@@ -12,6 +12,7 @@
         "target": "ES2021",
 		"forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
+        "strict": true,
         "paths": {
             "@nodecord/core": ["./packages/core"],
             "@nodecord/core*": ["./packages/core/*"],

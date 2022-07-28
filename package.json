@@ -3,28 +3,28 @@
   "version": "1.0.0",
   "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
   "main": "index.js",
+  "workspaces": [
+    "./packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "lerna run dev",
+    "build": "lerna run --parallel build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Datzu712/nodecord.git"
   },
-  "keywords": [
-    "discord",
-    "client",
-    "bot",
-    "discordapp",
-    "node",
-    "api",
-    "typescript",
-    "framework",
-    "tool"
-  ],
   "author": "Datzu712",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Datzu712/nodecord/issues"
   },
-  "homepage": "https://github.com/Datzu712/nodecord#readme"
+  "homepage": "https://github.com/Datzu712/nodecord#readme",
+  "dependencies": {
+    "lerna": "^5.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
 }
