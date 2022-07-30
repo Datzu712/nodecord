@@ -9,7 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "lerna run dev",
-    "build": "lerna run --parallel build"
+    "build": "lerna run --parallel build",
+    "eslint": "eslint \"**/*.{ts,tsx}\""
   },
   "repository": {
     "type": "git",

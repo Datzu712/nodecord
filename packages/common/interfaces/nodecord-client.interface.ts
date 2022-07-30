@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// type any is provisional.
 export interface NodecordClientConfig {
     logger: any;
     intents: any;
