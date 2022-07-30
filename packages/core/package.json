@@ -1,6 +1,6 @@
 {
   "name": "@nodecord/core",
-  "version": "1.0.0",
+  "version": "1.0.4-alfa.1",
   "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
