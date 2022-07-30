@@ -1,0 +1,1 @@
+# This package does not have a stable/finished version. Use it at your own risk, see our [repository](https://github.com/Datzu712/nodecord.git) for more information.
