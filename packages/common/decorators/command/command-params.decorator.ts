@@ -41,27 +41,27 @@ function createCommandParamDecorator(paramType: CommandParamTypes, ...pipes: pip
 }
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object
- * from the event `MessageCreate.
- *
+ * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
  * Example: `execute(@Message() message)`
  */
 export function Message(): ParameterDecorator;
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object
- * from the event `MessageCreate.
- *
+ * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
  * Example: `execute(@Message() message)`
+ *
+ * @param { pipe[] } pipes - pipes to apply to the parameter. See [pipes](https://github.com/Datzu712/nodecord) (TODO) for more info.
  */
 export function Message(...pipes: pipe[]): ParameterDecorator;
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object
- * from the event `MessageCreate.
- *
+ * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
  * Example: `execute(@Message() message)`
+ *
+ * @param { pipe[] } pipes - pipes to apply to the parameter. See (pipes)[https://github.com/Datzu712/nodecord] for more info.
  */
 export function Message(...pipes: pipe[]): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.MESSAGE, ...pipes);
 }
+
+export const Msg = Message;
