@@ -16,6 +16,8 @@
         "paths": {
             "@nodecord/core": ["./packages/core"],
             "@nodecord/core*": ["./packages/core/*"],
+            "@nodecord/common*": ["./packages/common/*"],
+            "@nodecord/common": ["./packages/common"],
         }
     }
 }

@@ -10,7 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "lerna run dev",
     "build": "lerna run --parallel build",
-    "eslint": "eslint \"**/*.{ts,tsx}\""
+    "eslint": "eslint \"**/*.{ts,tsx}\"",
+    "build:clean": "ts-node scripts/clean.ts"
   },
   "repository": {
     "type": "git",
