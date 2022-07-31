@@ -11,7 +11,7 @@
     "dev": "lerna run dev",
     "build": "lerna run --parallel build",
     "eslint": "eslint \"**/*.{ts,tsx}\"",
-    "build:clean": "ts-node scripts/clean.ts"
+    "build:clean": "./scripts/clean.sh"
   },
   "repository": {
     "type": "git",
