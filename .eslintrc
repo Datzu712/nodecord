@@ -27,6 +27,6 @@
         "no-fallthrough": "error",
         "no-empty-pattern": "error",
         "no-self-assign": "warn",
-        "strict": "error",
+        "strict": "error"
     }
 }
