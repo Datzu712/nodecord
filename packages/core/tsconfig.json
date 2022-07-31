@@ -2,7 +2,6 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "baseUrl": "./",
-        "pretty": true,
         "outDir": "dist",
     },
     "exclude": ["dist"]

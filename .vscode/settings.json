@@ -1,6 +1,6 @@
 {
     "cSpell.words": [
-        "nodecord"
+        "Nodecord"
     ],
-    "rpc.enabled": true
+    "rpc.enabled": false
 }
