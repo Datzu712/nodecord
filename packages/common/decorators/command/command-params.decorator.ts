@@ -5,18 +5,20 @@ import { PARAM_TYPES_METADATA } from '../../constants';
 export type ParamData = object | string | number;
 
 // TODO
-type pipe = {
-    execute: (data: any) => any;
-};
+type pipe =
+    | {
+          execute: (data: any) => any;
+      }
+    | any;
 
-export function assignMetadata<TParamType = any, TArgs = any>(
+function assignMetadata<TParamType = any, TArgs = any>(
     args: TArgs,
     paramType: TParamType,
     index: number,
     data?: ParamData,
     ...pipes: pipe[]
 ) {
-    return {
+    const d = {
         ...args,
         [`${paramType}:${index}`]: {
             index,
@@ -24,10 +26,11 @@ export function assignMetadata<TParamType = any, TArgs = any>(
             pipes,
         },
     };
+    console.log(d);
 }
 
-function createCommandParamDecorator(paramType: CommandParamTypes, ...pipes: pipe[]) {
-    return function (data?: object | string | number) {
+function createCommandParamDecorator(paramType: CommandParamTypes) {
+    return function (data?: object | string | number, ...pipes: pipe[]) {
         return (target: object, key: string | symbol, index: number) => {
             const commandArgs = Reflect.getMetadata(PARAM_TYPES_METADATA, target.constructor, key) || {};
             Reflect.defineMetadata(
@@ -36,6 +39,7 @@ function createCommandParamDecorator(paramType: CommandParamTypes, ...pipes: pip
                 target.constructor,
                 key,
             );
+            console.log(commandArgs);
         };
     };
 }
@@ -61,7 +65,7 @@ export function Message(...pipes: pipe[]): ParameterDecorator;
  * @param { pipe[] } pipes - pipes to apply to the parameter. See (pipes)[https://github.com/Datzu712/nodecord] for more info.
  */
 export function Message(...pipes: pipe[]): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.MESSAGE, ...pipes);
+    return createCommandParamDecorator(CommandParamTypes.MESSAGE)(undefined, ...pipes);
 }
 
 export const Msg = Message;

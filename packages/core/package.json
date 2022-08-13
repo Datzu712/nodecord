@@ -5,33 +5,33 @@
     "main": "index.js",
     "types": "index.d.ts",
     "scripts": {
-      "build": "tsc"
+        "build": "tsc"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/Datzu712/nodecord.git"
+        "type": "git",
+        "url": "git+https://github.com/Datzu712/nodecord.git"
     },
     "keywords": [
-      "discord",
-      "client",
-      "bot",
-      "discordapp",
-      "node",
-      "api",
-      "typescript",
-      "framework",
-      "tool"
+        "discord",
+        "client",
+        "bot",
+        "discordapp",
+        "node",
+        "api",
+        "typescript",
+        "framework",
+        "tool"
     ],
     "author": "Datzu712",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/Datzu712/nodecord/issues"
+        "url": "https://github.com/Datzu712/nodecord/issues"
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
     "devDependencies": {
-      "@types/node": "^18.6.1"
+        "@types/node": "^18.6.1"
     },
     "dependencies": {
-      "reflect-metadata": "^0.1.13"
+        "reflect-metadata": "^0.1.13"
     }
-  }
+}
