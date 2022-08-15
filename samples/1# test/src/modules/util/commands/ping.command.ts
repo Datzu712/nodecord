@@ -8,14 +8,13 @@ class MessagePipe implements PipeExecutable {
 
 @Command({
     name: 'ping',
-    group: 'general',
 })
-class PingCommand implements ICommand {
+export class PingCommand implements ICommand {
     execute(@Message(MessagePipe) message: object, @Message() xd: string) {
         message;
         xd;
         return 'hola';
     }
 }
-console.log(Reflect.getMetadata('__commandExecutionArguments__', PingCommand, 'execute'));
-console.log(Reflect.getMetadata('__commandMetadata__', PingCommand, 'execute'));
+// console.log(Reflect.getMetadata('__commandExecutionArguments__', PingCommand, 'execute'));
+// console.log(Reflect.getMetadata('__commandMetadata__', PingCommand, 'execute'));
