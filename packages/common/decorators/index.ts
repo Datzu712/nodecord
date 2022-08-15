@@ -1,4 +1,4 @@
 import 'reflect-metadata';
 
-export * from './command/command-params.decorator';
-export * from './command/command.decorator';
+export * from './command';
+export * from './modules';
