@@ -1,1 +1,1 @@
-import './module';
+import './client.module';

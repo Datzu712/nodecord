@@ -1,4 +1,4 @@
-import { Command, ICommand, Message, type PipeExecutable } from '@nodecord/common';
+import { Command, ICommand, Message, type PipeExecutable } from '@nodecord';
 
 class MessagePipe implements PipeExecutable {
     async run(message: unknown) {

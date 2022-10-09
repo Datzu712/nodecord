@@ -14,11 +14,10 @@
         "esModuleInterop": true,
         "strict": true,
         "allowJs": true,
+        "skipLibCheck": true,
         "paths": {
-            "@nodecord/core": ["./packages/core"],
-            "@nodecord/core*": ["./packages/core/*"],
-            "@nodecord/common": ["./packages/common"],
-            "@nodecord/common*": ["./packages/common/*"],
+            "@nodecord": ["./packages/nodecord"],
+            "@nodecord*": ["./packages/nodecord/*"],
         }
     },
     "exclude": ["node_modules", "**/*.spec.ts"]

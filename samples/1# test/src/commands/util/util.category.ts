@@ -1,8 +1,8 @@
-import { CategoryModule } from '@nodecord/common';
+import { Category } from '@nodecord';
 
 import { PingCommand } from './commands/ping.command';
 
-@CategoryModule({
+@Category({
     metadata: {
         name: 'util',
     },
