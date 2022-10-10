@@ -1,4 +1,4 @@
-import { ICommand } from '../index';
+import { ICommand } from '../../index';
 
 export interface ICategory {
     name: string;
