@@ -17,4 +17,4 @@ export class PingCommand implements ICommand {
     }
 }
 console.log(Reflect.getMetadata('__commandExecutionArguments__', PingCommand, 'execute'));
-console.log(Reflect.getMetadata('__commandMetadata__', PingCommand));
+//console.log(Reflect.getMetadata('__commandMetadata__', PingCommand));
