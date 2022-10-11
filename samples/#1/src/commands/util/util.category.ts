@@ -1,4 +1,4 @@
-import { Category } from '@nodecord';
+import { Category } from '@nodecord/core';
 
 import { PingCommand } from './commands/ping.command';
 

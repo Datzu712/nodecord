@@ -16,9 +16,10 @@
         "allowJs": true,
         "skipLibCheck": true,
         "paths": {
-            "@nodecord": ["./packages/nodecord"],
-            "@nodecord*": ["./packages/nodecord/*"],
+            "@nodecord": ["./packages/core"],
+            "@nodecord*": ["./packages/core/*"],
         }
     },
-    "exclude": ["node_modules", "**/*.spec.ts"]
+    "exclude": ["node_modules", "**/*.spec.ts"],
+    "include": ["packages/**/*"],
 }

@@ -16,7 +16,7 @@ export const CommandHookMapping =
  *
  * @see TODO
  */
-export const BeforeExecute = CommandHookMapping(CommandHooks.BEFORE_EXECUTE);
+export const BeforeExecute: MethodDecorator = CommandHookMapping(CommandHooks.BEFORE_EXECUTE);
 /**
  * Decorator that marks a method as a command hook for Nodecord.
  * The method marked will be executed after the `execute` method of the command is executed.
@@ -24,15 +24,15 @@ export const BeforeExecute = CommandHookMapping(CommandHooks.BEFORE_EXECUTE);
  *
  * @see TODO
  */
-export const AfterExecute = CommandHookMapping(CommandHooks.AFTER_EXECUTE);
+export const AfterExecute: MethodDecorator = CommandHookMapping(CommandHooks.AFTER_EXECUTE);
 
 /**
  * Aliases of the BeforeExecute decorator.
  * @see {@link BeforeExecute}
  */
-export const PreExecute = CommandHookMapping(CommandHooks.BEFORE_EXECUTE);
+export const PreExecute: MethodDecorator = CommandHookMapping(CommandHooks.BEFORE_EXECUTE);
 /**
  * Aliases of the AfterExecute decorator.
  * @see {@link AfterExecute}
  */
-export const PostExecute = CommandHookMapping(CommandHooks.AFTER_EXECUTE);
+export const PostExecute: MethodDecorator = CommandHookMapping(CommandHooks.AFTER_EXECUTE);

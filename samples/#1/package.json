@@ -1,0 +1,23 @@
+{
+    "name": "basic-bot",
+    "main": "index.ts",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon index.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {
+        "tsconfig-paths": "^4.1.0",
+        "nodemon": "^2.0.19",
+        "reflect-metadata": "^0.1.13",
+        "ts-node": "^10.9.1"
+    },
+    "ts-node": {
+      "files": true,
+      "require": ["tsconfig-paths/register"]
+    }
+}
