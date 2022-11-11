@@ -6,3 +6,5 @@ import { UtilityCategory } from './commands/util/util.category';
     categories: [UtilityCategory],
 })
 export class Client {}
+
+// console.log(Reflect.getMetadata('categories', Client));

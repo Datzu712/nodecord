@@ -22,7 +22,6 @@ function assignMetadata<TParamType = any, TArgs = any>(
 }
 function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: object | string | number, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]) {
-        // TODO: This evaluations must be inside the core
         if (pipes.length) {
             pipes = pipes.map((pipe) => (pipe.constructor === Function ? new (pipe as Type<PipeExecutable>)() : pipe));
 
