@@ -5,7 +5,6 @@ class MessagePipe implements PipeExecutable {
         return message;
     }
 }
-
 @Command({
     name: 'ping',
 })
