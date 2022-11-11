@@ -4,4 +4,5 @@ export enum CommandParamTypes {
     USER,
     GUILD,
     ARGS,
+    MEMBER,
 }
