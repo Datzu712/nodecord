@@ -12,5 +12,5 @@ export interface NodecordClientOptions {
     /**
      * Pass true if you want that when any error occurs within the client, it will be closed.
      */
-    abortOnError?: string;
+    abortOnError?: boolean;
 }
