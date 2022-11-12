@@ -1,4 +1,4 @@
-import type { ICategory, ICommand } from '../interfaces';
+import type { ICategory, ICommand, NodecordClientOptions } from '../interfaces';
 
 export class NodecordClient {
     /**
@@ -14,10 +14,13 @@ export class NodecordClient {
     public readonly commands: Map<string, ICommand> = new Map();
 
     /**
-     * Nodecord basic client.
+     * Nodecord client.
      */
-    constructor(clientOrOptions: any, options?: object) {
+    constructor(module: any, options?: NodecordClientOptions);
+    constructor(module: any, client: any, options: NodecordClientOptions);
+    constructor(module: any, clientOrOptions?: any, options?: NodecordClientOptions) {
         clientOrOptions;
         options;
+        module;
     }
 }
