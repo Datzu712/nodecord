@@ -71,7 +71,6 @@ export class Logger implements LoggerService {
     }
 
     // Static methods
-
     /**
      * Write an 'log' message.
      */

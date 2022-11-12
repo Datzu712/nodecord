@@ -17,7 +17,7 @@ export interface ConsoleLoggerOptions {
     folderPath?: string;
     /**
      * Excepted output template. It will be used to format the output (log message).
-     * @default '{timestamp} {context} {level} {message}'
+     * @default '{pid} {timestamp} - {level} {context} {message}'
      */
     outputTemplate?: string;
     /**
@@ -64,7 +64,7 @@ export class ConsoleLogger implements LoggerService {
 
     constructor(options?: ConsoleLoggerOptions) {
         this.options = {
-            outputTemplate: options?.outputTemplate || '{timestamp} {pid} {level} {message}',
+            outputTemplate: options?.outputTemplate || '{pid} {timestamp} - {level} {context} {message}',
             testing: options?.testing ?? false,
             logLevels: options?.logLevels || ['debug', 'error', 'warn', 'log', 'verbose'],
             allowWriteFiles: options?.allowWriteFiles ?? true,
@@ -250,5 +250,13 @@ export class ConsoleLogger implements LoggerService {
             month: '2-digit',
         };
         return new Date(Date.now()).toLocaleString(undefined, localeStringOptions);
+    }
+
+    public setLogLevels(levels: LogLevels[]) {
+        this.options.logLevels = levels;
+    }
+
+    public setContext(context: string) {
+        this.options.context = context;
     }
 }
