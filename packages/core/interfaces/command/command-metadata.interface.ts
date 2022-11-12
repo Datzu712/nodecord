@@ -4,7 +4,6 @@
  */
 export interface CommandMetadata {
     name: string;
-    // permissions: x[];
     aliases?: string[];
     category?: object;
 }

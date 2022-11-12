@@ -1,5 +1,5 @@
 import { CommandMetadata } from '../../interfaces/command/command-metadata.interface';
-import { COMMAND_WATERMARK, COMMAND_METADATA } from '../../constants';
+import { COMMAND_WATERMARK, COMMAND_METADATA } from '../../constants/command';
 
 /**
  * Interface defining the options that can be passed `@Command()` decorator

@@ -1,4 +1,4 @@
-import { COMMAND_HOOKS_METADATA } from '../../constants';
+import { COMMAND_HOOKS_METADATA } from '../../constants/command';
 import { CommandHooks } from '../../enums/command-hooks.enum';
 
 export const CommandHookMapping =

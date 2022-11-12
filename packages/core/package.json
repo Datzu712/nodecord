@@ -3,33 +3,34 @@
     "version": "1.2.0-alfa.1",
     "description": "A powerful Node.js framework for create efficient and scalable discord bots. (common)",
     "scripts": {
-      "build": "tsc"
+        "build": "tsc"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/Datzu712/nodecord.git"
+        "type": "git",
+        "url": "git+https://github.com/Datzu712/nodecord.git"
     },
     "keywords": [
-      "discord",
-      "client",
-      "bot",
-      "discordapp",
-      "node",
-      "api",
-      "typescript",
-      "framework",
-      "tool"
+        "discord",
+        "client",
+        "bot",
+        "discordapp",
+        "node",
+        "api",
+        "typescript",
+        "framework",
+        "tool"
     ],
     "author": "Datzu712",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/Datzu712/nodecord/issues"
+        "url": "https://github.com/Datzu712/nodecord/issues"
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
     "devDependencies": {
-      "@types/node": "^18.11.9"
+        "@types/node": "^18.11.9",
+        "ts-essentials": "^9.3.0"
     },
     "dependencies": {
-      "reflect-metadata": "^0.1.13"
+        "reflect-metadata": "^0.1.13"
     }
-  }
+}

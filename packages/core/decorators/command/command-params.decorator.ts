@@ -1,5 +1,5 @@
 import { CommandParamTypes } from '../../enums';
-import { COMMAND_ARGS_METADATA } from '../../constants';
+import { COMMAND_ARGS_METADATA } from '../../constants/command';
 import type { PipeExecutable, Type } from '../../interfaces';
 
 export type ParamData = object | string | number;
