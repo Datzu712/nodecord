@@ -2,5 +2,6 @@
     "cSpell.words": [
         "Nodecord"
     ],
-    "rpc.enabled": false
+    "rpc.enabled": false,
+    "vscord.enabled": true
 }
