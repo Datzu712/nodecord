@@ -1,6 +1,4 @@
-import type { CommandMetadata } from './';
-
-export interface ICommand extends CommandMetadata {
+export interface ICommand {
     /**
      * Method to implement the logic of the command.
      * To pass arguments to this function, use the commands [parameters decorators](google.com).

@@ -1,6 +1,6 @@
-import { CategoryModuleMetadata } from '../../interfaces';
+import { CategoryMetadata } from '../../interfaces';
 
-export function Category(metadata: CategoryModuleMetadata): ClassDecorator {
+export function Category(metadata: CategoryMetadata): ClassDecorator {
     return (target: object) => {
         for (const property in metadata) {
             if (Object.prototype.hasOwnProperty.call(metadata, property)) {
