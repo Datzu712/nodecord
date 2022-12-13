@@ -69,7 +69,7 @@ export class ConsoleLogger implements AbstractLogger {
             logLevels: options?.logLevels || ['debug', 'error', 'warn', 'log', 'verbose'],
             allowWriteFiles: options?.allowWriteFiles ?? true,
             allowConsole: options?.allowConsole ?? true,
-            context: options?.context || 'null',
+            context: options?.context || 'Bot',
             folderPath: options?.folderPath,
             indents: {
                 timestamp: options?.indents?.timestamp ?? 0,
@@ -223,7 +223,7 @@ export class ConsoleLogger implements AbstractLogger {
     }
 
     public getPid(): string {
-        return `[${this.options.context ?? 'Application'} - ${process.pid}]`;
+        return `[${this.options.context || 'Bot'} - ${process.pid}]`;
     }
 
     public formatLevel(level: LogLevels): string {

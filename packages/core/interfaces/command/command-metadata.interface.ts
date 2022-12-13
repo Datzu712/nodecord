@@ -1,4 +1,4 @@
-import type { CategoryMetadata, ICommand } from '../../interfaces';
+import type { DefinedCategory, ICommand } from '../../interfaces';
 
 /**
  * Base interface for command metadata.
@@ -8,6 +8,6 @@ export interface CommandMetadata extends ICommand {
     metadata: {
         name: string;
         aliases: string[];
-        category: CategoryMetadata;
+        category: DefinedCategory;
     };
 }

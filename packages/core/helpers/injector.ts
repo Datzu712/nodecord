@@ -12,11 +12,12 @@ export class Injector {
         );
         const computedCategories = [] as DefinedCategory[];
 
-        for (const category of categoriesMetadata) {
-            const commands = this.loadCommands(category);
+        for (const categoryMetadata of categoriesMetadata) {
+            const commands = this.loadCommands(categoryMetadata);
+            const category = { ...categoryMetadata, commands } as DefinedCategory;
 
             commands.forEach((command) => (command.metadata.category = category));
-            computedCategories.push({ ...category, commands });
+            computedCategories.push(category);
         }
         return computedCategories;
     }
@@ -29,7 +30,7 @@ export class Injector {
                 // todo check constructor required arguments
                 const command = new CommandInstance();
 
-                return Object.assign(command, metadata) as DefinedCommand;
+                return Object.assign(command, { metadata }) as DefinedCommand;
             }) || []
         );
     }

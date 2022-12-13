@@ -1,6 +1,6 @@
-import { type CommandMetadata, type ICommand, Logger } from '@nodecord/core';
+import { Logger, DefinedCommand } from '@nodecord/core';
 
-export class CommandManager extends Map<string, CommandMetadata & ICommand> {
+export class CommandManager extends Map<string, DefinedCommand> {
     private logger = new Logger('CommandManager');
 
     /**
@@ -9,7 +9,7 @@ export class CommandManager extends Map<string, CommandMetadata & ICommand> {
      * @param { boolean } sloppy - True for return the first command that matches with the name (included aliases).
      * @returns { ICommand | null } Command found (or undefined).
      */
-    public get(name: string, sloppy?: boolean): (CommandMetadata & ICommand) | undefined {
+    public get(name: string, sloppy?: boolean): DefinedCommand | undefined {
         let command = super.get(name);
 
         if (!command) {

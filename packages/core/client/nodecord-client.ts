@@ -68,6 +68,7 @@ export class NodecordClient<IAdapterOptions extends object> {
 
         ExceptionCatcher.run(() => {
             const categories = injector.loadCategoriesWithCommands();
+
             categories.forEach((category) => this.categories.set(category.metadata.name, category));
             categories.forEach((category) =>
                 category.commands.forEach((command) => this.commands.set(command.metadata.name, command)),

@@ -1,4 +1,4 @@
-import { Logger } from '@nodecord/core';
+import { Logger } from '../services/logger.service';
 
 function MISSING_REQUIRED_DEPENDENCY(dependencyName: string) {
     return `Missing required dependency "${dependencyName}", please check if it is installed (npm install ${dependencyName}).`;

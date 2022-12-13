@@ -1,4 +1,4 @@
 import type { CommandMetadata } from './command-metadata.interface';
-import type { ICommand } from './command.interface';
 
-export type DefinedCommand = ICommand & CommandMetadata;
+// Maybe in the future, this will be a interface that will have decorators metadata.
+export type DefinedCommand = CommandMetadata;
