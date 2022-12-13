@@ -7,7 +7,7 @@ export type LogLevels =
     | 'debug' // detailed messages for debugging
     | 'verbose';
 
-export interface LoggerService {
+export interface AbstractLogger {
     debug: (message: logMessage, context?: string) => void;
     error: (message: logMessage, context?: string) => void;
     warn: (message: logMessage, context?: string) => void;
@@ -18,9 +18,9 @@ export interface LoggerService {
 
 const defaultLogger = new ConsoleLogger();
 
-export class Logger implements LoggerService {
-    private static staticInstance?: LoggerService;
-    protected localInstanceRef?: LoggerService;
+export class Logger implements AbstractLogger {
+    private static staticInstance?: AbstractLogger;
+    protected localInstanceRef?: AbstractLogger;
     protected static logLevels: LogLevels[];
 
     constructor(private defaultContext?: string, instanceOptions?: ConsoleLoggerOptions) {
@@ -106,7 +106,7 @@ export class Logger implements LoggerService {
         return this.localInstanceRef;
     }
 
-    static overrideLocalInstance(instance: ConsoleLogger | LoggerService) {
+    static overrideLocalInstance(instance: ConsoleLogger | AbstractLogger) {
         Logger.staticInstance = instance;
     }
 }

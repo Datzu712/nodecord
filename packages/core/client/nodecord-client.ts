@@ -1,14 +1,16 @@
 import { EventEmitter } from 'stream';
-import { loadAdapter, Logger, ExceptionCatcher } from '@nodecord/core';
+import { Logger, type AbstractLogger } from '@nodecord/core/services/logger.service';
+import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
 import { CommandManager, CategoryManager } from '../managers';
+import { ExceptionCatcher } from '../helpers/catch-exception';
+import { Injector } from '../helpers/injector';
 
 import type { NodecordClientOptions, AbstractClientAdapter } from '../interfaces';
 
 /**
  * @publicApi
  */
-export class NodecordClient<IAdapterOptions> {
-    /* todo: change maps for managers */
+export class NodecordClient<IAdapterOptions extends object> {
     /**
      * Map of all categories.
      * `<CategoryName, CategoryObject>`
@@ -25,45 +27,55 @@ export class NodecordClient<IAdapterOptions> {
 
     /**
      * Nodecord client constructor.
-     * @param { any } module - Main module of the client.
-     * @param { NodecordClientOptions } options - Nodecord client options.
+     * @param module - Main module of the client.
+     * @param options - Nodecord client options.
      */
     constructor(module: any, options?: NodecordClientOptions & IAdapterOptions);
     /**
      * Nodecord client constructor.
-     * @param { any } module - Main module of the client.
-     * @param { AbstractClientAdapter } adapter - The client adapter (eris or biscuit client adapter).
-     * @param { NodecordClientOptions } options - Nodecord client options.
+     * @param module - Main module of the client.
+     * @param adapter - The client adapter (djs or biscuit client adapter).
+     * @param options - Nodecord client options.
      */
     constructor(module: any, adapter: AbstractClientAdapter, options: NodecordClientOptions & IAdapterOptions);
-    constructor(private module: any, adapterOrOptions?: any, options?: NodecordClientOptions & IAdapterOptions) {
+    constructor(
+        private module: any,
+        adapterOrOptions: (NodecordClientOptions & IAdapterOptions) | AbstractClientAdapter,
+        options?: NodecordClientOptions & IAdapterOptions,
+    ) {
         const [clientAdapter, clientOptions] = this.isClientAdapter(adapterOrOptions)
             ? [adapterOrOptions, options]
             : [this.createClientAdapter(), adapterOrOptions];
 
+        if (!clientOptions) throw new Error('No client options provided.');
+
         this.adapter = clientAdapter;
 
-        clientAdapter.initialize(clientOptions);
-        Logger.overrideLocalInstance(clientOptions?.logger);
+        // clientAdapter.initialize(clientOptions);
+        if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
 
-        this.loadMainModule(clientOptions);
+        this.start(clientOptions);
     }
 
-    private loadMainModule(config: NodecordClientOptions): void {
+    private start(config: NodecordClientOptions): void {
         const shouldRethrow =
             config.abortOnError === false
                 ? (err: Error) => {
                       throw err;
                   }
                 : undefined;
+        const injector = new Injector(this.module);
 
         ExceptionCatcher.run(() => {
-            // todo
-            this;
+            const categories = injector.loadCategoriesWithCommands();
+            categories.forEach((category) => this.categories.set(category.metadata.name, category));
+            categories.forEach((category) =>
+                category.commands.forEach((command) => this.commands.set(command.metadata.name, command)),
+            );
         }, shouldRethrow);
     }
 
-    public isClientAdapter(
+    private isClientAdapter(
         clientOrOptions: NodecordClientOptions | AbstractClientAdapter,
     ): clientOrOptions is AbstractClientAdapter {
         return (
@@ -73,6 +85,7 @@ export class NodecordClient<IAdapterOptions> {
     }
 
     private createClientAdapter(): AbstractClientAdapter {
+        return {} as AbstractClientAdapter;
         const { djsAdapter } = loadAdapter('@nodecord/djs-adapter');
 
         return new djsAdapter();

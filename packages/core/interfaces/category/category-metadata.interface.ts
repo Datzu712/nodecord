@@ -1,4 +1,4 @@
-import type { ICommand, Type } from '../index';
+import type { ICommand, Type } from '@nodecord/core';
 
 export interface CategoryMetadata {
     metadata: {
@@ -7,5 +7,5 @@ export interface CategoryMetadata {
     /**
      * Optional list of the commands that belong to this category.
      */
-    commands?: (ICommand | Type<ICommand>)[];
+    commands?: Type<ICommand>[];
 }

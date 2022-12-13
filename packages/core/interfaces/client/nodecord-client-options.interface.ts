@@ -1,4 +1,4 @@
-import type { LoggerService } from '../../services/logger.service';
+import type { AbstractLogger } from '../../services/logger.service';
 
 export interface NodecordClientOptions {
     /**
@@ -7,7 +7,7 @@ export interface NodecordClientOptions {
      * By default, we will use our logger with the basic configuration. If you want to enable the saving logs in files options
      * you should import the class `Logger` of `@nodecord/core`, instance it and pass it in this property.
      */
-    logger?: LoggerService | false;
+    logger?: AbstractLogger | false;
 
     /**
      * Pass true if you want that when any error occurs within the client, it will be closed.

@@ -15,7 +15,7 @@ export class CommandManager extends Map<string, CommandMetadata & ICommand> {
         if (!command) {
             for (const [cmdName, cmd] of this) {
                 if (
-                    cmd.aliases.some((alias) => alias === name || (sloppy && alias.includes(name))) ||
+                    cmd.metadata.aliases.some((alias) => alias === name || (sloppy && alias.includes(name))) ||
                     (sloppy && cmdName.includes(name))
                 ) {
                     command = cmd;

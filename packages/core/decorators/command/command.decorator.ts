@@ -1,10 +1,11 @@
 import { CommandMetadata } from '../../interfaces/command/command-metadata.interface';
 import { COMMAND_WATERMARK, COMMAND_METADATA } from '../../constants/command';
+import type { MarkOptional } from 'ts-essentials';
 
 /**
  * Interface defining the options that can be passed `@Command()` decorator
  */
-export type CommandOptions = Omit<CommandMetadata, 'category'>;
+export type CommandOptions = Omit<MarkOptional<CommandMetadata['metadata'], 'aliases'>, 'category' | 'execute'>;
 /**
  * Decorator that marks a class as a command for Nodecord and receive a `Message` or `CommandInteraction` (depending on the library)
  * and produce responses.

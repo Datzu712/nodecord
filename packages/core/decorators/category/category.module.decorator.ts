@@ -1,3 +1,4 @@
+import { CATEGORY_WATERMARK } from '../../constants';
 import { CategoryMetadata } from '../../interfaces';
 
 export function Category(metadata: CategoryMetadata): ClassDecorator {
@@ -7,5 +8,6 @@ export function Category(metadata: CategoryMetadata): ClassDecorator {
                 Reflect.defineMetadata(property, metadata[property as keyof typeof metadata], target);
             }
         }
+        Reflect.defineMetadata(CATEGORY_WATERMARK, true, target);
     };
 }

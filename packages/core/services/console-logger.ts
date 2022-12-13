@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, WriteStream, createWriteStream } from 'fs';
 
 import type { DeepRequired } from 'ts-essentials';
 import { inspect } from 'util';
-import type { LoggerService, LogLevels } from './logger.service';
+import type { AbstractLogger, LogLevels } from './logger.service';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type logMessage = any;
@@ -53,7 +53,7 @@ export interface ConsoleLoggerOptions {
 
 const defaultLogLevels: LogLevels[] = ['log', 'error', 'warn', 'debug', 'verbose'];
 
-export class ConsoleLogger implements LoggerService {
+export class ConsoleLogger implements AbstractLogger {
     protected options: Omit<DeepRequired<ConsoleLoggerOptions>, 'folderPath'> & { folderPath?: string };
 
     debug!: (message: any, ...optionalArguments: any[]) => void;

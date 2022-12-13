@@ -14,9 +14,9 @@
       "lib": ["ES2021"],
       "esModuleInterop": true,
       "paths": {
-        "@nodecord": ["../../packages/nodecord"],
-        "@nodecord*": ["../../packages/nodecord/*"],
-      }
+        "@nodecord/core": ["../../packages/core"],
+        "@nodecord/core/*": ["../../packages/core/*"],
+      },
     },
     "include": ["src/**/*"],
     "ts-node": {

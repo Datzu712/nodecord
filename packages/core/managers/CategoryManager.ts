@@ -1,6 +1,6 @@
-import { type CategoryMetadata, Logger } from '@nodecord/core';
+import { Logger, type DefinedCategory } from '@nodecord/core';
 
-export class CategoryManager extends Map<string, CategoryMetadata> {
+export class CategoryManager extends Map<string, DefinedCategory> {
     private logger = new Logger('CategoryManager');
 
     /**
@@ -9,7 +9,7 @@ export class CategoryManager extends Map<string, CategoryMetadata> {
      * @param { boolean } sloppy - True for return the first category that matches with the name).
      * @returns { CategoryMetadata | null } Category found (or undefined).
      */
-    public get(name: string, sloppy?: boolean): CategoryMetadata | undefined {
+    public get(name: string, sloppy?: boolean): DefinedCategory | undefined {
         let category = super.get(name);
 
         if (!category && sloppy) {
