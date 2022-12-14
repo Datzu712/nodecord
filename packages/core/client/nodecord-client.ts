@@ -4,6 +4,7 @@ import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
 import { CommandManager, CategoryManager } from '../managers';
 import { ExceptionCatcher } from '../helpers/catch-exception';
 import { Injector } from '../helpers/injector';
+import { rethrow } from '../helpers/rethrow';
 
 import type { NodecordClientOptions, AbstractClientAdapter } from '../interfaces';
 
@@ -58,12 +59,7 @@ export class NodecordClient<IAdapterOptions extends object> {
     }
 
     private start(config: NodecordClientOptions): void {
-        const shouldRethrow =
-            config.abortOnError === false
-                ? (err: Error) => {
-                      throw err;
-                  }
-                : undefined;
+        const shouldRethrow = config.abortOnError === false ? rethrow : undefined;
         const injector = new Injector(this.module);
 
         ExceptionCatcher.run(() => {
@@ -86,13 +82,12 @@ export class NodecordClient<IAdapterOptions extends object> {
     }
 
     private createClientAdapter(): AbstractClientAdapter {
-        return {} as AbstractClientAdapter;
         const { djsAdapter } = loadAdapter('@nodecord/djs-adapter');
 
         return new djsAdapter();
     }
 
     public async login(token: string): Promise<void> {
-        this.adapter.login(token);
+        await this.adapter.login(token);
     }
 }

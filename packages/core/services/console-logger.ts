@@ -74,9 +74,9 @@ export class ConsoleLogger implements AbstractLogger {
             indents: {
                 timestamp: options?.indents?.timestamp ?? 0,
                 pid: options?.indents?.pid ?? 0,
-                level: options?.indents?.level ?? 0,
+                level: options?.indents?.level ?? 7,
                 message: options?.indents?.message ?? 0,
-                context: options?.indents?.context ?? 0,
+                context: options?.indents?.context ?? 20,
             },
         };
         for (const logLevel of defaultLogLevels) {

@@ -5,5 +5,5 @@ import { Client } from './src/client.module';
     const bot = new NodecordClient(Client, {
         abortOnError: true,
     });
-    console.log(bot.categories.get('util')?.commands[0].metadata.category.commands[0].metadata.category.commands);
+    await bot.login('token');
 })();

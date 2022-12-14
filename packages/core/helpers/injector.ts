@@ -1,4 +1,4 @@
-import { MetadataScanner } from '../client/metadata-scanner';
+import { MetadataScanner } from './metadata-scanner';
 import type { CategoryMetadata, DefinedCategory, DefinedCommand } from '../interfaces';
 
 export class Injector {
