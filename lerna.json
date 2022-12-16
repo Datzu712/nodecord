@@ -9,5 +9,6 @@
         "version": {
             "message": "chore: Release"
         }
-    }
+    },
+    "useNx": true
 }
