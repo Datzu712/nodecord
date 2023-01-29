@@ -1,3 +1,4 @@
+// todo: Change discord.js to @discordjs/rest & @discordjs/ws
 import { Client } from 'discord.js';
 import { AbstractClientAdapter } from '@nodecord/core';
 
