@@ -1,15 +1,3 @@
-# name: Eslint
-# on: push
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/checkout@v2
-#     - name: Install modules
-#       run: npm install
-#     - name: Run ESLint
-#       run: npm run eslint
-
 name: Check
 
 on:
@@ -29,8 +17,6 @@ jobs:
         with:
           node-version: "${{ env.node_version }}"
       - name: Install dependencies
-        run: yarn install
+        run: npm install
       - name: Lint check
-        run: yarn lint
-      # - name: Unit & Integration tests
-      #   run: yarn test
+        run: npm run lint
