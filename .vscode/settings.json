@@ -5,6 +5,7 @@
     "rpc.enabled": false,
     "vscord.enabled": true,
     "conventionalCommits.scopes": [
-        "core & adapter"
+        "core & adapter",
+        "monorepo"
     ]
 }
