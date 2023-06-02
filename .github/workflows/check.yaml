@@ -1,0 +1,36 @@
+# name: Eslint
+# on: push
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Install modules
+#       run: npm install
+#     - name: Run ESLint
+#       run: npm run eslint
+
+name: Check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "node_version=$(cat .github/nodejs.version)" >> $GITHUB_ENV
+      - name: "use node ${{ env.node_version }}"
+        uses: actions/setup-node@v3
+        with:
+          node-version: "${{ env.node_version }}"
+      - name: Install dependencies
+        run: yarn install
+      - name: Lint check
+        run: yarn lint
+      # - name: Unit & Integration tests
+      #   run: yarn test

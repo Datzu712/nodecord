@@ -6,7 +6,7 @@
     "./packages/*"
   ],
   "scripts": {
-    "eslint": "eslint \"**/*.{ts,tsx}\"",
+    "lint": "eslint \"**/*.{ts,tsx}\"",
     "build:all": "nx run-many --target=build",
     "build:core": "nx build @nodecord/core",
     "build:since": "nx affected --target=build"

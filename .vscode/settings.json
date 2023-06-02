@@ -3,5 +3,8 @@
         "Nodecord"
     ],
     "rpc.enabled": false,
-    "vscord.enabled": true
+    "vscord.enabled": true,
+    "conventionalCommits.scopes": [
+        "core & adapter"
+    ]
 }
