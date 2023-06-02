@@ -14,6 +14,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter {
     }
 
     public initialize(commands: ICommand[]) {
+        commands;
         this.on('ready', () => console.log('Ready!'));
     }
 
