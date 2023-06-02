@@ -6,6 +6,7 @@
     "vscord.enabled": true,
     "conventionalCommits.scopes": [
         "core & adapter",
-        "monorepo"
+        "monorepo",
+        "core"
     ]
 }
