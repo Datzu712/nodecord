@@ -2,9 +2,6 @@
   "name": "nodecord",
   "version": "1.2.0-alfa.1",
   "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
-  "workspaces": [
-    "./packages/*"
-  ],
   "scripts": {
     "lint": "eslint \"**/*.{ts,tsx}\"",
     "build:all": "nx run-many --target=build",
@@ -34,6 +31,7 @@
     "eslint-plugin-security": "^1.5.0",
     "nodemon": "^2.0.20",
     "nx": "^15.4.1",
+    "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   }
