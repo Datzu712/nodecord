@@ -9,8 +9,6 @@ export class ExecutionManager {
 
         const command = this.commands.get(commandName);
         if (!command) return;
-
-        // command.execute(context);
     }
 
     public isSlashCommand(context: Message | CommandInteraction): context is CommandInteraction {

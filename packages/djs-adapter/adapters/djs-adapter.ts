@@ -1,18 +1,20 @@
 // todo: Change discord.js to @discordjs/rest & @discordjs/ws
-import { Client } from 'discord.js';
+import { Client, type ClientOptions } from 'discord.js';
 import { AbstractClientAdapter, type ICommand } from '@nodecord/core';
 
 export class DiscordJsAdapter extends AbstractClientAdapter {
-    constructor(instance?: Client) {
+    constructor(instanceOrOptions: Client | ClientOptions) {
+        const instance = instanceOrOptions instanceof Client ? instanceOrOptions : new Client(instanceOrOptions);
+
         super(instance);
     }
 
-    public login(token: string) {
+    public async login(token: string) {
         this.clientInstance.login(token);
     }
 
     public initialize(commands: ICommand[]) {
-        commands;
+        this.on('ready', () => console.log('Ready!'));
     }
 
     public on(event: string, listener: (...args: any[]) => void) {

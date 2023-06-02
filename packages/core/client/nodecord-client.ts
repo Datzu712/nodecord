@@ -1,6 +1,6 @@
 import { EventEmitter } from 'stream';
 import { Logger, type AbstractLogger } from '@nodecord/core/services/logger.service';
-// import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
+import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
 import { CommandManager, CategoryManager } from '../managers';
 import { ExceptionCatcher } from '../helpers/catch-exception';
 import { Injector } from '../helpers/injector';
@@ -25,6 +25,7 @@ export class NodecordClient<IAdapterOptions extends object> {
     public readonly commands = new CommandManager();
 
     private adapter: AbstractClientAdapter;
+    private options: NodecordClientOptions & IAdapterOptions;
 
     /**
      * Nodecord client constructor.
@@ -46,13 +47,14 @@ export class NodecordClient<IAdapterOptions extends object> {
     ) {
         const [clientAdapter, clientOptions] = this.isClientAdapter(adapterOrOptions)
             ? [adapterOrOptions, options]
-            : [this.createClientAdapter(), adapterOrOptions];
+            : [this.createClientAdapter(adapterOrOptions), adapterOrOptions];
 
         if (!clientOptions) throw new Error('No client options provided.');
 
+        this.options = clientOptions;
         this.adapter = clientAdapter;
 
-        // clientAdapter.initialize(clientOptions);
+        clientAdapter.initialize(clientOptions);
         if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
 
         this.start(clientOptions);
@@ -81,11 +83,10 @@ export class NodecordClient<IAdapterOptions extends object> {
         );
     }
 
-    private createClientAdapter(): AbstractClientAdapter {
-        // const { djsAdapter } = loadAdapter('@nodecord/djs-adapter');
+    private createClientAdapter(options: NodecordClientOptions & IAdapterOptions): AbstractClientAdapter {
+        const { DiscordJsAdapter } = loadAdapter('@nodecord/djs-adapter');
 
-        // return new djsAdapter();
-        return undefined as any;
+        return new DiscordJsAdapter(options);
     }
 
     public async login(token: string): Promise<void> {

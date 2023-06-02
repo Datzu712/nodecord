@@ -21,5 +21,8 @@
         "require": [
             "tsconfig-paths/register"
         ]
+    },
+    "dependencies": {
+        "discord.js": "^14.11.0"
     }
 }

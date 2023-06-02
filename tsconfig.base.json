@@ -17,6 +17,8 @@
           "paths": {
               "@nodecord/core": ["./packages/core"],
               "@nodecord/core/*": ["./packages/core/*"],
+              "@nodecord/djs-adapter": ["./packages/djs-adapter"],
+              "@nodecord/djs-adapter/*": ["./packages/djs-adapter/*"],
           },
       },
       "exclude": ["node_modules", "**/*.spec.ts"],
