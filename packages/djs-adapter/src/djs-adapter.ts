@@ -1,18 +1,29 @@
 // todo: Change discord.js to @discordjs/rest & @discordjs/ws
 import { Client } from 'discord.js';
-import { AbstractClientAdapter } from '@nodecord/core';
+import { AbstractClientAdapter, type ICommand } from '@nodecord/core';
 
 export class DiscordJsAdapter extends AbstractClientAdapter {
     constructor(instance?: Client) {
         super(instance);
     }
 
-    public initialize(clientOptions: unknown): void {
-        clientOptions;
-        throw new Error('Method not implemented.');
-    }
     public login(token: string) {
-        token;
-        throw new Error('Method not implemented.');
+        this.clientInstance.login(token);
+    }
+
+    public initialize(commands: ICommand[]) {
+        commands;
+    }
+
+    public on(event: string, listener: (...args: any[]) => void) {
+        this.clientInstance.on(event, listener);
+    }
+
+    public once(event: string, listener: (...args: any[]) => void) {
+        this.clientInstance.once(event, listener);
+    }
+
+    public emit(event: string, ...args: any[]) {
+        this.clientInstance.emit(event, ...args);
     }
 }

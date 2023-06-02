@@ -20,24 +20,27 @@ function assignMetadata<TParamType = any, TArgs = any>(
         },
     };
 }
-function createCommandParamDecorator(paramType: CommandParamTypes) {
-    return function (data?: object | string | number, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]) {
-        if (pipes.length) {
-            pipes = pipes.map((pipe) => (pipe.constructor === Function ? new (pipe as Type<PipeExecutable>)() : pipe));
 
-            pipes.forEach((pipe) => {
-                if (typeof (pipe as PipeExecutable).run !== 'function') {
-                    throw new Error('Pipe must have execute method');
-                }
-            });
-        }
-        return (target: object, key: string | symbol, index: number) => {
-            const commandArgs = Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key) || {};
+function createCommandParamDecorator(paramType: CommandParamTypes) {
+    return function (data?: any, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator {
+        return function (target, key, index) {
+            if (pipes.length) {
+                pipes = pipes.map(function (pipe) {
+                    return pipe.constructor === Function ? new (pipe as Type<PipeExecutable>)() : pipe;
+                });
+
+                pipes.forEach(function (pipe) {
+                    if (typeof (pipe as PipeExecutable).run !== 'function') {
+                        throw new Error('Pipe must have execute method');
+                    }
+                });
+            }
+            const commandArgs = Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) || {};
             Reflect.defineMetadata(
                 COMMAND_ARGS_METADATA,
                 assignMetadata(commandArgs, paramType, index, data, ...pipes),
                 target.constructor,
-                key,
+                key as string,
             );
         };
     };
@@ -52,19 +55,9 @@ export function Message(): ParameterDecorator;
 /**
  * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
  * Example: `execute(@Message() message)`
- *
- * @param { pipe[] } pipes - pipes to apply to the parameter. See [pipes](https://github.com/Datzu712/nodecord) (TODO) for more info.
  */
-export function Message(...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator;
-
-/**
- * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
- * Example: `execute(@Message() message)`
- *
- * @param { pipe[] } pipes - pipes to apply to the parameter. See (pipes)[https://github.com/Datzu712/nodecord] for more info.
- */
-export function Message(...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.MESSAGE)(undefined, ...pipes);
+export function Message(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.MESSAGE)();
 }
 
 export const Msg = Message;

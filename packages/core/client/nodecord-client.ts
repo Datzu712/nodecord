@@ -1,6 +1,6 @@
 import { EventEmitter } from 'stream';
 import { Logger, type AbstractLogger } from '@nodecord/core/services/logger.service';
-import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
+// import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
 import { CommandManager, CategoryManager } from '../managers';
 import { ExceptionCatcher } from '../helpers/catch-exception';
 import { Injector } from '../helpers/injector';
@@ -82,9 +82,10 @@ export class NodecordClient<IAdapterOptions extends object> {
     }
 
     private createClientAdapter(): AbstractClientAdapter {
-        const { djsAdapter } = loadAdapter('@nodecord/djs-adapter');
+        // const { djsAdapter } = loadAdapter('@nodecord/djs-adapter');
 
-        return new djsAdapter();
+        // return new djsAdapter();
+        return undefined as any;
     }
 
     public async login(token: string): Promise<void> {

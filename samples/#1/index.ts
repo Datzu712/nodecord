@@ -5,5 +5,6 @@ import { Client } from './src/client.module';
     const bot = new NodecordClient(Client, {
         abortOnError: true,
     });
-    console.log(bot);
+    const pingCommand = bot.commands.get('ping') as any;
+    console.log(Reflect.getMetadata('__commandExecutionArguments__', pingCommand.constructor, 'execute'));
 })();

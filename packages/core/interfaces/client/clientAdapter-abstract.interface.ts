@@ -2,13 +2,11 @@
  * @publicApi
  */
 export abstract class AbstractClientAdapter {
-    /**
-     * @param { any } clientInstance - The client instance (djs or biscuit client)
-     */
     constructor(protected clientInstance: any) {}
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    public abstract initialize(clientOptions: unknown): void;
-
-    public abstract login(token: string): any;
+    abstract initialize(clientOptions: any): void;
+    abstract login(token: string): any;
+    abstract on(event: string, listener: (...args: any[]) => void): void;
+    abstract once(event: string, listener: (...args: any[]) => void): void;
+    abstract emit(event: string, ...args: any[]): void;
 }
