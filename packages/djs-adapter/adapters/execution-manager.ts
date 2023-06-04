@@ -6,9 +6,11 @@ export class ExecutionManager {
 
     public listenCommands(context: Message | CommandInteraction) {
         const commandName = this.isSlashCommand(context) ? context.commandName : context.content;
-
+        console.log(commandName);
         const command = this.commands.get(commandName);
         if (!command) return;
+
+        command.execute(context);
     }
 
     public isSlashCommand(context: Message | CommandInteraction): context is CommandInteraction {

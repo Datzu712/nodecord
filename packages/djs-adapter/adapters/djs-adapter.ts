@@ -1,8 +1,12 @@
 // todo: Change discord.js to @discordjs/rest & @discordjs/ws
-import { Client, type ClientOptions } from 'discord.js';
-import { AbstractClientAdapter, type ICommand } from '@nodecord/core';
+import { Client, type ClientEvents, type ClientOptions, type CommandInteraction } from 'discord.js';
+import { AbstractClientAdapter, Logger } from '@nodecord/core';
+import { ExecutionManager } from './execution-manager';
+import type { CommandManager } from '@nodecord/core/managers';
 
-export class DiscordJsAdapter extends AbstractClientAdapter {
+export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
+    private logger = new Logger('djsAdapter');
+
     constructor(instanceOrOptions: Client | ClientOptions) {
         const instance = instanceOrOptions instanceof Client ? instanceOrOptions : new Client(instanceOrOptions);
 
@@ -13,12 +17,26 @@ export class DiscordJsAdapter extends AbstractClientAdapter {
         this.clientInstance.login(token);
     }
 
-    public initialize(commands: ICommand[]) {
-        commands;
-        this.on('ready', () => console.log('Ready!'));
+    public initialize(commands: CommandManager) {
+        const executionManager = new ExecutionManager(commands);
+
+        this.on('ready', () =>
+            this.logger.log(`Logged in as ${this.clientInstance.user?.tag} (${this.clientInstance.user?.id})`),
+        );
+
+        if (commands.hasSlashCommands()) {
+            this.on('interactionCreate', (interaction) =>
+                executionManager.listenCommands(interaction as CommandInteraction),
+            );
+        }
+
+        if (commands.hasChannelInputCommands()) {
+            console.log('entro');
+            this.on('messageCreate', (message) => executionManager.listenCommands(message));
+        }
     }
 
-    public on(event: string, listener: (...args: any[]) => void) {
+    public on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void) {
         this.clientInstance.on(event, listener);
     }
 

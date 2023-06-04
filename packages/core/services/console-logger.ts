@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { red, magenta, yellow, cyan, green, reset as resetColor } from '../constants';
 import { existsSync, mkdirSync, WriteStream, createWriteStream } from 'fs';
 
@@ -44,7 +45,7 @@ export interface ConsoleLoggerOptions {
      */
     context?: string;
     /**
-     * Spaces to indent the output.
+     * The number of the max length of the text. If the provided text is not longer than "indent", the text will be padded with spaces to reach the "indent" length.
      */
     indents?: {
         [key in MessageLogExpressionsKey]?: number;
@@ -66,7 +67,7 @@ export class ConsoleLogger implements AbstractLogger {
         this.options = {
             outputTemplate: options?.outputTemplate || '{pid} {timestamp} - {level} {context} {message}',
             testing: options?.testing ?? false,
-            logLevels: options?.logLevels || ['debug', 'error', 'warn', 'log', 'verbose'],
+            logLevels: options?.logLevels || defaultLogLevels,
             allowWriteFiles: options?.allowWriteFiles ?? true,
             allowConsole: options?.allowConsole ?? true,
             context: options?.context || 'Bot',
@@ -91,14 +92,7 @@ export class ConsoleLogger implements AbstractLogger {
         if (this.options.allowConsole) {
             const stdType = level === 'error' ? 'stderr' : 'stdout';
             // eslint-disable-next-line security/detect-object-injection
-            process[stdType].write(
-                `${this.createMessage({
-                    level,
-                    message,
-                    context,
-                    colorize: true,
-                })}\n`,
-            );
+            process[stdType].write(`${this.createMessage({ level, message, context, colorize: true })}\n`);
         }
         if (this.options.allowWriteFiles && this.options.folderPath) {
             this.write(this.createMessage({ level, message, context, colorize: false }), level);
@@ -119,7 +113,7 @@ export class ConsoleLogger implements AbstractLogger {
         const pid = this.getPid();
         const timestamp = this.getTimestamp(true);
 
-        return (this.options.outputTemplate as string)
+        return this.options.outputTemplate
             .replaceAll(
                 '{timestamp}',
                 `${colorize ? `${green}${timestamp}${resetColor}` : timestamp}${this.formatIndentationText(
@@ -161,9 +155,11 @@ export class ConsoleLogger implements AbstractLogger {
      * @param { string } text - The text to format.
      * @returns { string } Spaces to indent the text.
      */
-    private formatIndentationText = (indent: number, text: string) =>
-        ' '.repeat(indent - text?.length <= 0 ? 0 : indent - text?.length);
-
+    private formatIndentationText = (indent: number, text: string): string => {
+        const textLength = text?.length || 0;
+        const indentationLength = Math.max(0, indent - textLength);
+        return ' '.repeat(indentationLength);
+    };
     /**
      * Write the log.
      * @param { string } message - The message to log.

@@ -1,4 +1,5 @@
-import { Command, ICommand, Message, type PipeExecutable } from '@nodecord/core';
+import { Command, ICommand, Msg, type PipeExecutable } from '@nodecord/core';
+import type { Message } from 'discord.js';
 
 class MessagePipe implements PipeExecutable {
     async run(message: unknown) {
@@ -11,9 +12,9 @@ MessagePipe;
     aliases: ['p'],
 })
 export class PingCommand implements ICommand {
-    execute(@Message() message: object, @Message() xd: string) {
-        message;
-        xd;
+    execute(@Msg() message: Message) {
+        message.channel.send('Pong!');
+
         return 'hola';
     }
 }

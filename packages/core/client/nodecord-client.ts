@@ -12,6 +12,7 @@ import type { NodecordClientOptions, AbstractClientAdapter } from '../interfaces
  * @publicApi
  */
 export class NodecordClient<IAdapterOptions extends object> {
+    private logger = new Logger('NodecordClient');
     /**
      * Map of all categories.
      * `<CategoryName, CategoryObject>`
@@ -54,10 +55,10 @@ export class NodecordClient<IAdapterOptions extends object> {
         this.options = clientOptions;
         this.adapter = clientAdapter;
 
-        clientAdapter.initialize(clientOptions);
         if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
 
         this.start(clientOptions);
+        clientAdapter.initialize(this.commands);
     }
 
     private start(config: NodecordClientOptions): void {
@@ -72,6 +73,10 @@ export class NodecordClient<IAdapterOptions extends object> {
                 category.commands.forEach((command) => this.commands.set(command.metadata.name, command)),
             );
         }, shouldRethrow);
+
+        this.categories.forEach((category) => {
+            this.logger.log(`Mapped ${category.metadata.name} with ${category.commands.length} commands.`);
+        });
     }
 
     private isClientAdapter(

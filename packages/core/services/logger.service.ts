@@ -30,74 +30,52 @@ export class Logger implements AbstractLogger {
 
             // But if "instanceOptions" was provided, we will use it to create the new (and unique instance of ConsoleLogger).
         } else if (instanceOptions && !Logger.staticInstance) {
-            console.debug('Creating a new instance of ConsoleLogger');
             Logger.staticInstance = new ConsoleLogger({ ...instanceOptions, context: defaultContext });
         }
         // Local instance for this instance of the logger.
         this.localInstanceRef = Logger.staticInstance;
-        this.verbose('Logger initialized');
     }
 
     // Public methods
-    /**
-     * Write an 'log' message.
-     */
+
     public log(message: logMessage, context = this.defaultContext) {
         this.localInstanceRef?.log(message, context);
     }
-    /**
-     * Write an 'error' message.
-     */
+
     public error(message: logMessage, context = this.defaultContext) {
         this.localInstanceRef?.error(message, context);
     }
-    /**
-     * Write an 'debug' message.
-     */
+
     public debug(message: logMessage, context = this.defaultContext) {
         this.localInstanceRef?.debug(message, context);
     }
-    /**
-     * Write an 'verbose' message.
-     */
+
     public verbose(message: logMessage, context = this.defaultContext) {
         this.localInstanceRef?.verbose(message, context);
     }
-    /**
-     * Write an 'warn' message.
-     */
+
     public warn(message: logMessage, context = this.defaultContext) {
         this.localInstance?.warn(message, context);
     }
 
     // Static methods
-    /**
-     * Write an 'log' message.
-     */
+
     static log(message: logMessage, context?: string) {
         this.staticInstance?.log(message, context);
     }
-    /**
-     * Write an 'error' message.
-     */
+
     static error(message: logMessage, context?: string) {
         this.staticInstance?.error(message, context);
     }
-    /**
-     * Write an 'debug' message.
-     */
+
     static debug(message: logMessage, context?: string) {
         this.staticInstance?.debug(message, context);
     }
-    /**
-     * Write an 'verbose' message.
-     */
+
     static verbose(message: logMessage, context?: string) {
         this.staticInstance?.verbose(message, context);
     }
-    /**
-     * Write an 'warn' message.
-     */
+
     static warn(message: logMessage, context?: string) {
         this.staticInstance?.warn(message, context);
     }

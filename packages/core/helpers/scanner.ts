@@ -2,7 +2,13 @@ import { COMMAND_WATERMARK, CATEGORY_WATERMARK, MAIN_MODULE_WATERMARK } from '@n
 
 export class Scanner {
     static isCommand(instance: any): boolean {
-        return !!Reflect.hasMetadata(COMMAND_WATERMARK, instance);
+        const metadata = Reflect.getMetadata(COMMAND_WATERMARK, instance) as { channelInputCommand?: true };
+        // console.log(!!metadata?.channelInputCommand, metadata);
+        return !!metadata?.channelInputCommand;
+    }
+    static isSlashCommand(instance: any): boolean {
+        const metadata = Reflect.getMetadata(COMMAND_WATERMARK, instance) as { slashCommand?: true };
+        return !!metadata?.slashCommand;
     }
     static isCategory(instance: any): boolean {
         return !!Reflect.hasMetadata(CATEGORY_WATERMARK, instance);

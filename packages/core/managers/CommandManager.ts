@@ -1,4 +1,4 @@
-import { Logger, DefinedCommand } from '@nodecord/core';
+import { Logger, type DefinedCommand, Scanner } from '@nodecord/core';
 
 export class CommandManager extends Map<string, DefinedCommand> {
     private logger = new Logger('CommandManager');
@@ -24,5 +24,13 @@ export class CommandManager extends Map<string, DefinedCommand> {
             }
         }
         return command;
+    }
+
+    public hasSlashCommands(): boolean {
+        return Array.from(this.values()).some((command) => Scanner.isSlashCommand(command.constructor));
+    }
+
+    public hasChannelInputCommands(): boolean {
+        return Array.from(this.values()).some((command) => Scanner.isCommand(command.constructor));
     }
 }

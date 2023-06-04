@@ -26,7 +26,7 @@ export function Command(options: CommandOptions): ClassDecorator;
  */
 export function Command(options: CommandOptions): ClassDecorator {
     return (target: object) => {
-        Reflect.defineMetadata(COMMAND_WATERMARK, true, target);
+        Reflect.defineMetadata(COMMAND_WATERMARK, { channelInputCommand: true }, target);
         Reflect.defineMetadata(COMMAND_METADATA, options, target);
     };
 }
