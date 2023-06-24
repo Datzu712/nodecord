@@ -30,15 +30,15 @@ export class NodecordClient<IAdapterOptions extends object> {
 
     /**
      * Nodecord client constructor.
-     * @param module - Main module of the client.
-     * @param options - Nodecord client options.
+     * @param { any } module - Main module of the client.
+     * @param { NodecordClientOptions & IAdapterOptions | undefined } options - Nodecord client options.
      */
     constructor(module: any, options?: NodecordClientOptions & IAdapterOptions);
     /**
      * Nodecord client constructor.
-     * @param module - Main module of the client.
-     * @param adapter - The client adapter (djs or biscuit client adapter).
-     * @param options - Nodecord client options.
+     * @param { any } module - Main module of the client.
+     * @param { AbstractClientAdapter } adapter - The client adapter (djs or biscuit client adapter).
+     * @param { NodecordClientOptions & IAdapterOptions } options - Nodecord client options.
      */
     constructor(module: any, adapter: AbstractClientAdapter, options: NodecordClientOptions & IAdapterOptions);
     constructor(
