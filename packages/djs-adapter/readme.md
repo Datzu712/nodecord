@@ -1,4 +1,4 @@
-# @nodecord/core
+# @nodecord/djs-adapter
 <p align="center">
   <a href="/" target="blank"><img src="https://media.discordapp.net/attachments/838828747762827338/1122284372184281169/image.png" width="500" alt="nodecord logo" /></a>
 </p>
