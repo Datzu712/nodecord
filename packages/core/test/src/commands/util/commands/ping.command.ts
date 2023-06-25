@@ -1,17 +1,10 @@
-import { Command, ICommand, Message, type PipeExecutable } from '@nodecord/core';
+import { Command, ICommand } from '@nodecord/core';
 
-class MessagePipe implements PipeExecutable {
-    async run(message: unknown) {
-        return message;
-    }
-}
 @Command({
     name: 'ping',
 })
 export class PingCommand implements ICommand {
-    execute(@Message(MessagePipe) message: object, @Message() xd: string) {
-        message;
-        xd;
+    execute() {
         return 'hola';
     }
 }
