@@ -1,5 +1,5 @@
 {
-    "name": "@nodecord/core",
+    "name": "@nodecord/djs-adapter",
     "version": "1.2.0-alfa.1",
     "description": "A powerful Node.js framework for create efficient and scalable discord bots. (common)",
     "scripts": {
@@ -9,17 +9,6 @@
         "type": "git",
         "url": "git+https://github.com/Datzu712/nodecord.git"
     },
-    "keywords": [
-        "discord",
-        "client",
-        "bot",
-        "discordapp",
-        "node",
-        "api",
-        "typescript",
-        "framework",
-        "tool"
-    ],
     "author": "Datzu712",
     "license": "MIT",
     "bugs": {
@@ -27,8 +16,20 @@
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
     "devDependencies": {
-        "@types/node": "^18.11.15",
-        "ts-essentials": "^9.3.0",
+        "@types/node": "^20.2.5",
         "reflect-metadata": "^0.1.13"
+    },
+    "dependencies": {
+        "discord.js": "^14.11.0",
+        "prettier": "^2.8.8",
+        "@typescript-eslint/eslint-plugin": "^5.59.8",
+        "@typescript-eslint/parser": "^5.59.8",
+        "eslint": "^8.41.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-prettier": "^4.2.1",
+        "eslint-plugin-security": "^1.7.1"
+    },
+    "peerDependencies": {
+        "@nodecord/core": "1.2.0-alfa.1"
     }
 }

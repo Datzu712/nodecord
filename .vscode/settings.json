@@ -1,6 +1,13 @@
 {
     "cSpell.words": [
-        "nodecord"
+        "nodecord",
+        "Nodecord"
     ],
-    "rpc.enabled": true
+    "rpc.enabled": false,
+    "vscord.enabled": true,
+    "conventionalCommits.scopes": [
+        "core & adapter",
+        "monorepo",
+        "core"
+    ]
 }

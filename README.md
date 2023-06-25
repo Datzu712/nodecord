@@ -1,10 +1,83 @@
-# nodecord
-A powerful Node.js framework for create efficient and scalable discord bots with TypeScript.
+<p align="center">
+  <a href="/" target="blank"><img src="https://media.discordapp.net/attachments/838828747762827338/1122284372184281169/image.png" width="500" alt="nodecord logo" /></a>
+</p>
 
-# About this project
-This project arose by the idea of create a framework similar as [nestjs](https://nestjs.com/), but for discord using some very popular modules like [discord.js](https://discord.js.org/#/) and [Eris](https://abal.moe/Eris/). 
+<p align="center"><strong>A powerful Discord API wrapper for Node.js<strong></p>
 
-At the moment, the main version of this package and main branch of this repository will not have any functionally (at the moment) but we are going to develop in the dev branch of this repository.
+# Basic bot usage
 
-# When this project will be ready?
-The version 1.2.0 will launched when we have a good implementation with the latest versions of discord.js, with slash commands, etc. See the [branch dev](https://github.com/Datzu712/nodecord/tree/dev) for more information about the actual status of this project!
+Commands are a way that users can interact with your bot. We also support slash commands.
+```ts
+// src/commands/util/ping.command.ts
+import { 
+    Command, 
+    User,
+    ICommand,
+} from '@nodecord/core';
+
+@Command({
+    name: 'ping',
+    aliases: ['p'],
+})
+export class PingCommand implements ICommand {
+    execute(@User() user: User) {
+        return `Pong ${user.tag}!`;
+    }
+}
+```
+
+Categories are a way to group commands together.
+```ts
+// src/commands/util/util.category.ts
+import { Category } from '@nodecord/core';
+
+import { PingCommand } from './commands/ping.command';
+
+@Category({
+    metadata: {
+        name: 'util',
+    },
+    commands: [PingCommand],
+})
+export class UtilityCategory {}
+```
+
+The client module will include all categories, custom events, providers, etc...
+```ts
+import { ClientModule } from '@nodecord/core';
+
+import { UtilityCategory } from './commands/util/util.category';
+
+@ClientModule({
+    categories: [UtilityCategory],
+})
+export class Client {}
+```
+
+And finally, the main file to start the bot.
+```ts
+import { NodecordClient } from '@nodecord/core';
+import { Client } from './client.module';
+import { config } from 'dotenv';
+import { Partials, type ClientOptions, IntentsBitField } from 'discord.js';
+import { resolve } from 'path';
+
+config({ path: resolve(__dirname + '/../.env') });
+
+(async function () {
+    const bot = new NodecordClient<ClientOptions>(Client, {
+        abortOnError: true,
+        intents: [
+            IntentsBitField.Flags.MessageContent,
+            IntentsBitField.Flags.Guilds,
+            IntentsBitField.Flags.GuildMessages,
+        ],
+        partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.User],
+    });
+
+    bot.login(process.env.DISCORD_CLIENT_TOKEN);
+})();
+```
+
+## About the actual status of nodecord
+Nodecord is still in development, and is not ready for production use. We are working hard to make it ready for production use, but we need your help! If you want to help us, please join our [discord server](https://discord.gg/BSaERbS) and contact us.
