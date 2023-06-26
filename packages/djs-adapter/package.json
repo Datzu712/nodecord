@@ -18,15 +18,15 @@
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
     "devDependencies": {
-        "@types/node": "^20.2.5",
+        "@types/node": "^20.3.1",
         "reflect-metadata": "^0.1.13"
     },
     "dependencies": {
         "discord.js": "^14.11.0",
         "prettier": "^2.8.8",
-        "@typescript-eslint/eslint-plugin": "^5.59.8",
-        "@typescript-eslint/parser": "^5.59.8",
-        "eslint": "^8.41.0",
+        "@typescript-eslint/eslint-plugin": "^5.60.1",
+        "@typescript-eslint/parser": "^5.60.1",
+        "eslint": "^8.43.0",
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-prettier": "^4.2.1",
         "eslint-plugin-security": "^1.7.1"
@@ -40,5 +40,8 @@
 			"url": "https://github.com/Datzu712",
 			"author": true
 		}
-	]
+	],
+    "peerDependencies": {
+        "@nodecord/core": "0.0.1-alfa.6"
+    }
 }

@@ -1,4 +1,4 @@
-import { COMMAND_WATERMARK, CATEGORY_WATERMARK, MAIN_MODULE_WATERMARK } from '@nodecord/core/constants';
+import { COMMAND_WATERMARK, CATEGORY_WATERMARK, MAIN_MODULE_WATERMARK } from '../constants';
 
 export class Scanner {
     static isCommand(instance: any): boolean {

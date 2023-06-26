@@ -1,4 +1,5 @@
-import { Logger, type DefinedCategory } from '@nodecord/core';
+import type { DefinedCategory } from '../interfaces/category/defined-category.interface';
+import { Logger } from '../services/logger.service';
 
 export class CategoryManager extends Map<string, DefinedCategory> {
     private logger = new Logger('CategoryManager');

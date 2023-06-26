@@ -1,5 +1,5 @@
-import type { CommandMetadata, CategoryMetadata, ClientModuleMetadata } from '@nodecord/core/interfaces';
-import { COMMAND_METADATA } from '@nodecord/core/constants';
+import type { CommandMetadata, CategoryMetadata, ClientModuleMetadata } from '../interfaces';
+import { COMMAND_METADATA } from '../constants/command';
 import { Scanner } from './scanner';
 
 const INVALID_CLASS_ERROR = (target: string, decorator: string, instanceName = 'unknown') =>

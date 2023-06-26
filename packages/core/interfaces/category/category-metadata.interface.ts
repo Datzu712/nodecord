@@ -1,4 +1,5 @@
-import type { ICommand, Type } from '@nodecord/core';
+import type { ICommand } from '../command/command.interface';
+import { Type } from '../../interfaces/type.interface';
 
 export interface CategoryMetadata {
     metadata: {

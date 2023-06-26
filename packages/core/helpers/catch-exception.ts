@@ -1,4 +1,4 @@
-import { Logger } from '@nodecord/core';
+import { Logger } from '../services/logger.service';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const defaultTeardown = (_e: Error): void => process.exit(1);

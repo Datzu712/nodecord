@@ -1,6 +1,6 @@
 import { EventEmitter } from 'stream';
-import { Logger, type AbstractLogger } from '@nodecord/core/services/logger.service';
-import { loadAdapter } from '@nodecord/core/helpers/load-adapter';
+import { Logger, type AbstractLogger } from '../services/logger.service';
+import { loadAdapter } from '../helpers/load-adapter';
 import { CommandManager, CategoryManager } from '../managers';
 import { ExceptionCatcher } from '../helpers/catch-exception';
 import { Injector } from '../helpers/injector';

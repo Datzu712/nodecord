@@ -31,7 +31,6 @@ export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
         }
 
         if (commands.hasChannelInputCommands()) {
-            console.log('entro');
             this.on('messageCreate', (message) => executionManager.listenCommands(message));
         }
     }
