@@ -1,4 +1,4 @@
-import type { DefinedCommand } from '@nodecord/core';
+import type { DefinedCommand } from '../command';
 
 export interface DefinedCategory {
     metadata: {

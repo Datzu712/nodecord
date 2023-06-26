@@ -3,7 +3,7 @@
           "module": "CommonJS",
           "moduleResolution": "node",
           "declaration": true,
-          "sourceMap": true,
+          "sourceMap": false,
           "emitDecoratorMetadata": true,
           "experimentalDecorators": true,
           "useUnknownInCatchVariables": false,

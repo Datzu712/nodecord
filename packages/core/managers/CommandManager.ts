@@ -1,4 +1,6 @@
-import { Logger, type DefinedCommand, Scanner } from '@nodecord/core';
+import { Scanner } from '../helpers/scanner';
+import type { DefinedCommand } from '../interfaces/command/defined-command.interface';
+import { Logger } from '../services/logger.service';
 
 export class CommandManager extends Map<string, DefinedCommand> {
     private logger = new Logger('CommandManager');
