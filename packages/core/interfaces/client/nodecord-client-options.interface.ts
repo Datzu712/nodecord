@@ -15,7 +15,7 @@ export interface NodecordClientOptions {
     abortOnError?: boolean;
 
     /**
-     * This prefix only works for messages-based commands.
+     * This prefix only works for messages-based commands (legacy commands).
      */
-    prefix?: string;
+    prefix?: string[] | string;
 }

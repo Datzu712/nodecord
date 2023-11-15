@@ -8,7 +8,7 @@ import { pingSlashOptions } from './options/ping.options';
     options: pingSlashOptions,
 })
 export class PingSlashCommand implements ICommand {
-    execute(@Interaction() message: ChatInputCommandInteraction) {
-        message.channel.send('Pong!');
+    execute(@Interaction() interaction: ChatInputCommandInteraction) {
+        interaction.reply('Pong!');
     }
 }

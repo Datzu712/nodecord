@@ -40,8 +40,8 @@ export class CommandManager extends Map<string, DefinedCommand> {
     /**
      * Add prefix to message-based commands.
      */
-    public addPrefix(prefix: string): void {
-        this.prefixes.push(prefix);
+    public addPrefix(prefix: string | string[]): void {
+        this.prefixes.push(...prefix);
     }
     public deletePrefix(position?: number): void {
         if (position) {
@@ -57,7 +57,9 @@ export class CommandManager extends Map<string, DefinedCommand> {
     }
 
     public getSlashCommands(): DefinedCommand[] {
-        return Array.from(this.values()).filter((command) => Scanner.isSlashCommand(command.constructor));
+        return Array.from(this.values()).filter(
+            (command) => Scanner.isSlashCommand(command.constructor) && command.metadata.options,
+        );
     }
     public getLegacyCommands(): DefinedCommand[] {
         return Array.from(this.values()).filter((command) => Scanner.isLegacyCommand(command.constructor));

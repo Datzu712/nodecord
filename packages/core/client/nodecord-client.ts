@@ -57,6 +57,10 @@ export class NodecordClient<IAdapterOptions extends object> {
 
         if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
 
+        if (clientOptions?.prefix) {
+            this.commands.addPrefix(clientOptions.prefix);
+        }
+
         this.start(clientOptions);
         clientAdapter.initialize(this.commands);
     }
@@ -78,14 +82,14 @@ export class NodecordClient<IAdapterOptions extends object> {
             this.logger.log(
                 `Mapped ${category.metadata.name} category with ${
                     category.commands.filter((c) => c.metadata.options).length
-                } slash and ${category.commands.filter((c) => !c.metadata.options).length} legacy commands`,
+                } slash and ${category.commands.filter((c) => !c.metadata.options).length} legacy command(s)`,
             );
         });
 
         this.logger.log(
-            `Loaded successful ${this.categories.size} categories and ${this.commands.size} commands (${
+            `Loaded successful ${this.categories.size} categories and ${this.commands.size} command(s) (${
                 this.commands.getSlashCommands().length
-            } slash commands and ${this.commands.getLegacyCommands().length} legacy commands).`,
+            } slash command(s) and ${this.commands.getLegacyCommands().length} legacy commands).`,
         );
     }
 
@@ -106,5 +110,9 @@ export class NodecordClient<IAdapterOptions extends object> {
 
     public async login(token: string): Promise<void> {
         await this.adapter.login(token);
+    }
+
+    public async loadSlashCommands(token: string, clientId: string): Promise<void> {
+        await this.adapter.loadSlashCommands(token, clientId);
     }
 }
