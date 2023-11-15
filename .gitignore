@@ -285,3 +285,4 @@ fabric.properties
 .idea/**/azureSettings.xml
 
 nx-cloud.env
+.nx

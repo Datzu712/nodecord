@@ -75,8 +75,18 @@ export class NodecordClient<IAdapterOptions extends object> {
         }, shouldRethrow);
 
         this.categories.forEach((category) => {
-            this.logger.log(`Mapped ${category.metadata.name} with ${category.commands.length} commands.`);
+            this.logger.log(
+                `Mapped ${category.metadata.name} category with ${
+                    category.commands.filter((c) => c.metadata.options).length
+                } slash and ${category.commands.filter((c) => !c.metadata.options).length} legacy commands`,
+            );
         });
+
+        this.logger.log(
+            `Loaded successful ${this.categories.size} categories and ${this.commands.size} commands (${
+                this.commands.getSlashCommands().length
+            } slash commands and ${this.commands.getLegacyCommands().length} legacy commands).`,
+        );
     }
 
     private isClientAdapter(

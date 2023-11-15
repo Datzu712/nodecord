@@ -1,5 +1,6 @@
 import { MetadataScanner } from './metadata-scanner';
 import type { CategoryMetadata, DefinedCategory, DefinedCommand } from '../interfaces';
+import { Scanner } from './scanner';
 
 export class Injector {
     constructor(private module: any) {}
@@ -16,7 +17,7 @@ export class Injector {
             const commands = this.loadCommands(categoryMetadata);
             const category = { ...categoryMetadata, commands } as DefinedCategory;
 
-            commands.forEach((command) => (command.metadata.category = category));
+            // commands.forEach((command) => (command.metadata.category = category));
             computedCategories.push(category);
         }
         return computedCategories;
@@ -30,7 +31,14 @@ export class Injector {
                 // todo check constructor required arguments
                 const command = new CommandInstance();
 
-                return Object.assign(command, { metadata }) as DefinedCommand;
+                const commandName = Scanner.isSlashCommand(CommandInstance) ? `/${metadata.name}` : metadata.name;
+
+                return Object.assign(command, {
+                    metadata: Object.assign(metadata, {
+                        name: commandName,
+                        category,
+                    }),
+                }) as DefinedCommand;
             }) || []
         );
     }

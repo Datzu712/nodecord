@@ -9,5 +9,9 @@ export interface CommandMetadata extends ICommand {
         name: string;
         aliases: string[];
         category: DefinedCategory;
+        /**
+         * Only for slash commands.
+         */
+        options?: Record<string, any>;
     };
 }

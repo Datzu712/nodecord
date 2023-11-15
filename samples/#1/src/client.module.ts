@@ -1,6 +1,6 @@
 import { ClientModule } from '@nodecord/core';
 
-import { UtilityCategory } from './commands/util/util.category';
+import { UtilityCategory } from './categories/util/util.category';
 
 @ClientModule({
     categories: [UtilityCategory],

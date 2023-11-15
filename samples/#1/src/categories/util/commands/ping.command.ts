@@ -14,8 +14,6 @@ MessagePipe;
 export class PingCommand implements ICommand {
     execute(@Msg() message: Message) {
         message.channel.send('Pong!');
-
-        return 'hola';
     }
 }
 // console.log(Reflect.getMetadata('__commandExecutionArguments__', PingCommand, 'execute'));

@@ -3,7 +3,7 @@
     "version": "0.0.1-alfa.6",
     "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
     "types": "./dist/index.d.ts",
-    "main": "./dist/index.js",
+
     "scripts": {
         "build": "tsc"
     },
@@ -29,8 +29,8 @@
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
     "devDependencies": {
-        "@types/node": "^18.11.15",
-        "ts-essentials": "^9.3.0",
+        "@types/node": "^20.9.0",
+        "ts-essentials": "^9.4.1",
         "reflect-metadata": "^0.1.13"
     },
     "peerDependencies": {
