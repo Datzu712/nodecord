@@ -60,4 +60,18 @@ export function Message(): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.MESSAGE)();
 }
 
+/**
+ * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
+ * Example: `execute(@Interaction() interaction)`
+ */
+export function Interaction(): ParameterDecorator;
+
+/**
+ * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
+ * Example: `execute(@Interaction() interaction)`
+ */
+export function Interaction(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.INTERACTION)();
+}
+
 export const Msg = Message;

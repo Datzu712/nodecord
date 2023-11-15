@@ -4,6 +4,7 @@ import { Logger } from '../services/logger.service';
 
 export class CommandManager extends Map<string, DefinedCommand> {
     private logger = new Logger('CommandManager');
+    public readonly prefixes: string[] = [];
 
     /**
      * Get command by name.
@@ -34,5 +35,33 @@ export class CommandManager extends Map<string, DefinedCommand> {
 
     public hasChannelInputCommands(): boolean {
         return Array.from(this.values()).some((command) => Scanner.isCommand(command.constructor));
+    }
+
+    /**
+     * Add prefix to message-based commands.
+     */
+    public addPrefix(prefix: string | string[]): void {
+        this.prefixes.push(...prefix);
+    }
+    public deletePrefix(position?: number): void {
+        if (position) {
+            this.prefixes.splice(position, 1);
+        } else {
+            Object.defineProperty(this, 'prefixes', {
+                value: [],
+                writable: false,
+                enumerable: true,
+                configurable: false,
+            });
+        }
+    }
+
+    public getSlashCommands(): DefinedCommand[] {
+        return Array.from(this.values()).filter(
+            (command) => Scanner.isSlashCommand(command.constructor) && command.metadata.options,
+        );
+    }
+    public getLegacyCommands(): DefinedCommand[] {
+        return Array.from(this.values()).filter((command) => Scanner.isLegacyCommand(command.constructor));
     }
 }

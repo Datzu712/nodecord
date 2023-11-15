@@ -3,7 +3,7 @@ import { COMMAND_METADATA } from '../constants/command';
 import { Scanner } from './scanner';
 
 const INVALID_CLASS_ERROR = (target: string, decorator: string, instanceName = 'unknown') =>
-    `An invalid ${target} class was provided. Make sure that the class is decorated with @${decorator}() decorator. Class: ${instanceName}`;
+    `An invalid ${target} class was provided. Make sure the class is decorated with @${decorator}() decorator. Class: ${instanceName}`;
 
 export class MetadataScanner {
     public static getCommandMetadata(instance: any): CommandMetadata['metadata'] {
@@ -11,7 +11,9 @@ export class MetadataScanner {
             throw new Error(INVALID_CLASS_ERROR('command', 'Command', instance.constructor?.name));
         }
 
-        return Reflect.getMetadata(COMMAND_METADATA, instance) as CommandMetadata['metadata'];
+        const commandMetadata = Reflect.getMetadata(COMMAND_METADATA, instance) as CommandMetadata['metadata'];
+
+        return commandMetadata;
     }
 
     public static getCategoryMetadata(instance: any): CategoryMetadata {

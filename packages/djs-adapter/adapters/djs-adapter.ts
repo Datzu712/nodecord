@@ -4,7 +4,7 @@ import { AbstractClientAdapter, Logger } from '@nodecord/core';
 import { ExecutionManager } from './execution-manager';
 import type { CommandManager } from '@nodecord/core/managers';
 
-export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
+export class DiscordJsAdapter extends AbstractClientAdapter<Client, ExecutionManager> {
     private logger = new Logger('djsAdapter');
 
     constructor(instanceOrOptions: Client | ClientOptions) {
@@ -13,12 +13,18 @@ export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
         super(instance);
     }
 
+    public async loadSlashCommands(token: string, clientId: string) {
+        if (!this.executionManager) throw new Error('Execution manager not initialized.');
+
+        await this.executionManager.registerSlashCommands(token, clientId);
+    }
+
     public async login(token: string) {
         this.clientInstance.login(token);
     }
 
     public initialize(commands: CommandManager) {
-        const executionManager = new ExecutionManager(commands);
+        this.executionManager = new ExecutionManager(commands);
 
         this.on('ready', () =>
             this.logger.log(`Logged in as ${this.clientInstance.user?.tag} (${this.clientInstance.user?.id})`),
@@ -26,12 +32,12 @@ export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
 
         if (commands.hasSlashCommands()) {
             this.on('interactionCreate', (interaction) =>
-                executionManager.listenCommands(interaction as CommandInteraction),
+                this.executionManager.listenCommands(interaction as CommandInteraction),
             );
         }
 
         if (commands.hasChannelInputCommands()) {
-            this.on('messageCreate', (message) => executionManager.listenCommands(message));
+            this.on('messageCreate', (message) => this.executionManager.listenCommands(message));
         }
     }
 

@@ -9,5 +9,6 @@
         "core & adapter",
         "monorepo",
         "core"
-    ]
+    ],
+    "discord.enabled": true
 }
