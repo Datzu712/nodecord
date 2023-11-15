@@ -1,6 +1,6 @@
 {
     "name": "@nodecord/djs-adapter",
-    "version": "0.0.1-alfa.7",
+    "version": "0.0.1-alfa.9",
     "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
     "types": "./dist/index.d.ts",
     "main": "./dist/index.js",
@@ -42,6 +42,6 @@
 		}
 	],
     "peerDependencies": {
-        "@nodecord/core": "0.0.1-alfa.7"
+        "@nodecord/core": "0.0.1-alfa.9"
     }
 }
