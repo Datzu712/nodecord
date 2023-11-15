@@ -23,7 +23,10 @@ export class Logger implements AbstractLogger {
     protected localInstanceRef?: AbstractLogger;
     protected static logLevels: LogLevels[];
 
-    constructor(private defaultContext?: string, instanceOptions?: ConsoleLoggerOptions) {
+    constructor(
+        private defaultContext?: string,
+        instanceOptions?: ConsoleLoggerOptions,
+    ) {
         // If theres not a static instance it means that the logger is not initialized, so if we don't have the "instanceOptions" to create a new instance of "ConsoleLogger", we will use the default logger.
         if (!Logger.staticInstance && !instanceOptions) {
             Logger.staticInstance = defaultLogger;

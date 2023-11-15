@@ -1,9 +1,9 @@
 {
     "name": "@nodecord/core",
-    "version": "0.0.1-alfa.6",
+    "version": "0.0.1-alfa.7",
     "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
     "types": "./dist/index.d.ts",
-
+    "main": "./dist/index.js",
     "scripts": {
         "build": "tsc"
     },
@@ -34,7 +34,7 @@
         "reflect-metadata": "^0.1.13"
     },
     "peerDependencies": {
-        "@nodecord/djs-adapter": "0.0.1-alfa.5"
+        "@nodecord/djs-adapter": "0.0.1-alfa.7"
     },
     "publishConfig": {
         "access": "public"

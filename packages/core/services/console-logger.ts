@@ -200,8 +200,8 @@ export class ConsoleLogger implements AbstractLogger {
                 this.options.testing
                     ? `${fileType == 'error' ? '.error' : ''}.test`
                     : fileType === 'log'
-                    ? ''
-                    : `-${fileType}`
+                      ? ''
+                      : `-${fileType}`
             }.log`,
             {
                 flags: 'a',
@@ -227,12 +227,12 @@ export class ConsoleLogger implements AbstractLogger {
             level === 'error'
                 ? red
                 : level === 'warn'
-                ? yellow
-                : level === 'debug'
-                ? magenta
-                : level === 'verbose'
-                ? magenta
-                : cyan;
+                  ? yellow
+                  : level === 'debug'
+                    ? magenta
+                    : level === 'verbose'
+                      ? magenta
+                      : cyan;
         return `${color}${level.toUpperCase()}${resetColor}`;
     }
 
