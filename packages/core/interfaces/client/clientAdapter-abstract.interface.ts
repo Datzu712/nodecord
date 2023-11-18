@@ -3,8 +3,8 @@ import type { CommandManager } from '@nodecord/core/managers';
 /**
  * @publicApi
  */
-export abstract class AbstractClientAdapter<TClientInstance = any, TExecutionManager = any> {
-    protected executionManager!: TExecutionManager;
+export abstract class AbstractClientAdapter<TClientInstance = any> {
+    public commands!: CommandManager;
 
     constructor(protected clientInstance: TClientInstance) {}
 

@@ -1,4 +1,4 @@
-import { Command, ICommand, Msg } from '@nodecord/core';
+import { Command, ICommand, Context } from '@nodecord/core';
 import type { Message } from 'discord.js';
 
 @Command({
@@ -6,7 +6,7 @@ import type { Message } from 'discord.js';
     aliases: ['p'],
 })
 export class PingCommand implements ICommand {
-    execute(@Msg() message: Message) {
+    execute(@Context() message: Message) {
         message.channel.send('Pong!');
     }
 }

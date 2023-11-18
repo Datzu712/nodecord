@@ -29,7 +29,7 @@ export class Injector {
             category.commands?.map((CommandInstance) => {
                 const { metadata, params } = MetadataScanner.getCommandMetadata(CommandInstance);
                 const command = new CommandInstance();
-                console.log(params);
+
                 // Slash commands must be prefixed with a slash (/)
                 const commandName = Scanner.isSlashCommand(CommandInstance) ? `/${metadata.name}` : metadata.name;
 

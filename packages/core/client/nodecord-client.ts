@@ -55,6 +55,8 @@ export class NodecordClient<IAdapterOptions extends object> {
         this.options = clientOptions;
         this.adapter = clientAdapter;
 
+        clientAdapter.commands = this.commands;
+
         if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
 
         if (clientOptions?.prefix) {
@@ -69,7 +71,7 @@ export class NodecordClient<IAdapterOptions extends object> {
         const shouldRethrow = config.abortOnError === false ? rethrow : undefined;
         const injector = new Injector(this.module);
 
-        ExceptionCatcher.run(() => {
+        new ExceptionCatcher({ log: true }).run(() => {
             const categories = injector.loadCategoriesWithCommands();
 
             categories.forEach((category) => this.categories.set(category.metadata.name, category));

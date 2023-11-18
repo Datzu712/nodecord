@@ -1,44 +1,6 @@
 import { CommandParamTypes } from '../../enums';
 import { COMMAND_ARGS_METADATA } from '../../constants/command';
-import type { PipeExecutable, Type } from '../../interfaces';
-
-export type ParamData = object | string | number;
-
-// function assignMetadata<TParamType = any, TArgs = any>(
-//     args: TArgs,
-//     paramType: TParamType,
-//     index: number,
-//     data?: ParamData,
-//     ...pipes: (PipeExecutable | Type<PipeExecutable>)[]
-// ) {
-//     return {
-//         ...args,
-//         [`${paramType}:${index}`]: {
-//             index,
-//             data,
-//             pipes,
-//         },
-//     };
-// }
-
-type ParamMetadata = {
-    /**
-     * Index of parameter in the method signature.
-     */
-    index: number;
-    /**
-     * Parameter type.
-     */
-    type: CommandParamTypes;
-    /**
-     * Additional parameter data.
-     */
-    data?: ParamData;
-    /**
-     * Pipes that will be used to transform the received value.
-     */
-    pipes: (PipeExecutable | Type<PipeExecutable>)[];
-};
+import type { ParamMetadata, PipeExecutable, Type } from '../../interfaces';
 
 function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: any, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator {
@@ -70,31 +32,23 @@ function createCommandParamDecorator(paramType: CommandParamTypes) {
 }
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
- * Example: `execute(@Message() message)`
+ * Command handler parameter decorator. Extracts the main argument from the target event (Message or InteractionCreate).
+ * Example: `execute(@Context() message: Message)`
  */
-export function Message(): ParameterDecorator;
+export function Context(): ParameterDecorator;
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
- * Example: `execute(@Message() message)`
+ * Command handler parameter decorator. Extracts the main argument from the target event (Message or InteractionCreate).
+ * @example ```ts
+ * // Legacy commands with message event
+ * execute(@Context() message: Message)
+ *
+ * // Slash commands with interactionCreate event
+ * execute(@Context() interaction: Interaction)
+ * ```
  */
-export function Message(): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.MESSAGE)();
+export function Context(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.CONTEXT)();
 }
 
-/**
- * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
- * Example: `execute(@Interaction() interaction)`
- */
-export function Interaction(): ParameterDecorator;
-
-/**
- * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
- * Example: `execute(@Interaction() interaction)`
- */
-export function Interaction(): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.INTERACTION)();
-}
-
-export const Msg = Message;
+export const Ctx = Context;

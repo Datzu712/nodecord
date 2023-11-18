@@ -1,10 +1,7 @@
-// todo: Change discord.js to @discordjs/rest & @discordjs/ws
-import { Client, type ClientEvents, type ClientOptions, type CommandInteraction } from 'discord.js';
-import { AbstractClientAdapter, Logger } from '@nodecord/core';
-import { ExecutionManager } from './execution-manager';
-import type { CommandManager } from '@nodecord/core/managers';
+import { Client, SlashCommandBuilder, type ClientEvents, type ClientOptions, REST, Routes } from 'discord.js';
+import { AbstractClientAdapter, CommandTypes, Logger } from '@nodecord/core';
 
-export class DiscordJsAdapter extends AbstractClientAdapter<Client, ExecutionManager> {
+export class DiscordJsAdapter extends AbstractClientAdapter<Client> {
     private logger = new Logger('djsAdapter');
 
     constructor(instanceOrOptions: Client | ClientOptions) {
@@ -13,31 +10,42 @@ export class DiscordJsAdapter extends AbstractClientAdapter<Client, ExecutionMan
         super(instance);
     }
 
+    /**
+     * Registers the slash commands for the Discord bot application.
+     * @param token - The Discord bot token.
+     * @param clientId - The Discord bot client ID.
+     */
     public async loadSlashCommands(token: string, clientId: string) {
-        if (!this.executionManager) throw new Error('Execution manager not initialized.');
+        this.checkSlashCommandsIntegrity();
 
-        await this.executionManager.registerSlashCommands(token, clientId);
+        const slashCommands = this.commands.getSlashCommands();
+        const rest = new REST({ version: '10' }).setToken(token);
+
+        await rest.put(Routes.applicationCommands(clientId), {
+            body: slashCommands.map((command) => (command.metadata.options as SlashCommandBuilder).toJSON()),
+        });
+        this.logger.log(`Successfully registered ${slashCommands.length} slash commands`);
     }
 
     public async login(token: string) {
         this.clientInstance.login(token);
     }
 
-    public initialize(commands: CommandManager) {
-        this.executionManager = new ExecutionManager(commands);
-
+    public initialize() {
         this.on('ready', () =>
             this.logger.log(`Logged in as ${this.clientInstance.user?.tag} (${this.clientInstance.user?.id})`),
         );
 
-        if (commands.hasSlashCommands()) {
-            this.on('interactionCreate', (interaction) =>
-                this.executionManager.listenCommands(interaction as CommandInteraction),
-            );
+        if (this.commands.hasSlashCommands()) {
+            this.on('interactionCreate', (interaction) => {
+                if (interaction.isChatInputCommand()) {
+                    this.commands.execute(interaction, interaction.commandName, CommandTypes.SLASH);
+                }
+            });
         }
 
-        if (commands.hasChannelInputCommands()) {
-            this.on('messageCreate', (message) => this.executionManager.listenCommands(message));
+        if (this.commands.hasLegacyCommands()) {
+            this.on('messageCreate', (msg) => this.commands.execute(msg, msg.content, CommandTypes.LEGACY));
         }
     }
 
@@ -51,5 +59,19 @@ export class DiscordJsAdapter extends AbstractClientAdapter<Client, ExecutionMan
 
     public emit(event: string, ...args: any[]) {
         this.clientInstance.emit(event, ...args);
+    }
+
+    /**
+     * Checks the integrity of the slash commands by verifying that each command has options.
+     * Throws an error if a command has no options.
+     */
+    private checkSlashCommandsIntegrity() {
+        const slashCommands = this.commands.getSlashCommands();
+
+        for (const command of slashCommands) {
+            if (!(command.metadata.options instanceof SlashCommandBuilder)) {
+                throw new Error(`Slash command ${command.metadata.name} has no options`);
+            }
+        }
     }
 }

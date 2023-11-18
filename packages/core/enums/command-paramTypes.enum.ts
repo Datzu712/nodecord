@@ -1,8 +1,9 @@
 export enum CommandParamTypes {
-    MESSAGE,
-    INTERACTION,
-    USER,
-    GUILD,
-    ARGS,
-    MEMBER,
+    CONTEXT,
+    CUSTOM,
+    // INTERACTION,
+    // USER,
+    // GUILD,
+    // ARGS,
+    // MEMBER,
 }
