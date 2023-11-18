@@ -1,19 +1,36 @@
-import type { CommandMetadata, CategoryMetadata, ClientModuleMetadata } from '../interfaces';
-import { COMMAND_METADATA } from '../constants/command';
+import type { DefinedCommand, CategoryMetadata, ClientModuleMetadata } from '../interfaces';
+import { COMMAND_METADATA, COMMAND_ARGS_METADATA } from '../constants/command';
 import { Scanner } from './scanner';
 
 const INVALID_CLASS_ERROR = (target: string, decorator: string, instanceName = 'unknown') =>
     `An invalid ${target} class was provided. Make sure the class is decorated with @${decorator}() decorator. Class: ${instanceName}`;
 
 export class MetadataScanner {
-    public static getCommandMetadata(instance: any): CommandMetadata['metadata'] {
+    public static getCommandMetadata(instance: any): Omit<DefinedCommand, 'execute'> {
         if (!Scanner.isCommand(instance)) {
             throw new Error(INVALID_CLASS_ERROR('command', 'Command', instance.constructor?.name));
         }
 
-        const commandMetadata = Reflect.getMetadata(COMMAND_METADATA, instance) as CommandMetadata['metadata'];
+        const metadata = Reflect.getMetadata(COMMAND_METADATA, instance) as DefinedCommand['metadata'];
+        const argsMetadata = this.getCommandParamsMetadata(instance);
 
-        return commandMetadata;
+        return {
+            metadata,
+            params: argsMetadata,
+        };
+    }
+
+    public static getCommandParamsMetadata(instance: any): DefinedCommand['params'] {
+        if (!Scanner.isCommand(instance)) {
+            throw new Error(INVALID_CLASS_ERROR('command', 'Command', instance.constructor?.name));
+        }
+
+        const commandParams = Reflect.getMetadata(
+            COMMAND_ARGS_METADATA,
+            instance,
+            'execute',
+        ) as DefinedCommand['params'];
+        return commandParams || [];
     }
 
     public static getCategoryMetadata(instance: any): CategoryMetadata {

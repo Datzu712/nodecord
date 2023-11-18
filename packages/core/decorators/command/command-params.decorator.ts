@@ -4,22 +4,41 @@ import type { PipeExecutable, Type } from '../../interfaces';
 
 export type ParamData = object | string | number;
 
-function assignMetadata<TParamType = any, TArgs = any>(
-    args: TArgs,
-    paramType: TParamType,
-    index: number,
-    data?: ParamData,
-    ...pipes: (PipeExecutable | Type<PipeExecutable>)[]
-) {
-    return {
-        ...args,
-        [`${paramType}:${index}`]: {
-            index,
-            data,
-            pipes,
-        },
-    };
-}
+// function assignMetadata<TParamType = any, TArgs = any>(
+//     args: TArgs,
+//     paramType: TParamType,
+//     index: number,
+//     data?: ParamData,
+//     ...pipes: (PipeExecutable | Type<PipeExecutable>)[]
+// ) {
+//     return {
+//         ...args,
+//         [`${paramType}:${index}`]: {
+//             index,
+//             data,
+//             pipes,
+//         },
+//     };
+// }
+
+type ParamMetadata = {
+    /**
+     * Index of parameter in the method signature.
+     */
+    index: number;
+    /**
+     * Parameter type.
+     */
+    type: CommandParamTypes;
+    /**
+     * Additional parameter data.
+     */
+    data?: ParamData;
+    /**
+     * Pipes that will be used to transform the received value.
+     */
+    pipes: (PipeExecutable | Type<PipeExecutable>)[];
+};
 
 function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: any, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator {
@@ -35,13 +54,17 @@ function createCommandParamDecorator(paramType: CommandParamTypes) {
                     }
                 });
             }
-            const commandArgs = Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) || {};
-            Reflect.defineMetadata(
-                COMMAND_ARGS_METADATA,
-                assignMetadata(commandArgs, paramType, index, data, ...pipes),
-                target.constructor,
-                key as string,
-            );
+            const commandArgs: ParamMetadata[] =
+                Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) || [];
+
+            commandArgs.push({
+                index,
+                type: paramType,
+                data,
+                pipes,
+            });
+
+            Reflect.defineMetadata(COMMAND_ARGS_METADATA, commandArgs, target.constructor, key as string);
         };
     };
 }

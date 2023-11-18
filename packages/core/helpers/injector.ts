@@ -27,10 +27,10 @@ export class Injector {
         // todo: Import command decorators metadata
         return (
             category.commands?.map((CommandInstance) => {
-                const metadata = MetadataScanner.getCommandMetadata(CommandInstance);
-                // todo check constructor required arguments
+                const { metadata, params } = MetadataScanner.getCommandMetadata(CommandInstance);
                 const command = new CommandInstance();
-
+                console.log(params);
+                // Slash commands must be prefixed with a slash (/)
                 const commandName = Scanner.isSlashCommand(CommandInstance) ? `/${metadata.name}` : metadata.name;
 
                 return Object.assign(command, {
@@ -38,6 +38,7 @@ export class Injector {
                         name: commandName,
                         category,
                     }),
+                    params,
                 }) as DefinedCommand;
             }) || []
         );
