@@ -1,5 +1,5 @@
 import { Type } from '../type.interface';
-import { CommandParamTypes } from '../../enums/command-paramTypes.enum';
+import { CommandParamTypes } from '../../enums/command-param-types.enum';
 import { PipeExecutable } from '../pipe-executable.interface';
 
 export type ParamData = object | string | number;

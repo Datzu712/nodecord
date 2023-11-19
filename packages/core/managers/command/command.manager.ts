@@ -1,12 +1,12 @@
-import { CommandTypes } from '../enums';
-import { Scanner } from '../helpers/scanner';
-import type { DefinedCommand } from '../interfaces/command/defined-command.interface';
-import { Logger } from '../services/logger.service';
+import { CommandTypes } from '../../enums';
+import { Scanner } from '../../helpers/scanner';
+import type { DefinedCommand } from '../../interfaces/command/defined-command.interface';
+import { Logger } from '../../services/logger.service';
 import { ExecutionManager } from './execution.manager';
 
 export class CommandManager extends Map<string, DefinedCommand> {
     private readonly logger = new Logger('CommandManager');
-    private readonly execution = new ExecutionManager(this);
+    private readonly execution = new ExecutionManager();
 
     public readonly prefixes: string[] = [];
 
@@ -73,14 +73,14 @@ export class CommandManager extends Map<string, DefinedCommand> {
         if (type === CommandTypes.SLASH) {
             const command = this.get(`/${commandName}`);
             if (command) {
-                this.execution.run({ command, type, arg });
+                return this.execution.run({ command, type, arg });
             }
         } else {
             const prefix = this.findPrefix(commandName);
             if (prefix) {
                 const command = this.getCommand(commandName.slice(prefix.length).split(' ')[0]);
                 if (command) {
-                    this.execution.run({ command, type, arg });
+                    return this.execution.run({ command, type, arg });
                 }
             }
         }

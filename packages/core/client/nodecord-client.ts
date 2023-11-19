@@ -71,7 +71,7 @@ export class NodecordClient<IAdapterOptions extends object> {
         const shouldRethrow = config.abortOnError === false ? rethrow : undefined;
         const injector = new Injector(this.module);
 
-        new ExceptionCatcher({ log: true }).run(() => {
+        ExceptionCatcher.run(() => {
             const categories = injector.loadCategoriesWithCommands();
 
             categories.forEach((category) => this.categories.set(category.metadata.name, category));
