@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/Datzu712/nodecord#readme",
   "dependencies": {
-    "lerna": "^7.4.2"
+    "lerna": "^8.0.1"
   },
   "devDependencies": {
     "@nrwl/nx-cloud": "^16.5.2",
