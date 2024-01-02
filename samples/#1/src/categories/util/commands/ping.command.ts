@@ -7,6 +7,7 @@ import type { Message } from 'discord.js';
 })
 export class PingCommand implements ICommand {
     execute(@Context() message: Message) {
+        console.log(message);
         message.channel.send('Pong!');
     }
 }
