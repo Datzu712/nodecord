@@ -5,6 +5,7 @@ import { pingSlashOptions } from './options/ping.options';
 @SlashCommand({
     name: 'ping',
     options: pingSlashOptions,
+    global: true,
 })
 export class PingSlashCommand implements ICommand {
     execute(@Context() interaction: ChatInputCommandInteraction) {
