@@ -5,7 +5,7 @@ function MISSING_REQUIRED_DEPENDENCY(dependencyName: string) {
 }
 const logger = new Logger('DependencyLoader');
 
-export function loadAdapter(adapterName: string) {
+export function loadAdapter<TAdapter extends object>(adapterName: string): TAdapter {
     try {
         // eslint-disable-next-line security/detect-non-literal-require
         return require(adapterName);

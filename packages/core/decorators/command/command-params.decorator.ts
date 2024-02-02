@@ -51,4 +51,29 @@ export function Context(): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.CONTEXT)();
 }
 
+/**
+ * Client parameter decorator. Gets the client that wrapper is using.
+ * Example: `execute(@Client() client: Client)`
+ */
+export function Client(): ParameterDecorator;
+
+/**
+ * Client parameter decorator. Gets the client that wrapper is using.
+ * @example ```ts
+ * execute(@Client() client: djsClient)
+ *
+ * execute(@Client() client: BiscuitSession)
+ * ```
+ */
+export function Client(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.CLIENT)();
+}
+
+/**
+ * Alias for `@Context()`
+ */
 export const Ctx = Context;
+/**
+ * Alias for `@Client()`
+ */
+export const LibClient = Client;

@@ -6,7 +6,7 @@ import { ExceptionCatcher } from '../helpers/catch-exception';
 import { Injector } from '../helpers/injector';
 import { rethrow } from '../helpers/rethrow';
 
-import type { NodecordClientOptions, AbstractClientAdapter } from '../interfaces';
+import type { NodecordClientOptions, AbstractClientAdapter, LoadSlashCommandsOptions } from '../interfaces/client';
 
 /**
  * @publicApi
@@ -23,7 +23,7 @@ export class NodecordClient<IAdapterOptions extends object> {
      * Map of all slash and normal commands.
      *`<CommandName, CommandObject>`
      */
-    public readonly commands = new CommandManager();
+    public readonly commands: CommandManager;
 
     private adapter: AbstractClientAdapter;
     private options: NodecordClientOptions & IAdapterOptions;
@@ -55,16 +55,17 @@ export class NodecordClient<IAdapterOptions extends object> {
         this.options = clientOptions;
         this.adapter = clientAdapter;
 
+        this.commands = new CommandManager(this.adapter);
         clientAdapter.commands = this.commands;
 
-        if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger);
+        if (options?.logger) Logger.overrideLocalInstance(clientOptions.logger as AbstractLogger); // todo: change this logger
 
         if (clientOptions?.prefix) {
             this.commands.addPrefix(clientOptions.prefix);
         }
 
         this.start(clientOptions);
-        clientAdapter.initialize(this.commands);
+        clientAdapter.initialize();
     }
 
     private start(config: NodecordClientOptions): void {
@@ -104,8 +105,12 @@ export class NodecordClient<IAdapterOptions extends object> {
         );
     }
 
-    private createClientAdapter(options: NodecordClientOptions & IAdapterOptions): AbstractClientAdapter {
-        const { DiscordJsAdapter } = loadAdapter('@nodecord/djs-adapter');
+    private createClientAdapter(
+        options: NodecordClientOptions & IAdapterOptions,
+    ): AbstractClientAdapter<IAdapterOptions> {
+        const { DiscordJsAdapter } = loadAdapter<{
+            DiscordJsAdapter: new (options: IAdapterOptions) => AbstractClientAdapter<IAdapterOptions>;
+        }>('@nodecord/djs-adapter');
 
         return new DiscordJsAdapter(options);
     }
@@ -114,7 +119,7 @@ export class NodecordClient<IAdapterOptions extends object> {
         await this.adapter.login(token);
     }
 
-    public async loadSlashCommands(token: string, clientId: string): Promise<void> {
-        await this.adapter.loadSlashCommands(token, clientId);
+    public async loadSlashCommands(options: LoadSlashCommandsOptions): Promise<void> {
+        await this.adapter.loadSlashCommands(options);
     }
 }

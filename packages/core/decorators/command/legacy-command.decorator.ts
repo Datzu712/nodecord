@@ -6,7 +6,10 @@ import { CommandTypes } from '../../enums';
 /**
  * Interface defining the options that can be passed `@Command()` decorator
  */
-export type CommandOptions = Omit<MarkOptional<CommandMetadata['metadata'], 'aliases'>, 'category' | 'execute'>;
+export type CommandOptions = Omit<
+    MarkOptional<CommandMetadata['metadata'], 'aliases' | 'global'>,
+    'category' | 'execute'
+>;
 /**
  * Decorator that marks a class as a command for Nodecord and receive a `Message` from discord
  * and produce responses.

@@ -7,6 +7,7 @@ import { CommandTypes } from '../../enums';
  */
 export type SlashCommandOptions = Omit<CommandMetadata['metadata'], 'aliases' | 'execute' | 'category'> & {
     options: any;
+    global: boolean;
 };
 /**
  * Decorator that marks a class as a command for Nodecord and receive a `Interaction` from discord

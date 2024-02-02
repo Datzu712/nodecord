@@ -12,7 +12,7 @@ export class MetadataScanner {
         }
 
         const metadata = Reflect.getMetadata(COMMAND_METADATA, instance) as DefinedCommand['metadata'];
-        const argsMetadata = this.getCommandParamsMetadata(instance);
+        const argsMetadata = MetadataScanner.getCommandParamsMetadata(instance);
 
         return {
             metadata,

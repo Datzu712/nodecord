@@ -1,3 +1,4 @@
+import type { AbstractClientAdapter } from '../../interfaces/client';
 import { CommandTypes } from '../../enums';
 import { Scanner } from '../../helpers/scanner';
 import type { DefinedCommand } from '../../interfaces/command/defined-command.interface';
@@ -6,9 +7,15 @@ import { ExecutionManager } from './execution.manager';
 
 export class CommandManager extends Map<string, DefinedCommand> {
     private readonly logger = new Logger('CommandManager');
-    private readonly execution = new ExecutionManager();
+    private readonly execution: ExecutionManager;
 
     public readonly prefixes: string[] = [];
+
+    constructor(clientAdapter: AbstractClientAdapter) {
+        super();
+
+        this.execution = new ExecutionManager(clientAdapter);
+    }
 
     /**
      * Get command by name.

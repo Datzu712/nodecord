@@ -13,5 +13,10 @@ export interface CommandMetadata extends ICommand {
          * Only for slash commands.
          */
         options?: Record<string, any>;
+
+        /**
+         * Only for slash commands
+         */
+        global: boolean;
     };
 }
