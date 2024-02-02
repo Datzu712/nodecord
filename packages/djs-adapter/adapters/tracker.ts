@@ -1,5 +1,5 @@
 import { CommandTypes, Logger, type AbstractClientAdapter } from '@nodecord/core';
-import { EmbedBuilder, type ChatInputCommandInteraction, type Client } from 'discord.js';
+import { EmbedBuilder, Message, type ChatInputCommandInteraction, type Client } from 'discord.js';
 
 export class EventTracker {
     private logger = new Logger('eventTracker');
@@ -25,7 +25,9 @@ export class EventTracker {
 
         if (this.adapter.commands.hasLegacyCommands()) {
             this.adapter.on('messageCreate', (msg) =>
-                this.adapter.commands.execute(msg, msg.content, CommandTypes.LEGACY),
+                this.trackLegacyCommands(msg, async () =>
+                    this.adapter.commands.execute(msg, msg.content, CommandTypes.LEGACY),
+                ),
             );
         }
     }
@@ -39,6 +41,18 @@ export class EventTracker {
                 interaction.reply(returnedValue);
             } else if (returnedValue instanceof EmbedBuilder) {
                 interaction.reply({ embeds: [returnedValue] });
+            }
+        }
+    }
+
+    public async trackLegacyCommands(msg: Message, cmdCallbackReturn: () => Promise<any>) {
+        const returnedValue = await cmdCallbackReturn();
+
+        if (returnedValue) {
+            if (typeof returnedValue === 'string') {
+                msg.reply(returnedValue);
+            } else if (returnedValue instanceof EmbedBuilder) {
+                msg.reply({ embeds: [returnedValue] });
             }
         }
     }

@@ -1,5 +1,4 @@
-import { SlashCommand, ICommand, Context } from '@nodecord/core';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommand, ICommand } from '@nodecord/core';
 import { pingSlashOptions } from './options/ping.options';
 
 @SlashCommand({
@@ -8,7 +7,7 @@ import { pingSlashOptions } from './options/ping.options';
     global: true,
 })
 export class PingSlashCommand implements ICommand {
-    execute(@Context() interaction: ChatInputCommandInteraction) {
-        interaction.reply('Pong!');
+    execute() {
+        return 'Pong!';
     }
 }
