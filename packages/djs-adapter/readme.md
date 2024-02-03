@@ -36,7 +36,7 @@ export class PingCommand implements ICommand {
 ```ts
 // src/categories/util/slashCommands/ping.command.ts
 import { SlashCommand, ICommand, Interaction } from '@nodecord/core';
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction, Client } from 'discord.js';
 import { pingSlashOptions } from './options/ping.options';
 
 @SlashCommand({
@@ -44,10 +44,22 @@ import { pingSlashOptions } from './options/ping.options';
     options: pingSlashOptions,
 })
 export class PingSlashCommand implements ICommand {
-    execute(@Interaction() interaction: ChatInputCommandInteraction) {
-        interaction.reply('Pong!');
+    execute(@LibClient() client: Client, @Interaction() interaction: ChatInputCommandInteraction) {
+        interaction.reply(`Pong! ${client.ws.ping}ms`);
     }
 }
+
+```
+
+> *Slash command options*
+
+```ts
+// src/categories/util/slashCommands/options/ping.options.ts
+import { SlashCommandBuilder } from 'discord.js';
+
+export const pingSlashOptions = new SlashCommandBuilder()
+    .setName('ping')
+    .setDescription("Shows the bot's ping");
 
 ```
 

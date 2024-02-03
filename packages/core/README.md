@@ -36,7 +36,6 @@ export class PingCommand implements ICommand {
 ```ts
 // src/categories/util/slashCommands/ping.command.ts
 import { SlashCommand, ICommand, Interaction } from '@nodecord/core';
-import type { ChatInputCommandInteraction } from 'discord.js';
 import { pingSlashOptions } from './options/ping.options';
 
 @SlashCommand({
@@ -44,10 +43,22 @@ import { pingSlashOptions } from './options/ping.options';
     options: pingSlashOptions,
 })
 export class PingSlashCommand implements ICommand {
-    execute(@Interaction() interaction: ChatInputCommandInteraction) {
-        interaction.reply('Pong!');
+    execute() {
+        return 'Pong!';
     }
 }
+
+```
+
+> *Slash command options*
+
+```ts
+// src/categories/util/slashCommands/options/ping.options.ts
+import { SlashCommandBuilder } from 'discord.js';
+
+export const pingSlashOptions = new SlashCommandBuilder()
+    .setName('ping')
+    .setDescription("Shows the bot's ping");
 
 ```
 
@@ -87,7 +98,7 @@ import { UtilityCategory } from './categories/util/util.category';
 export class Client {}
 ```
 
-And finally, the main file to start the bot.
+And finally, the main file to start the bot (In this case we use @nodecord/djs-adapter).
 
 ```ts
 import { NodecordClient } from '@nodecord/core';
