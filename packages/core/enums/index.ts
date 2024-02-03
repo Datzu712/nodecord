@@ -1,2 +1,2 @@
-export * from './command-paramTypes.enum';
+export * from './command-param-types.enum';
 export * from './command-types.enum';

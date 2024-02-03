@@ -1,4 +1,4 @@
-import type { CommandParamTypes } from 'enums/command-paramTypes.enum';
+import type { CommandParamTypes } from '../../enums/command-param-types.enum';
 import type { PipeExecutable } from 'interfaces/pipe-executable.interface';
 import type { Type } from 'interfaces/type.interface';
 import { assignCustomMetadata } from './assign-custom-metadata';

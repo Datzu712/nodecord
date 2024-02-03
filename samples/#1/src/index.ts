@@ -17,7 +17,10 @@ config({ path: resolve(__dirname + '/../.env') });
     });
 
     // console.log(bot.commands);
-    await bot.loadSlashCommands(process.env.DISCORD_CLIENT_TOKEN, process.env.DISCORD_CLIENT_ID);
+    await bot.loadSlashCommands({
+        token: process.env.DISCORD_CLIENT_TOKEN,
+        clientId: process.env.DISCORD_CLIENT_ID,
+    });
     await bot.login(process.env.DISCORD_CLIENT_TOKEN);
     // const pingCommand = bot.commands.get('ping') as any;
     // console.log(Scanner.isCommand(pingCommand.constructor));

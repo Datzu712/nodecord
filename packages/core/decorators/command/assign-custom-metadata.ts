@@ -1,5 +1,5 @@
-import type { PipeExecutable } from 'interfaces/pipe-executable.interface';
-import type { ParamData } from './command-params.decorator';
+import type { PipeExecutable } from '../../interfaces/pipe-executable.interface';
+import type { ParamData } from '../../interfaces/command/command-param-metadata.interface';
 import type { Type } from 'interfaces/type.interface';
 
 export function assignCustomMetadata<TContext = any, TFactoryReturn = any>({

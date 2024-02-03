@@ -1,2 +1,2 @@
-export * from './CommandManager';
-export * from './CategoryManager';
+export * from './command';
+export * from './category.manager';

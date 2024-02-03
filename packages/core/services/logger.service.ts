@@ -18,6 +18,10 @@ export interface AbstractLogger {
 
 const defaultLogger = new ConsoleLogger();
 
+/**
+ * Logger class
+ * Use `useful-logger` package instead
+ */
 export class Logger implements AbstractLogger {
     private static staticInstance?: AbstractLogger;
     protected localInstanceRef?: AbstractLogger;

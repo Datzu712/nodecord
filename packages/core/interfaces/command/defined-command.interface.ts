@@ -1,4 +1,6 @@
 import type { CommandMetadata } from './command-metadata.interface';
+import { ParamMetadata } from './command-param-metadata.interface';
 
-// Maybe in the future, this will be a interface that will have decorators metadata.
-export type DefinedCommand = CommandMetadata;
+export interface DefinedCommand extends CommandMetadata {
+    params: ParamMetadata[];
+}

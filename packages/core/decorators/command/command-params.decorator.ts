@@ -1,25 +1,6 @@
 import { CommandParamTypes } from '../../enums';
 import { COMMAND_ARGS_METADATA } from '../../constants/command';
-import type { PipeExecutable, Type } from '../../interfaces';
-
-export type ParamData = object | string | number;
-
-function assignMetadata<TParamType = any, TArgs = any>(
-    args: TArgs,
-    paramType: TParamType,
-    index: number,
-    data?: ParamData,
-    ...pipes: (PipeExecutable | Type<PipeExecutable>)[]
-) {
-    return {
-        ...args,
-        [`${paramType}:${index}`]: {
-            index,
-            data,
-            pipes,
-        },
-    };
-}
+import type { ParamMetadata, PipeExecutable, Type } from '../../interfaces';
 
 function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: any, ...pipes: (PipeExecutable | Type<PipeExecutable>)[]): ParameterDecorator {
@@ -35,43 +16,64 @@ function createCommandParamDecorator(paramType: CommandParamTypes) {
                     }
                 });
             }
-            const commandArgs = Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) || {};
-            Reflect.defineMetadata(
-                COMMAND_ARGS_METADATA,
-                assignMetadata(commandArgs, paramType, index, data, ...pipes),
-                target.constructor,
-                key as string,
-            );
+            const commandArgs: ParamMetadata[] =
+                Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) || [];
+
+            commandArgs.push({
+                index,
+                type: paramType,
+                data,
+                pipes,
+            });
+
+            Reflect.defineMetadata(COMMAND_ARGS_METADATA, commandArgs, target.constructor, key as string);
         };
     };
 }
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
- * Example: `execute(@Message() message)`
+ * Command handler parameter decorator. Extracts the main argument from the target event (Message or InteractionCreate).
+ * Example: `execute(@Context() message: Message)`
  */
-export function Message(): ParameterDecorator;
+export function Context(): ParameterDecorator;
 
 /**
- * Command handler parameter decorator. Extracts the `Message` object from the event `MessageCreate.
- * Example: `execute(@Message() message)`
+ * Command handler parameter decorator. Extracts the main argument from the target event (Message or InteractionCreate).
+ * @example ```ts
+ * // Legacy commands with message event
+ * execute(@Context() message: Message)
+ *
+ * // Slash commands with interactionCreate event
+ * execute(@Context() interaction: Interaction)
+ * ```
  */
-export function Message(): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.MESSAGE)();
+export function Context(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.CONTEXT)();
 }
 
 /**
- * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
- * Example: `execute(@Interaction() interaction)`
+ * Client parameter decorator. Gets the client that wrapper is using.
+ * Example: `execute(@Client() client: Client)`
  */
-export function Interaction(): ParameterDecorator;
+export function Client(): ParameterDecorator;
 
 /**
- * Command handler parameter decorator. Extracts the 'Interaction' object from the event 'InteractionCreate'.
- * Example: `execute(@Interaction() interaction)`
+ * Client parameter decorator. Gets the client that wrapper is using.
+ * @example ```ts
+ * execute(@Client() client: djsClient)
+ *
+ * execute(@Client() client: BiscuitSession)
+ * ```
  */
-export function Interaction(): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.INTERACTION)();
+export function Client(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.CLIENT)();
 }
 
-export const Msg = Message;
+/**
+ * Alias for `@Context()`
+ */
+export const Ctx = Context;
+/**
+ * Alias for `@Client()`
+ */
+export const LibClient = Client;

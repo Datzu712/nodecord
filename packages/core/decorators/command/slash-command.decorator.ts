@@ -1,13 +1,13 @@
 import { CommandMetadata } from '../../interfaces/command/command-metadata.interface';
 import { COMMAND_WATERMARK, COMMAND_METADATA } from '../../constants/command';
-import type { MarkOptional } from 'ts-essentials';
 import { CommandTypes } from '../../enums';
 
 /**
  * Interface defining the options that can be passed `@SlashCommand()` decorator
  */
-export type SlashCommandOptions = Omit<MarkOptional<CommandMetadata['metadata'], 'aliases'>, 'category' | 'execute'> & {
+export type SlashCommandOptions = Omit<CommandMetadata['metadata'], 'aliases' | 'execute' | 'category'> & {
     options: any;
+    global: boolean;
 };
 /**
  * Decorator that marks a class as a command for Nodecord and receive a `Interaction` from discord

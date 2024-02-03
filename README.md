@@ -41,7 +41,6 @@ import { pingSlashOptions } from './options/ping.options';
 
 @SlashCommand({
     name: 'ping',
-    aliases: ['p'],
     options: pingSlashOptions,
 })
 export class PingSlashCommand implements ICommand {

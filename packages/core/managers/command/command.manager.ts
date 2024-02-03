@@ -1,10 +1,21 @@
-import { Scanner } from '../helpers/scanner';
-import type { DefinedCommand } from '../interfaces/command/defined-command.interface';
-import { Logger } from '../services/logger.service';
+import type { AbstractClientAdapter } from '../../interfaces/client';
+import { CommandTypes } from '../../enums';
+import { Scanner } from '../../helpers/scanner';
+import type { DefinedCommand } from '../../interfaces/command/defined-command.interface';
+import { Logger } from '../../services/logger.service';
+import { ExecutionManager } from './execution.manager';
 
 export class CommandManager extends Map<string, DefinedCommand> {
-    private logger = new Logger('CommandManager');
+    private readonly logger = new Logger('CommandManager');
+    private readonly execution: ExecutionManager;
+
     public readonly prefixes: string[] = [];
+
+    constructor(clientAdapter: AbstractClientAdapter) {
+        super();
+
+        this.execution = new ExecutionManager(clientAdapter);
+    }
 
     /**
      * Get command by name.
@@ -12,13 +23,14 @@ export class CommandManager extends Map<string, DefinedCommand> {
      * @param { boolean } sloppy - True for return the first command that matches with the name (included aliases).
      * @returns { ICommand | null } Command found (or undefined).
      */
-    public get(name: string, sloppy?: boolean): DefinedCommand | undefined {
+    public getCommand(name: string, sloppy?: boolean): DefinedCommand | undefined {
         let command = super.get(name);
 
         if (!command) {
             for (const [cmdName, cmd] of this) {
+                console.log(cmd);
                 if (
-                    cmd.metadata.aliases.some((alias) => alias === name || (sloppy && alias.includes(name))) ||
+                    cmd.metadata.aliases?.some((alias) => alias === name || (sloppy && alias.includes(name))) ||
                     (sloppy && cmdName.includes(name))
                 ) {
                     command = cmd;
@@ -33,8 +45,8 @@ export class CommandManager extends Map<string, DefinedCommand> {
         return Array.from(this.values()).some((command) => Scanner.isSlashCommand(command.constructor));
     }
 
-    public hasChannelInputCommands(): boolean {
-        return Array.from(this.values()).some((command) => Scanner.isCommand(command.constructor));
+    public hasLegacyCommands(): boolean {
+        return Array.from(this.values()).some((command) => Scanner.isLegacyCommand(command.constructor));
     }
 
     /**
@@ -63,5 +75,24 @@ export class CommandManager extends Map<string, DefinedCommand> {
     }
     public getLegacyCommands(): DefinedCommand[] {
         return Array.from(this.values()).filter((command) => Scanner.isLegacyCommand(command.constructor));
+    }
+    public execute(arg: any, commandName: string, type: CommandTypes) {
+        if (type === CommandTypes.SLASH) {
+            const command = this.get(`/${commandName}`);
+            if (command) {
+                return this.execution.run({ command, type, arg });
+            }
+        } else {
+            const prefix = this.findPrefix(commandName);
+            if (prefix) {
+                const command = this.getCommand(commandName.slice(prefix.length).split(' ')[0]);
+                if (command) {
+                    return this.execution.run({ command, type, arg });
+                }
+            }
+        }
+    }
+    private findPrefix(commandName: string): string | undefined {
+        return this.prefixes.find((prefix) => commandName.startsWith(prefix));
     }
 }
