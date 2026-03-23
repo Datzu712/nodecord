@@ -1,25 +1,34 @@
 {
+    "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
-          "module": "CommonJS",
-          "moduleResolution": "node",
-          "declaration": true,
-          "sourceMap": false,
-          "emitDecoratorMetadata": true,
-          "experimentalDecorators": true,
-          "useUnknownInCatchVariables": false,
-          "removeComments": true,
-          "target": "ES2021",
-          "forceConsistentCasingInFileNames": true,
-          "esModuleInterop": true,
-          "strict": true,
-          "allowJs": true,
-          "skipLibCheck": true,
-          "paths": {
-              "@nodecord/core": ["./packages/core"],
-              "@nodecord/core/*": ["./packages/core/*"],
-              "@nodecord/djs-adapter": ["./packages/djs-adapter"],
-              "@nodecord/djs-adapter/*": ["./packages/djs-adapter/*"],
-          },
-      },
-      "exclude": ["node_modules", "**/*.spec.ts"],
-  }
+        "target": "ES2022",
+        "lib": [
+            "es2022",
+        ],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "moduleDetection": "force",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "strict": true,
+        "types": [
+            "node"
+        ],
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "noEmitOnError": true,
+        "stripInternal": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "incremental": false
+    }
+}

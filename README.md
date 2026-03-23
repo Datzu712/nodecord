@@ -1,126 +1,159 @@
-# Nodecord
+# Turborepo starter
 
-<p align="center">
-  <a href="/" target="blank"><img src="https://media.discordapp.net/attachments/838828747762827338/1122284372184281169/image.png" width="500" alt="nodecord logo" /></a>
-</p>
+This Turborepo starter is maintained by the Turborepo core team.
 
-<p align="center"><strong>A powerful Discord API wrapper for Node.js<strong></p>
+## Using this example
 
-## Basic bot usage
+Run the following command:
 
-### Commands
-
-Commands are a way that users can interact with your bot. We also support slash commands.
-
-> *Message-based commands*
-
-```ts
-// src/categories/util/commands/ping.command.ts
-import { Command, ICommand, Msg } from '@nodecord/core';
-import type { Message } from 'discord.js';
-
-@Command({
-    name: 'ping',
-    aliases: ['p'],
-})
-export class PingCommand implements ICommand {
-    execute(@Msg() message: Message) {
-        message.channel.send('Pong!');
-    }
-}
-
+```sh
+npx create-turbo@latest
 ```
 
-> *Slash commands*
+## What's inside?
 
-```ts
-// src/categories/util/slashCommands/ping.command.ts
-import { SlashCommand, ICommand, Interaction } from '@nodecord/core';
-import type { ChatInputCommandInteraction } from 'discord.js';
-import { pingSlashOptions } from './options/ping.options';
+This Turborepo includes the following packages/apps:
 
-@SlashCommand({
-    name: 'ping',
-    options: pingSlashOptions,
-})
-export class PingSlashCommand implements ICommand {
-    execute(@Interaction() interaction: ChatInputCommandInteraction) {
-        interaction.reply('Pong!');
-    }
-}
+### Apps and Packages
 
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+
+### Utilities
+
+This Turborepo has some additional tools already setup for you:
+
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+
+### Build
+
+To build all apps and packages, run the following command:
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+
+```sh
+cd my-turborepo
+turbo build
 ```
 
-### Categories
+Without global `turbo`, use your package manager:
 
-Nodecord groups commands by categories. A category is a group of commands that have something in common. For example, a category called "utility" could have commands like "ping", "help", "invite", etc...
-
-```ts
-// src/categories/util/util.category.ts
-import { Category } from '@nodecord/core';
-
-import { PingCommand } from './commands/ping.command';
-import { PingSlashCommand } from './slashCommands/ping.command';
-
-@Category({
-    metadata: {
-        name: 'util',
-    },
-    commands: [PingCommand, PingSlashCommand],
-})
-export class UtilityCategory {}
-
+```sh
+cd my-turborepo
+npx turbo build
+yarn dlx turbo build
+pnpm exec turbo build
 ```
 
-### Client Module
+You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
 
-The client module will include all categories, etc...
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
 
-```ts
-import { ClientModule } from '@nodecord/core';
-
-import { UtilityCategory } from './categories/util/util.category';
-
-@ClientModule({
-    categories: [UtilityCategory],
-})
-export class Client {}
+```sh
+turbo build --filter=docs
 ```
 
-And finally, the main file to start the bot.
+Without global `turbo`:
 
-```ts
-import { NodecordClient } from '@nodecord/core';
-import { Client } from './client.module';
-import { Partials, type ClientOptions, GatewayIntentBits } from 'discord.js';
-
-(async function () {
-    const { Guilds, MessageContent, GuildMessages, GuildMembers } = GatewayIntentBits;
-
-    const bot = new NodecordClient<ClientOptions>(Client, {
-        abortOnError: true,
-        intents: [Guilds, MessageContent, GuildMessages, GuildMembers],
-        partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.User],
-        prefix: ['!'],
-    });
-
-    await bot.loadSlashCommands(yourBotToken, yourBotId);
-    await bot.login(yourBotToken);
-})();
+```sh
+npx turbo build --filter=docs
+yarn exec turbo build --filter=docs
+pnpm exec turbo build --filter=docs
 ```
 
-## Help
+### Develop
 
-Nodecord is still in development, and we're striving to make it production-ready. Currently, only the 'Legacy Commands' and slash commands are functional. If you'd like to assist us, please join our [Discord server](https://discord.gg/BSaERbS) and contact us.
+To develop all apps and packages, run the following command:
 
-### todo
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
 
-- [ ] Add custom decorators
-- [ ] Add some kind of middleware for commands
-- [ ] Add custom events
-- [ ] Add param decorators for commands
-- [ ] Add support for other libraries
-- [ ] Command response based on command return
-- [ ] Commands debugging
+```sh
+cd my-turborepo
+turbo dev
+```
 
-There are many more things to do, but we're working on it.
+Without global `turbo`, use your package manager:
+
+```sh
+cd my-turborepo
+npx turbo dev
+yarn exec turbo dev
+pnpm exec turbo dev
+```
+
+You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+
+```sh
+turbo dev --filter=web
+```
+
+Without global `turbo`:
+
+```sh
+npx turbo dev --filter=web
+yarn exec turbo dev --filter=web
+pnpm exec turbo dev --filter=web
+```
+
+### Remote Caching
+
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+
+Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+
+```sh
+cd my-turborepo
+turbo login
+```
+
+Without global `turbo`, use your package manager:
+
+```sh
+cd my-turborepo
+npx turbo login
+yarn exec turbo login
+pnpm exec turbo login
+```
+
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+
+```sh
+turbo link
+```
+
+Without global `turbo`:
+
+```sh
+npx turbo link
+yarn exec turbo link
+pnpm exec turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
+- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)

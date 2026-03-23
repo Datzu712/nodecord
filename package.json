@@ -1,41 +1,28 @@
 {
   "name": "nodecord",
-  "version": "0.0.1",
-  "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
-  "workspaces": [
-    "./packages/*"
-  ],
+  "private": true,
   "scripts": {
-    "lint": "eslint \"**/*.{ts,tsx}\"",
-    "build:all": "nx run-many --target=build",
-    "build:core": "nx build @nodecord/core",
-    "build:since": "nx affected --target=build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Datzu712/nodecord.git"
-  },
-  "author": "Datzu712",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Datzu712/nodecord/issues"
-  },
-  "homepage": "https://github.com/Datzu712/nodecord#readme",
-  "dependencies": {
-    "lerna": "^8.0.2"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "@nrwl/nx-cloud": "^18.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.20.0",
-    "@typescript-eslint/parser": "^6.20.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.3",
-    "nodemon": "^3.0.3",
-    "nx": "^17.3.1",
-    "prettier": "^3.2.4",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "@turbo/gen": "^2.8.20",
+    "@types/node": "^25.5.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.5.5",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.7.4",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "turbo": "^2.8.20",
+    "typescript": "5.9.2",
+    "typescript-eslint": "^8.50.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
   }
 }

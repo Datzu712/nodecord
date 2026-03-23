@@ -1,9 +1,7 @@
 {
-    "singleQuote": true,
-    "trailingComma": "all",
-    "parser": "typescript",
-    "printWidth": 120,
-    "tabWidth": 4,
-    "semi": true,
-    "indent": 4
-  }
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 120,
+  "tabWidth": 4,
+  "semi": true
+}

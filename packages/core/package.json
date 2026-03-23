@@ -1,38 +1,30 @@
 {
     "name": "@nodecord/core",
     "version": "0.0.3-alfa.3",
-    "description": "A powerful Node.js framework for create efficient and scalable discord bots.",
+    "type": "module",
     "types": "./dist/index.d.ts",
     "main": "./dist/index.js",
     "scripts": {
-        "build": "tsc"
+        "dev": "tsup --watch",
+        "build": "tsup"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Datzu712/nodecord.git"
     },
-    "keywords": [
-        "discord",
-        "client",
-        "bot",
-        "discordapp",
-        "node",
-        "api",
-        "typescript",
-        "framework",
-        "tool"
-    ],
     "author": "Datzu712",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/Datzu712/nodecord/issues"
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
-    "devDependencies": {
-        "@types/node": "^20.11.16",
-        "ts-essentials": "^9.4.1",
-        "reflect-metadata": "^0.2.1"
-    },
     "peerDependencies": {
         "@nodecord/djs-adapter": "0.0.3-alfa.3"
     },
@@ -45,5 +37,19 @@
             "url": "https://github.com/Datzu712",
             "author": true
         }
-    ]
+    ],
+    "keywords": [
+        "discord",
+        "client",
+        "bot",
+        "discordapp",
+        "node",
+        "api",
+        "typescript",
+        "framework",
+        "tool"
+    ],
+    "devDependencies": {
+        "typescript": "latest"
+    }
 }

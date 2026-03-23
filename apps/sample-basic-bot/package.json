@@ -1,0 +1,11 @@
+{
+    "name": "sample-basic-bot",
+    "scripts": {
+        "dev": "tsx watch --include ../../packages/core/dist/index.js src/index.ts",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@nodecord/core": "workspace:*",
+        "typescript": "latest"
+    }
+}
