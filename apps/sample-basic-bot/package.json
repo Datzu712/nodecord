@@ -6,6 +6,7 @@
     },
     "devDependencies": {
         "@nodecord/core": "workspace:*",
+        "tsx": "^4.21.0",
         "typescript": "latest"
     }
 }

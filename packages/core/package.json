@@ -25,9 +25,6 @@
         "url": "https://github.com/Datzu712/nodecord/issues"
     },
     "homepage": "https://github.com/Datzu712/nodecord#readme",
-    "peerDependencies": {
-        "@nodecord/djs-adapter": "0.0.3-alfa.3"
-    },
     "publishConfig": {
         "access": "public"
     },
@@ -50,6 +47,10 @@
         "tool"
     ],
     "devDependencies": {
+        "tsup": "latest",
         "typescript": "latest"
+    },
+    "dependencies": {
+        "inversify": "^8.1.0"
     }
 }
