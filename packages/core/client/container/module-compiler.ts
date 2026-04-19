@@ -18,8 +18,8 @@ import { ModuleContainer } from './module-container.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
-    private moduleMap = new Map<Symbol | string, ModuleContainer>(); // Map<moduleId, ModuleContainer>
-    private providerMap = new Map<Symbol | string, Symbol | string>(); // Map<providerId, moduleId>
+    private moduleMap = new Map<unknown, ModuleContainer>(); // Map<moduleId, ModuleContainer>
+    private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
 
     compile(parentModule: Type): ModuleContainer {
         return this.compileModule(parentModule, this.globalContainer);

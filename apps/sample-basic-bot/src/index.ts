@@ -4,6 +4,5 @@ import { AdminService } from './bot/admin.service.js';
 
 const client = new NodecordClient(MainModule);
 
-// services resolved normally via DI
-const admin = client.resolve(AdminService);
+const admin = client.get(AdminService);
 console.log(admin.getStatus());

@@ -1,4 +1,7 @@
 {
     "snyk.advanced.autoSelectOrganization": true,
-    "discord.enabled": true
+    "discord.enabled": true,
+    "conventionalCommits.scopes": [
+        "core"
+    ]
 }
