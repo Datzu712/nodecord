@@ -1,9 +1,9 @@
 import { Module } from '@nodecord/core';
 
-import { StatusCommand } from './status.command';
-import { PingCommand } from './ping.command';
-import { LoggerModule } from '../logger/logger.module';
-import { AdminModule } from '../admin/admin.module';
+import { StatusCommand } from './status.command.js';
+import { PingCommand } from './ping.command.js';
+import { LoggerModule } from '../logger/logger.module.js';
+import { AdminModule } from '../admin/admin.module.js';
 
 @Module({
     imports: [LoggerModule, AdminModule],

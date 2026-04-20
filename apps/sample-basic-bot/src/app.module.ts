@@ -1,7 +1,7 @@
 import { Module } from '@nodecord/core';
-import { AdminModule } from './bot/modules/admin/admin.module';
-import { LoggerModule } from './bot/modules/logger/logger.module';
-import { UtilModule } from './bot/modules/util/util.module';
+import { AdminModule } from './bot/modules/admin/admin.module.js';
+import { LoggerModule } from './bot/modules/logger/logger.module.js';
+import { UtilModule } from './bot/modules/util/util.module.js';
 
 @Module({
     imports: [LoggerModule, AdminModule, UtilModule],

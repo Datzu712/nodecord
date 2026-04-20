@@ -46,8 +46,13 @@ export class ModuleCompiler {
         return targetModule;
     }
 
-    private compileModule(moduleClass: Type, parent: ModuleContainer, visited = new Set()): ModuleContainer {
-        // when cicular dependency is detected, check if moduleClass is undefined in mjs
+    private compileModule(moduleClass: Type, parent: ModuleContainer): ModuleContainer {
+        /**
+         * CJS resolves module in runtime, so that means if ModuleA imports ModuleB, but ModuleB also imports ModuleA, then when we try to resolve ModuleA,
+         * it will try to resolve ModuleB first, and then when it tries to resolve ModuleA again, it will get undefined because ModuleA is not fully loaded yet
+         *
+         * This only happens in CJS, because ESM before runtime so it just throws an error like "ReferenceError: Cannot access 'AdminModule' before initialization"
+         */
         if (!moduleClass) {
             throw new Error(
                 `[${parent.moduleName}] An import resolved to ${moduleClass}. ` +
@@ -57,15 +62,6 @@ export class ModuleCompiler {
         }
 
         const moduleId = MetadataScanner.getModuleId(moduleClass);
-
-        if (visited.has(moduleId)) {
-            throw new Error(
-                `Circular module dependency detected: ${moduleClass.name} is already in the current resolution chain. ` +
-                    `Resolution path ends at ${parent.moduleName}.`,
-            );
-        }
-
-        visited.add(moduleId);
 
         const metadata: ModuleMetadata = Reflect.getMetadata(MODULE_METADATA, moduleClass) ?? {};
         const container = metadata.global ? this.globalContainer : new ModuleContainer(moduleClass, parent);
@@ -80,7 +76,7 @@ export class ModuleCompiler {
 
         this.moduleMap.set(moduleId, container);
         for (const importedModule of metadata.imports ?? []) {
-            this.compileModule(importedModule, container, new Set(visited));
+            this.compileModule(importedModule, container);
         }
 
         for (const provider of metadata.providers ?? []) {

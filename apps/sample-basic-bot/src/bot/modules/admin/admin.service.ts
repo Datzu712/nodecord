@@ -1,5 +1,5 @@
 import { Injectable } from '@nodecord/core';
-import { LoggerService } from '../logger/logger.service';
+import { LoggerService } from '../logger/logger.service.js';
 
 @Injectable()
 export class AdminService {

@@ -1,5 +1,5 @@
 import { Inject, SlashCommand } from '@nodecord/core';
-import { LoggerService } from '../logger/logger.service';
+import { LoggerService } from '../logger/logger.service.js';
 
 @SlashCommand({ name: 'ping', description: 'Replies with pong' })
 export class PingCommand {

@@ -1,7 +1,9 @@
 {
     "name": "sample-basic-bot",
+    "type": "module",
+    "description": "sample mjs bot",
     "scripts": {
-        "dev": "ts-node src/index.ts",
+        "dev": "tsx src/index.ts",
         "build": "tsc"
     },
     "devDependencies": {

@@ -1,6 +1,6 @@
 import { SlashCommand } from '@nodecord/core';
 
-import { AdminService } from './admin.service';
+import { AdminService } from './admin.service.js';
 
 @SlashCommand({ name: 'ping', description: 'idk' })
 export class AdminHandler {

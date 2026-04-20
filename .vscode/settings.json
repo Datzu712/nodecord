@@ -2,6 +2,7 @@
     "snyk.advanced.autoSelectOrganization": true,
     "discord.enabled": true,
     "conventionalCommits.scopes": [
-        "core"
+        "core",
+        "sample-basic-bot"
     ]
 }
