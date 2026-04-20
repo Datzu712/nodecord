@@ -1,6 +1,6 @@
 import { NodecordClient } from '@nodecord/core';
-import { MainModule } from './app.module.js';
-import { AdminService } from './bot/admin.service.js';
+import { MainModule } from './app.module';
+import { AdminService } from './bot/modules/admin/admin.service';
 
 const client = new NodecordClient(MainModule);
 

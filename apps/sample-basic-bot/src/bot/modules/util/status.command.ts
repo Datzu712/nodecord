@@ -1,5 +1,5 @@
 import { Inject, SlashCommand } from '@nodecord/core';
-import { LoggerService } from '../logger/logger.service.js';
+import { LoggerService } from '../logger/logger.service';
 
 @SlashCommand({ name: 'status', description: 'Shows bot status', global: true })
 export class StatusCommand {

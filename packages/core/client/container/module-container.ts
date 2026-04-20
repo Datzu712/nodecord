@@ -3,11 +3,11 @@ import type { Type } from '../../interfaces/type.js';
 
 export class ModuleContainer {
     #container: Container;
-    //#parent: ModuleContainer | undefined;
+    readonly moduleName: string;
 
-    constructor(parent?: ModuleContainer) {
+    constructor(moduleClass?: Type, parent?: ModuleContainer) {
         this.#container = new Container({ parent: parent ? parent.#container : undefined });
-        //this.#parent = parent;
+        this.moduleName = moduleClass?.name ?? 'GlobalContainer';
     }
 
     register<T>(cls: Type<T>, scope: 'singleton' | 'transient' = 'singleton'): void {
@@ -18,11 +18,8 @@ export class ModuleContainer {
 
     resolve<T>(cls: Type<T>): T {
         if (this.#container.isBound(cls as ServiceIdentifier<T>)) {
-            return this.#container.get<T>(cls as ServiceIdentifier<T>); // Inversify already looks up the parent container if the binding is not found in the current container
+            return this.#container.get<T>(cls as ServiceIdentifier<T>);
         }
-        // if (this.#parent) {
-        //     return this.#parent.resolve<T>(cls);
-        // }
-        throw new Error(`No binding found for ${cls.name}`);
+        throw new Error(`[${this.moduleName}] No binding found for ${cls.name}`);
     }
 }

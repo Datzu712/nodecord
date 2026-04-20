@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nodecord/core';
-import { LoggerService } from '../logger/logger.service.js';
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class PingService {

@@ -1,8 +1,9 @@
 import { Module } from '@nodecord/core';
-import { BotModule } from './bot/bot.module.js';
-import { LoggerModule } from './logger/logger.module.js';
+import { AdminModule } from './bot/modules/admin/admin.module';
+import { LoggerModule } from './bot/modules/logger/logger.module';
+import { UtilModule } from './bot/modules/util/util.module';
 
 @Module({
-    imports: [LoggerModule, BotModule],
+    imports: [LoggerModule, AdminModule, UtilModule],
 })
 export class MainModule {}

@@ -1,5 +1,5 @@
 import { Module } from '@nodecord/core';
-import { LoggerService } from './logger.service.js';
+import { LoggerService } from './logger.service';
 
 @Module({
     providers: [LoggerService],
