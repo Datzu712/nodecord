@@ -1,4 +1,4 @@
-import type { Type } from './type.js';
+import type { Type } from '../common/type.js';
 
 export interface ModuleMetadata {
     providers?: Type[]; // services

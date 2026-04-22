@@ -1,40 +1,44 @@
-import type { ModuleMetadata } from '@nestjs/common';
-import { MODULE_METADATA } from '@nestjs/common/constants.js';
-import { Type } from '../../interfaces/type.js';
-import { INJECTABLE_ID, MODULE_ID } from '../../constants/metadata.js';
-import { COMMAND_ID } from '../../constants/command.js';
+import { Type } from '../../interfaces/common/type.js';
+import { INJECTABLE_ID } from '../../constants/injectable.js';
+import { HANDLER_ID, HANDLER_WATERMARK } from '../../constants/handler.js';
+import { MODULE_ID, MODULE_METADATA } from '../../constants/module.js';
+import { ModuleMetadata } from '../../interfaces/module/module-metadata.interface.js';
+import { LISTENER_ID, LISTENER_WATERMARK } from '../../constants/listener.js';
 
-// todo remove watermarks or use them as uuids idk
 export class MetadataScanner {
-    static getModuleId(target: Type): Symbol {
-        const moduleId = Reflect.getMetadata(MODULE_ID, target);
-        if (!moduleId) {
-            throw new Error(`Class ${target.name} is not decorated with @Module`);
-        }
-        return moduleId;
+    static getModuleId(target: Type): string {
+        return Reflect.getMetadata(MODULE_ID, target);
+    }
+
+    static isModule(target: Type): boolean {
+        return Reflect.hasMetadata(MODULE_METADATA, target);
+    }
+
+    static isProvider(target: Type): boolean {
+        return Reflect.hasMetadata(INJECTABLE_ID, target);
+    }
+
+    static isHandler(target: Type): boolean {
+        return Reflect.hasMetadata(HANDLER_WATERMARK, target);
     }
 
     static getModuleMetadata(target: Type): ModuleMetadata {
-        const metadata = Reflect.getMetadata(MODULE_METADATA, target);
-        if (!metadata) {
-            throw new Error(`Class ${target.name} is not decorated with @Module`);
-        }
-        return metadata;
+        return Reflect.getMetadata(MODULE_METADATA, target);
     }
 
-    static getProviderId(target: Type): Symbol {
-        const providerId = Reflect.getMetadata(INJECTABLE_ID, target);
-        if (!providerId) {
-            throw new Error(`Class ${target.name} is not decorated with @Injectable`);
-        }
-        return providerId;
+    static getProviderId(target: Type): string | undefined {
+        return Reflect.getMetadata(INJECTABLE_ID, target);
     }
 
-    static getCommandId(target: Type): Symbol {
-        const commandId = Reflect.getMetadata(COMMAND_ID, target);
-        if (!commandId) {
-            throw new Error(`Class ${target.name} is not decorated with a command decorator`);
-        }
-        return commandId;
+    static getHandlerId(target: Type): string | undefined {
+        return Reflect.getMetadata(HANDLER_ID, target);
+    }
+
+    static isListener(target: Type): boolean {
+        return Reflect.hasMetadata(LISTENER_WATERMARK, target);
+    }
+
+    static getListenerId(target: Type): string | undefined {
+        return Reflect.getMetadata(LISTENER_ID, target);
     }
 }

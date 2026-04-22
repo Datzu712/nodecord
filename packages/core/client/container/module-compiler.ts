@@ -1,25 +1,15 @@
-import { MODULE_METADATA } from '../../constants/metadata.js';
-import type { ModuleMetadata } from '../../interfaces/module-metadata.interface.js';
-import type { Type } from '../../interfaces/type.js';
+import type { Type } from '../../interfaces/common/type.js';
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
-
-/**
- * RootModule
- * -> imports: [ModuleA, ModuleB]
- * -> providers: [ServiceA, ServiceB]
- * -> handlers: [CommandA, CommandB]
- *
- * ModuleA
- * -> imports: [ModuleC]
- * -> providers: [ServiceC]
- * -> handlers: [CommandC]
- */
+import { AbstractCommand } from '../../commands/abstract-command.js';
+import { ListenerProvider } from '../../interfaces/listener/event-listener.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
     private moduleMap = new Map<unknown, ModuleContainer>(); // Map<moduleId, ModuleContainer>
     private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
+    private handlerMap = new Map<unknown, AbstractCommand>(); // Map<handlerId, moduleId>
+    private listenerMap = new Map<unknown, ListenerProvider>(); // Map<listenerId, moduleId>
 
     compile(parentModule: Type): ModuleContainer {
         return this.compileModule(parentModule, this.globalContainer);
@@ -61,9 +51,15 @@ export class ModuleCompiler {
             );
         }
 
+        if (!MetadataScanner.isModule(moduleClass)) {
+            throw new Error(
+                `Class ${moduleClass.name} is not a valid module. ` + `Make sure it is decorated with @Module.`,
+            );
+        }
+
         const moduleId = MetadataScanner.getModuleId(moduleClass);
 
-        const metadata: ModuleMetadata = Reflect.getMetadata(MODULE_METADATA, moduleClass) ?? {};
+        const metadata = MetadataScanner.getModuleMetadata(moduleClass);
         const container = metadata.global ? this.globalContainer : new ModuleContainer(moduleClass, parent);
 
         const moduleRef = this.moduleMap.get(moduleId);
@@ -80,6 +76,21 @@ export class ModuleCompiler {
         }
 
         for (const provider of metadata.providers ?? []) {
+            if (MetadataScanner.isListener(provider)) {
+                const listenerId = MetadataScanner.getListenerId(provider);
+
+                container.register(provider);
+                this.listenerMap.set(listenerId, container.resolve(provider));
+
+                continue;
+            }
+
+            if (!MetadataScanner.isProvider(provider)) {
+                throw new Error(
+                    `Class ${provider.name} is not a valid provider. ` + `Make sure it is decorated with @Injectable.`,
+                );
+            }
+
             const providerId = MetadataScanner.getProviderId(provider);
 
             this.providerMap.set(providerId, moduleId);
@@ -87,9 +98,27 @@ export class ModuleCompiler {
         }
 
         for (const handler of metadata.handlers ?? []) {
+            if (!MetadataScanner.isHandler(handler)) {
+                throw new Error(
+                    `Class ${handler.name} is not a valid command handler. ` +
+                        `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
+                );
+            }
+
+            const handlerId = MetadataScanner.getHandlerId(handler);
+
             container.register(handler);
+            this.handlerMap.set(handlerId, container.resolve(handler as Type<AbstractCommand>));
         }
 
         return container;
+    }
+
+    getCommandHandlers(): AbstractCommand[] {
+        return Array.from(this.handlerMap.values());
+    }
+
+    getEventListeners(): ListenerProvider[] {
+        return Array.from(this.listenerMap.values());
     }
 }

@@ -1,10 +1,4 @@
 export { NodecordClient } from './client/nodecord-client.js';
-export { Inject } from './decorators/inject.decorator.js';
-export { Injectable } from './decorators/injectable.decorator.js';
-export { Module } from './decorators/module.decorator.js';
-export { SlashCommand } from './decorators/slash-command.decorator.js';
-export { CommandTypes } from './enums/command-types.enum.js';
-export type { SlashCommandOptions } from './decorators/slash-command.decorator.js';
-export type { CommandMetadata } from './interfaces/command/command-metadata.interface.js';
-export type { ModuleMetadata } from './interfaces/module-metadata.interface.js';
-export type { Type } from './interfaces/type.js';
+
+export * from './decorators/index.js';
+export * from './interfaces/index.js';

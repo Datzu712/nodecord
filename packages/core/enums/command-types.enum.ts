@@ -1,5 +1,4 @@
-export enum CommandTypes {
+export enum HandlerTypes {
     SLASH = 'SLASH',
-    PREFIX = 'PREFIX',
     CONTEXT_MENU = 'CONTEXT_MENU',
 }
