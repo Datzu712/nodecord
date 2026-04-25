@@ -1,10 +1,10 @@
-export enum CommandTypes {
-    /**
-     * Slash command (interaction)
-     */
-    SLASH = 0,
-    /**
-     * Legacy command (message)
-     */
-    LEGACY = 1,
+export enum HandlerTypes {
+    SLASH = 'SLASH',
+    CONTEXT_MENU = 'CONTEXT_MENU',
+}
+
+export enum CommandParamTypes {
+    CONTEXT = 'CONTEXT',
+    GUILD = 'GUILD',
+    AUTHOR = 'AUTHOR',
 }

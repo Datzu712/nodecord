@@ -1,14 +1,8 @@
 {
-    "cSpell.words": [
-        "nodecord",
-        "Nodecord"
-    ],
-    "rpc.enabled": false,
-    "vscord.enabled": true,
+    "snyk.advanced.autoSelectOrganization": true,
+    "discord.enabled": true,
     "conventionalCommits.scopes": [
-        "core & adapter",
-        "monorepo",
-        "core"
-    ],
-    "discord.enabled": true
+        "core",
+        "sample-basic-bot"
+    ]
 }

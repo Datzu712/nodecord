@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2021",
+    "rootDir": "src",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "lib": [
+      "ES2021"
+    ],
+    "types": [
+      "node"
+    ],
+    "esModuleInterop": true,
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

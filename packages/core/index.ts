@@ -1,6 +1,5 @@
-export * from './decorators';
-export * from './interfaces';
-export * from './enums';
-export * from './client';
-export * from './services';
-export * from './helpers';
+export * from './client/index.js';
+
+export * from './decorators/index.js';
+export * from './interfaces/index.js';
+export * from './enums/command-types.enum.js';

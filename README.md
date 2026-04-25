@@ -1,126 +1,178 @@
 # Nodecord
 
-<p align="center">
-  <a href="/" target="blank"><img src="https://media.discordapp.net/attachments/838828747762827338/1122284372184281169/image.png" width="500" alt="nodecord logo" /></a>
-</p>
+A TypeScript framework for building Discord bots.
 
-<p align="center"><strong>A powerful Discord API wrapper for Node.js<strong></p>
+Nodecord takes the module/provider pattern from frameworks like NestJS and brings it to Discord bot development. Instead of one giant file full of `client.on(...)` calls and globally shared state, you get a proper dependency injection system, scoped modules, and decorator-driven command definitions.
 
-## Basic bot usage
+> **Current status:** Core DI, Discord.js adapter, slash command registration, event handling, and parameter decorators are working. See [where things stand](#where-things-stand) before using this in production.
+
+---
+
+## Why this exists
+
+Most Discord bot libraries give you a client and leave the rest up to you. That works fine for small bots. It falls apart the moment you need to share services between commands, test a handler without simulating a live interaction, or explain the codebase to someone who joined last week.
+
+Nodecord imposes structure by design: every command and service lives inside a module, modules declare what they provide and what they need, and the framework wires everything together at startup. Dependencies flow through constructors, not through a runtime object that quietly accumulates responsibilities as the project grows.
+
+---
+
+## How it works
+
+### Modules
+
+The entry point to any Nodecord application is a root module. Modules declare their providers (services), handlers (commands), and any other modules they depend on.
+
+```typescript
+@Module({
+    imports: [LoggerModule],
+    providers: [AdminService],
+    handlers: [PingCommand, AdminHandler],
+})
+export class MainModule {}
+```
+
+Modules can be marked as `global: true`, which registers their providers into a shared container accessible from anywhere in the application.
+
+```typescript
+@Module({
+    providers: [LoggerService],
+    global: true,
+})
+export class LoggerModule {}
+```
+
+### Services
+
+Any class marked with `@Injectable()` can be registered as a provider and injected into other classes.
+
+```typescript
+@Injectable()
+export class AdminService {
+    constructor(private readonly logger: LoggerService) {}
+
+    getStatus(): string {
+        this.logger.log('AdminService.getStatus() called');
+        return 'Bot is running';
+    }
+}
+```
 
 ### Commands
 
-Commands are a way that users can interact with your bot. We also support slash commands.
+Slash commands are decorated with `@SlashCommand` and receive a `SlashCommandBuilder` (or compatible metadata) as argument. Services get injected through the constructor; Discord-specific context comes through parameter decorators on `execute()`.
 
-> *Message-based commands*
+```typescript
+@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+export class PingCommand {
+    constructor(private readonly logger: LoggerService) {}
 
-```ts
-// src/categories/util/commands/ping.command.ts
-import { Command, ICommand, Msg } from '@nodecord/core';
-import type { Message } from 'discord.js';
-
-@Command({
-    name: 'ping',
-    aliases: ['p'],
-})
-export class PingCommand implements ICommand {
-    execute(@Msg() message: Message) {
-        message.channel.send('Pong!');
+    execute(@Context() ctx: ExecutionContext): void {
+        this.logger.log('PingCommand executed');
+        ctx.getRaw<ChatInputCommandInteraction>().reply('pong!');
     }
 }
-
 ```
 
-> *Slash commands*
+#### Parameter decorators
 
-```ts
-// src/categories/util/slashCommands/ping.command.ts
-import { SlashCommand, ICommand, Interaction } from '@nodecord/core';
-import type { ChatInputCommandInteraction } from 'discord.js';
-import { pingSlashOptions } from './options/ping.options';
+| Decorator | Resolves to |
+|-----------|-------------|
+| `@Context()` | The `ExecutionContext` instance |
+| `@Guild()` | The `Guild` from the interaction, or `null` |
+| `@Author()` | The `User` who triggered the interaction |
 
-@SlashCommand({
-    name: 'ping',
-    options: pingSlashOptions,
-})
-export class PingSlashCommand implements ICommand {
-    execute(@Interaction() interaction: ChatInputCommandInteraction) {
-        interaction.reply('Pong!');
-    }
-}
+`ExecutionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
 
-```
+### Bootstrapping
 
-### Categories
-
-Nodecord groups commands by categories. A category is a group of commands that have something in common. For example, a category called "utility" could have commands like "ping", "help", "invite", etc...
-
-```ts
-// src/categories/util/util.category.ts
-import { Category } from '@nodecord/core';
-
-import { PingCommand } from './commands/ping.command';
-import { PingSlashCommand } from './slashCommands/ping.command';
-
-@Category({
-    metadata: {
-        name: 'util',
-    },
-    commands: [PingCommand, PingSlashCommand],
-})
-export class UtilityCategory {}
-
-```
-
-### Client Module
-
-The client module will include all categories, etc...
-
-```ts
-import { ClientModule } from '@nodecord/core';
-
-import { UtilityCategory } from './categories/util/util.category';
-
-@ClientModule({
-    categories: [UtilityCategory],
-})
-export class Client {}
-```
-
-And finally, the main file to start the bot.
-
-```ts
+```typescript
 import { NodecordClient } from '@nodecord/core';
-import { Client } from './client.module';
-import { Partials, type ClientOptions, GatewayIntentBits } from 'discord.js';
+import { type ClientOptions, GatewayIntentBits } from 'discord.js'; 
+import { MainModule } from './app.module.js';
 
-(async function () {
-    const { Guilds, MessageContent, GuildMessages, GuildMembers } = GatewayIntentBits;
+const client = NodecordClient.create<ClientOptions>({
+    module: MainModule,
+    options: {
+        intents: [GatewayIntentBits.Guilds],
+    },
+});
 
-    const bot = new NodecordClient<ClientOptions>(Client, {
-        abortOnError: true,
-        intents: [Guilds, MessageContent, GuildMessages, GuildMembers],
-        partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.User],
-        prefix: ['!'],
-    });
-
-    await bot.loadSlashCommands(yourBotToken, yourBotId);
-    await bot.login(yourBotToken);
-})();
+await client.loadSlashCommands();
+await client.login(process.env.BOT_TOKEN);
 ```
 
-## Help
+`NodecordClient.create()` compiles the module tree, wires up the DI containers, and initializes the adapter. Call `client.get(ServiceClass)` to pull instances out of the dependency graph.
 
-Nodecord is still in development, and we're striving to make it production-ready. Currently, only the 'Legacy Commands' and slash commands are functional. If you'd like to assist us, please join our [Discord server](https://discord.gg/BSaERbS) and contact us.
+---
 
-### todo
+## Container model
 
-- [ ] Add custom decorators
-- [ ] Add some kind of middleware for commands
-- [ ] Add custom events
-- [ ] Add param decorators for commands
-- [ ] Add support for other libraries
-- [ ] Command response based on command return
-- [ ] Commands debugging
+The framework builds a hierarchy of [Inversify](https://inversify.io/) containers that mirrors the module tree. When a module imports another, its child container delegates resolution to the parent for any providers it doesn't own. Global modules bind directly to a shared root container, making their providers available everywhere without explicit imports in each module.
 
-There are many more things to do, but we're working on it.
+Each provider and module gets a unique ID generated at decoration time, which prevents metadata collisions when the same class appears in different parts of the tree.
+
+---
+
+## Project structure
+
+```text
+nodecord/
+├── apps/
+│   └── sample-basic-bot/     # Working example: modules, services, commands
+├── packages/
+│   ├── core/                 # @nodecord/core
+│   └── djs-adapter/          # @nodecord/djs-adapter — Discord.js integration
+```
+
+The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspaces. Both packages ship ESM and CJS outputs with full TypeScript declarations.
+
+---
+
+## Where things stand
+
+**Working now:**
+
+- Module compilation and container hierarchy
+- `@Injectable`, `@Module`, `@SlashCommand`, `@Inject`, `@Listener` decorators
+- Global vs. scoped module registration
+- Provider resolution via `NodecordClient.get<T>()`
+- Discord.js adapter with slash command registration and event handling
+- Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
+- Full TypeScript strict mode throughout, dual ESM/CJS output
+
+**Not yet implemented:**
+
+- Interceptors (`@Interceptor` decorator exists but is not wired into the execution pipeline yet)
+- Interaction flows (buttons, modals, select menus, and autocomplete co-located with their parent slash command)
+- Context menu command handling
+- Pipes on parameter decorators
+- More built-in parameter decorators (`@Option()`, etc.)
+
+---
+
+## Getting started
+
+```bash
+pnpm install
+pnpm build
+```
+
+To run the sample bot:
+
+```bash
+pnpm turbo watch dev --filter=sample-basic-bot
+```
+
+---
+
+## Requirements
+
+- Node.js 20+
+- pnpm 9+
+- TypeScript 5.x with `experimentalDecorators` and `emitDecoratorMetadata` enabled
+
+---
+
+## License
+
+MIT

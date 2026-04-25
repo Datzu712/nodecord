@@ -1,0 +1,21 @@
+{
+    "name": "sample-basic-bot",
+    "type": "module",
+    "description": "sample mjs bot",
+    "scripts": {
+        "dev": "node --loader ts-node/esm --no-warnings src/index.ts",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "ts-node": "^10.9.2",
+        "tsx": "^4.21.0",
+        "typescript": "latest",
+        "vitest": "^4.1.4"
+    },
+    "dependencies": {
+        "discord.js": "^14.26.3",
+        "dotenv": "^17.4.2",
+        "@nodecord/core": "workspace:*",
+        "@nodecord/djs-adapter": "workspace:*"
+    }
+}
