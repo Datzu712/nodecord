@@ -57,6 +57,45 @@ export class AdminService {
 }
 ```
 
+### Event listeners
+
+Classes decorated with `@Listener` receive Discord events and are registered as module providers. They must implement `ListenerProvider`.
+
+```typescript
+@Listener(Events.ClientReady)
+export class ReadyListener implements ListenerProvider {
+    constructor(private readonly logger: LoggerService) {}
+
+    handler(): void {
+        this.logger.log('Bot is ready!');
+    }
+}
+```
+
+For one-time events, pass `{ once: true }`:
+
+```typescript
+@Listener(Events.ClientReady, { once: true })
+export class ReadyListener implements ListenerProvider {
+    handler(): void {
+        console.log('Ready!');
+    }
+}
+```
+
+Listeners for the same event are grouped under a single underlying handler. Mixing `on` and `once` listeners for the same event throws at startup.
+
+Register them in the module's `providers` array:
+
+```typescript
+@Module({
+    providers: [LoggerService, ReadyListener],
+})
+export class EventsModule {}
+```
+
+---
+
 ### Commands
 
 Slash commands are decorated with `@SlashCommand` and receive a `SlashCommandBuilder` (or compatible metadata) as argument. Services get injected through the constructor; Discord-specific context comes through parameter decorators on `execute()`.
@@ -136,7 +175,6 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 - `@Injectable`, `@Module`, `@SlashCommand`, `@Inject`, `@Listener` decorators
 - Global vs. scoped module registration
 - Provider resolution via `NodecordClient.get<T>()`
-- Discord.js adapter with slash command registration and event handling
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
