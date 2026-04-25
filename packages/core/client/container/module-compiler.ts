@@ -1,7 +1,7 @@
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
 import type { Constructor } from '../../interfaces/common/constructor.js';
-import { RegisteredListener } from '../../interfaces/listener/event-listener.js';
+import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/event-listener.js';
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 
@@ -90,8 +90,9 @@ export class ModuleCompiler {
                 const event = MetadataScanner.getListenerEvent(provider);
 
                 container.register(provider);
-                const instance = container.resolve(provider) as { handler: (...args: unknown[]) => void };
-                this.listenerMap.set(listenerId, { event, handler: instance.handler.bind(instance) });
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                const instance = container.resolve<ListenerProvider>(provider);
+                this.listenerMap.set(listenerId, { event, listener: instance });
 
                 continue;
             }
