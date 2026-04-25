@@ -23,7 +23,6 @@ export class CommandExecutor {
             .sort((a, b) => a.index - b.index)
             .map((meta) => this.resolvers.get(meta.type)?.(ctx, meta.data));
 
-        console.log(args);
         return await handler.execute(...args);
     }
 }

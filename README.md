@@ -138,11 +138,12 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 - Provider resolution via `NodecordClient.get<T>()`
 - Discord.js adapter with slash command registration and event handling
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
-- Interceptor support via `@Interceptor`
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
 **Not yet implemented:**
 
+- Interceptors (`@Interceptor` decorator exists but is not wired into the execution pipeline yet)
+- Interaction flows (buttons, modals, select menus, and autocomplete co-located with their parent slash command)
 - Context menu command handling
 - Pipes on parameter decorators
 - More built-in parameter decorators (`@Option()`, etc.)
