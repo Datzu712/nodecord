@@ -1,5 +1,11 @@
 import { HandlerTypes } from '../../enums/command-types.enum.js';
 
+export interface HandlerMetadata {
+    id: string;
+    type: HandlerTypes;
+    descriptor: unknown;
+}
+
 export interface CommandHandler {
     execute(...args: unknown[]): Promise<unknown>;
 }
@@ -19,5 +25,5 @@ export interface CommandHandler {
 export interface RegisteredCommandHandler<TMetadata = unknown> {
     type: HandlerTypes;
     handler: CommandHandler;
-    metadata: TMetadata;
+    descriptor: TMetadata;
 }

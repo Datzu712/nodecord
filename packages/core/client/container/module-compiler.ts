@@ -19,7 +19,13 @@ export class ModuleCompiler {
     }
 
     getContainerFor(provider: Constructor): ModuleContainer {
-        const providerId = MetadataScanner.getProviderId(provider);
+        if (!MetadataScanner.isProvider(provider)) {
+            throw new Error(
+                `Class ${provider.name} is not a valid provider. ` + `Make sure it is decorated with @Injectable.`,
+            );
+        }
+
+        const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
         const moduleId = this.providerMap.get(providerId);
         if (!moduleId) {
             throw new Error(
@@ -86,13 +92,16 @@ export class ModuleCompiler {
 
         for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isListener(provider)) {
-                const listenerId = MetadataScanner.getListenerId(provider);
-                const event = MetadataScanner.getListenerEvent(provider);
+                const metadata = MetadataScanner.getListenerMetadata(provider);
 
                 container.register(provider);
+
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 const instance = container.resolve<ListenerProvider>(provider);
-                this.listenerMap.set(listenerId, { event, listener: instance });
+                this.listenerMap.set(metadata.id, {
+                    metadata,
+                    listener: instance,
+                });
 
                 continue;
             }
@@ -103,29 +112,26 @@ export class ModuleCompiler {
                 );
             }
 
-            const providerId = MetadataScanner.getProviderId(provider);
+            const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
 
             this.providerMap.set(providerId, moduleId);
             container.register(provider);
         }
 
         for (const handler of metadata.handlers ?? []) {
-            const handlerType = MetadataScanner.getHandlerWatermark(handler);
-            if (!handlerType) {
+            if (!MetadataScanner.isHandler(handler)) {
                 throw new Error(
                     `Class ${handler.name} is not a valid command handler. ` +
                         `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
                 );
             }
-
-            const handlerId = MetadataScanner.getHandlerId(handler);
-            const handlerMetadata = MetadataScanner.getHandlerMetadata(handler);
+            const { id: handlerId, descriptor, type: handlerType } = MetadataScanner.getHandlerMetadata(handler);
 
             container.register(handler);
 
             const resolvedHandler = container.resolve(handler) as CommandHandler;
 
-            this.handlerMap.set(handlerId, { handler: resolvedHandler, metadata: handlerMetadata, type: handlerType });
+            this.handlerMap.set(handlerId, { handler: resolvedHandler, descriptor, type: handlerType });
         }
 
         return container;

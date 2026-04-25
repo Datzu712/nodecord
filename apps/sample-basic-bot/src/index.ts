@@ -25,7 +25,6 @@ async function bootstrap() {
     console.log('Slash commands loaded');
 
     await client.login(process.env.BOT_TOKEN!);
-    console.log('Bot is online');
 }
 
 void bootstrap();

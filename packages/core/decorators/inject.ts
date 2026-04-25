@@ -1,6 +1,6 @@
 import { inject } from 'inversify';
-import type { Type } from '../interfaces/common/constructor.js';
+import type { Constructor } from '../interfaces/common/constructor.js';
 
-export function Inject(token: Type): ParameterDecorator {
+export function Inject(token: Constructor): ParameterDecorator {
     return inject(token);
 }
