@@ -1,2 +1,2 @@
-export const INTERCEPTOR_ID = 'nodecord:interceptor_id';
 export const INTERCEPTOR_WATERMARK = 'nodecord:interceptor';
+export const INTERCEPTOR_METADATA = 'nodecord:interceptor_metadata';

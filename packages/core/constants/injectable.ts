@@ -1,2 +1,2 @@
-export const INJECTABLE_ID = 'nodecord:injectable_id';
+export const INJECTABLE_METADATA = 'nodecord:injectable_metadata';
 export const INJECTABLE_WATERMARK = 'nodecord:injectable';

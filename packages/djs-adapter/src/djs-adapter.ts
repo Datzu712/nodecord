@@ -17,6 +17,7 @@ import { CommandRegistry } from './command-registry.js';
 import { EventManager } from './event-manager.js';
 import { InteractionCreateDispatcher } from './events/interaction-create.dispatcher.js';
 import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
+import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
@@ -52,18 +53,21 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         const eventManager = new EventManager();
 
         if (handlers.length) {
-            handlers.forEach(({ metadata, handler, ...rest }) => {
-                if (!isDjsCommandMeta(metadata)) {
+            handlers.forEach(({ descriptor, handler, ...rest }) => {
+                if (!isDjsCommandMeta(descriptor)) {
                     throw new Error(
                         `Invalid metadata for handler "${handler.constructor.name}". ` +
                             `Expected SlashCommandBuilder or ContextMenuCommandBuilder.`,
                     );
                 }
-                this.commandRegistry.register({ metadata: metadata.toJSON(), handler, ...rest });
+                this.commandRegistry.register({ descriptor: descriptor.toJSON(), handler, ...rest });
             });
 
             const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor);
-            eventManager.register({ event: Events.InteractionCreate, listener: dispatcher });
+            eventManager.register({
+                metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
+                listener: dispatcher,
+            });
         }
 
         listeners.forEach((l) => eventManager.register(l));
@@ -85,7 +89,9 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
      * @param commands - Array of command data to register globally.
      */
     async loadSlashCommands(): Promise<void> {
-        const commands = this.commandRegistry.getAll().map((cmd) => cmd.metadata) as ApplicationCommandDataResolvable[];
+        const commands = this.commandRegistry
+            .getAll()
+            .map((cmd) => cmd.descriptor) as ApplicationCommandDataResolvable[];
 
         await this.clientInstance.application?.commands.set(commands);
     }
