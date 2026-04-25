@@ -33,7 +33,7 @@ export default [
         rules: {
             // Type safety
             '@typescript-eslint/no-floating-promises': 'error',
-            '@typescript-eslint/no-explicit-any': 'error',
+            '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/no-unsafe-argument': 'error',
             '@typescript-eslint/no-unsafe-assignment': 'error',
             '@typescript-eslint/no-unsafe-call': 'error',
@@ -47,6 +47,7 @@ export default [
             // Code quality
             '@typescript-eslint/prefer-nullish-coalescing': 'warn',
             'no-console': ['error', { allow: ['warn', 'error'] }],
+            
 
             // Random disabled rules
             '@typescript-eslint/no-magic-numbers': 'off',

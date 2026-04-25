@@ -1,21 +1,24 @@
-import type { Type } from '../../interfaces/common/type.js';
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
-import { AbstractCommand } from '../../commands/abstract-command.js';
-import { ListenerProvider } from '../../interfaces/listener/event-listener.js';
+import type { Constructor } from '../../interfaces/common/constructor.js';
+import { RegisteredListener } from '../../interfaces/listener/event-listener.js';
+import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
+import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
     private moduleMap = new Map<unknown, ModuleContainer>(); // Map<moduleId, ModuleContainer>
     private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
-    private handlerMap = new Map<unknown, AbstractCommand>(); // Map<handlerId, moduleId>
-    private listenerMap = new Map<unknown, ListenerProvider>(); // Map<listenerId, moduleId>
+    private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, CommandHandler>
+    private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
 
-    compile(parentModule: Type): ModuleContainer {
+    constructor(private logger: AbstractLogger) {}
+
+    compile(parentModule: Constructor): ModuleContainer {
         return this.compileModule(parentModule, this.globalContainer);
     }
 
-    getContainerFor(provider: Type): ModuleContainer {
+    getContainerFor(provider: Constructor): ModuleContainer {
         const providerId = MetadataScanner.getProviderId(provider);
         const moduleId = this.providerMap.get(providerId);
         if (!moduleId) {
@@ -36,12 +39,12 @@ export class ModuleCompiler {
         return targetModule;
     }
 
-    private compileModule(moduleClass: Type, parent: ModuleContainer): ModuleContainer {
+    private compileModule(moduleClass: Constructor | undefined, parent: ModuleContainer): ModuleContainer {
         /**
          * CJS resolves module in runtime, so that means if ModuleA imports ModuleB, but ModuleB also imports ModuleA, then when we try to resolve ModuleA,
          * it will try to resolve ModuleB first, and then when it tries to resolve ModuleA again, it will get undefined because ModuleA is not fully loaded yet
          *
-         * This only happens in CJS, because ESM before runtime so it just throws an error like "ReferenceError: Cannot access 'AdminModule' before initialization"
+         * This only happens in CJS, because ESM just throws an error like "ReferenceError: Cannot access 'AdminModule' before initialization"
          */
         if (!moduleClass) {
             throw new Error(
@@ -64,11 +67,17 @@ export class ModuleCompiler {
 
         const moduleRef = this.moduleMap.get(moduleId);
         if (moduleRef) {
-            console.warn(`Module ${moduleClass.name} is already compiled. Reusing existing container.`);
+            this.logger.warn(
+                `Module ${moduleClass.name} is already compiled. Reusing existing container.`,
+                'ModuleCompiler',
+            );
             return moduleRef;
         }
 
-        console.log(`Binding module: ${moduleClass.name} as ${metadata.global ? 'global' : 'scoped'} module`);
+        this.logger.log(
+            `Binding module: ${moduleClass.name} as ${metadata.global ? 'global' : 'scoped'} module`,
+            'ModuleCompiler',
+        );
 
         this.moduleMap.set(moduleId, container);
         for (const importedModule of metadata.imports ?? []) {
@@ -78,9 +87,11 @@ export class ModuleCompiler {
         for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isListener(provider)) {
                 const listenerId = MetadataScanner.getListenerId(provider);
+                const event = MetadataScanner.getListenerEvent(provider);
 
                 container.register(provider);
-                this.listenerMap.set(listenerId, container.resolve(provider));
+                const instance = container.resolve(provider) as { handler: (...args: unknown[]) => void };
+                this.listenerMap.set(listenerId, { event, handler: instance.handler.bind(instance) });
 
                 continue;
             }
@@ -98,7 +109,8 @@ export class ModuleCompiler {
         }
 
         for (const handler of metadata.handlers ?? []) {
-            if (!MetadataScanner.isHandler(handler)) {
+            const handlerType = MetadataScanner.getHandlerWatermark(handler);
+            if (!handlerType) {
                 throw new Error(
                     `Class ${handler.name} is not a valid command handler. ` +
                         `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
@@ -106,19 +118,23 @@ export class ModuleCompiler {
             }
 
             const handlerId = MetadataScanner.getHandlerId(handler);
+            const handlerMetadata = MetadataScanner.getHandlerMetadata(handler);
 
             container.register(handler);
-            this.handlerMap.set(handlerId, container.resolve(handler as Type<AbstractCommand>));
+
+            const resolvedHandler = container.resolve(handler) as CommandHandler;
+
+            this.handlerMap.set(handlerId, { handler: resolvedHandler, metadata: handlerMetadata, type: handlerType });
         }
 
         return container;
     }
 
-    getCommandHandlers(): AbstractCommand[] {
+    getHandlers(): RegisteredCommandHandler[] {
         return Array.from(this.handlerMap.values());
     }
 
-    getEventListeners(): ListenerProvider[] {
+    getEventListeners(): RegisteredListener<unknown[]>[] {
         return Array.from(this.listenerMap.values());
     }
 }

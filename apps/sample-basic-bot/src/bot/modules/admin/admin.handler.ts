@@ -1,8 +1,9 @@
 import { SlashCommand } from '@nodecord/core';
+import { SlashCommandBuilder } from 'discord.js';
 
 import { AdminService } from './admin.service.js';
 
-@SlashCommand({ name: 'ping', description: 'idk' })
+@SlashCommand(new SlashCommandBuilder().setName('admin').setDescription('Admin command'))
 export class AdminHandler {
     constructor(private readonly adminService: AdminService) {}
 

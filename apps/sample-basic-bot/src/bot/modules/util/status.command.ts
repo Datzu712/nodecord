@@ -1,7 +1,9 @@
 import { Inject, SlashCommand } from '@nodecord/core';
+import { SlashCommandBuilder } from 'discord.js';
+
 import { LoggerService } from '../logger/logger.service.js';
 
-@SlashCommand({ name: 'status', description: 'Shows bot status', global: true })
+@SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows bot status'))
 export class StatusCommand {
     constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
 

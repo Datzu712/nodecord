@@ -1,5 +1,5 @@
 import { Container, type ServiceIdentifier } from 'inversify';
-import type { Type } from '../../interfaces/common/type.js';
+import type { Type } from '../../interfaces/common/constructor.js';
 
 export class ModuleContainer {
     #container: Container;

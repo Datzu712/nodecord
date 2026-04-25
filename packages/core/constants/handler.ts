@@ -8,3 +8,6 @@ export const HANDLER_METADATA = 'nodecord:handler:metadata';
 
 // Internal unique ID, used for conflict detection and DI lookups.
 export const HANDLER_ID = 'nodecord:handler:id';
+
+// Param metadata stored by parameter decorators on handler methods.
+export const COMMAND_ARGS_METADATA = 'nodecord:handler:args';
