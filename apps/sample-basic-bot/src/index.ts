@@ -21,7 +21,10 @@ async function bootstrap() {
     const admin = client.get(AdminService);
     console.log(admin.getStatus());
 
-    await client.loadSlashCommands();
+    await client.loadSlashCommands({
+        token: process.env.BOT_TOKEN!,
+        clientId: process.env.CLIENT_ID!,
+    });
     console.log('Slash commands loaded');
 
     await client.login(process.env.BOT_TOKEN!);

@@ -4,19 +4,24 @@ import {
     type ApplicationCommandDataResolvable,
     Events,
     type Interaction,
+    REST,
+    Routes,
 } from 'discord.js';
 import {
     AbstractClientAdapter,
     CommandExecutor,
     CommandParamTypes,
+    LoadSlashCommandsOptions,
     type ExecutionContext,
     type RegisteredCommandHandler,
+    type RegisteredInterceptor,
     type RegisteredListener,
 } from '@nodecord/core';
 import { CommandRegistry } from './command-registry.js';
 import { EventManager } from './event-manager.js';
 import { InteractionCreateDispatcher } from './events/interaction-create.dispatcher.js';
 import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
+import { ResponseHandler } from './response-handler.js';
 import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
@@ -40,6 +45,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         executor: CommandExecutor,
         handlers: RegisteredCommandHandler[],
         listeners: RegisteredListener<unknown[]>[],
+        interceptors: RegisteredInterceptor[],
     ): void {
         if (this.alreadyInitialized) {
             throw new Error(
@@ -63,7 +69,13 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
                 this.commandRegistry.register({ descriptor: descriptor.toJSON(), handler, ...rest });
             });
 
-            const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor);
+            const responseHandler = new ResponseHandler();
+            const dispatcher = new InteractionCreateDispatcher(
+                this.commandRegistry,
+                executor,
+                interceptors,
+                responseHandler,
+            );
             eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,
@@ -83,17 +95,17 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     }
 
     /**
-     * Syncs slash commands with the Discord API.
-     * Must be called after login so that client.application is available.
-     *
-     * @param commands - Array of command data to register globally.
+     * Todo: Add someway to filter which commands get registered.
      */
-    async loadSlashCommands(): Promise<void> {
+    async loadSlashCommands({ token, clientId, restVersion = '10' }: LoadSlashCommandsOptions): Promise<void> {
         const commands = this.commandRegistry
             .getAll()
             .map((cmd) => cmd.descriptor) as ApplicationCommandDataResolvable[];
 
-        await this.clientInstance.application?.commands.set(commands);
+        const rest = new REST({ version: restVersion }).setToken(token);
+        await rest.put(Routes.applicationCommands(clientId), {
+            body: commands,
+        });
     }
 
     getClient(): DjsClient {

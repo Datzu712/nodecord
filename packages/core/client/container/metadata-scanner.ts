@@ -1,12 +1,13 @@
 import { Constructor } from '../../interfaces/common/constructor.js';
-import { INJECTABLE_METADATA } from '../../constants/injectable.js';
-import { HANDLER_METADATA, HANDLER_WATERMARK } from '../../constants/handler.js';
+import { INJECTABLE_METADATA, INJECTABLE_WATERMARK } from '../../constants/injectable.js';
+import { HANDLER_METADATA, HANDLER_WATERMARK, USE_INTERCEPTORS_METADATA } from '../../constants/handler.js';
 import { MODULE_ID, MODULE_METADATA } from '../../constants/module.js';
 import type { ModuleMetadata } from '../../interfaces/module/module-metadata.interface.js';
 import { LISTENER_METADATA, LISTENER_WATERMARK } from '../../constants/listener.js';
 import type { ListenerMetadata } from '../../interfaces/listener/event-listener.js';
 import type { HandlerMetadata } from '../../interfaces/handler/command-handler.js';
-import { INJECTABLE_WATERMARK } from '@nestjs/common/constants.js';
+import { INTERCEPTOR_METADATA, INTERCEPTOR_WATERMARK } from '../../constants/interceptor.js';
+import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 
 export class MetadataScanner {
     static getModuleId(target: Constructor): string {
@@ -23,6 +24,22 @@ export class MetadataScanner {
 
     static isHandler(target: Constructor): boolean {
         return Reflect.hasMetadata(HANDLER_WATERMARK, target);
+    }
+
+    static isInterceptor(target: Constructor): boolean {
+        return Reflect.hasMetadata(INTERCEPTOR_WATERMARK, target);
+    }
+
+    static getInterceptorMetadata(target: Constructor): { id: string; type?: Constructor } | undefined {
+        return Reflect.getMetadata(INTERCEPTOR_METADATA, target) as { id: string; type?: Constructor } | undefined;
+    }
+
+    static getHandlerInterceptors(target: Constructor): Constructor<NodecordInterceptor>[] {
+        return (
+            (Reflect.getMetadata(USE_INTERCEPTORS_METADATA, target) as
+                | Constructor<NodecordInterceptor>[]
+                | undefined) ?? []
+        );
     }
 
     static getModuleMetadata(target: Constructor): ModuleMetadata {

@@ -4,7 +4,7 @@ A TypeScript framework for building Discord bots.
 
 Nodecord takes the module/provider pattern from frameworks like NestJS and brings it to Discord bot development. Instead of one giant file full of `client.on(...)` calls and globally shared state, you get a proper dependency injection system, scoped modules, and decorator-driven command definitions.
 
-> **Current status:** Core DI, Discord.js adapter, slash command registration, event handling, and parameter decorators are working. See [where things stand](#where-things-stand) before using this in production.
+> **Current status:** Core DI, Discord.js adapter, slash command registration, event handling, parameter decorators, and interceptors are working.
 
 ---
 
@@ -122,6 +122,66 @@ export class PingCommand {
 
 `ExecutionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
 
+#### Automatic reply deferral
+
+Place `@DeferReply()` on `execute()` to have the framework will defer the reply before running the handler. The `ResponseHandler` will edit the deferred reply with the return value of `execute()`, so you can return a string or an `InteractionReplyOptions` object instead of calling `reply()` manually.
+
+```typescript
+@SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows bot status'))
+export class StatusCommand implements CommandHandler {
+    @DeferReply()
+    execute(): string {
+        return 'Bot is online';
+    }
+}
+```
+
+Without `@DeferReply()`, the framework does not defer automatically and the handler is responsible for replying to the interaction directly (typically by using `@Context({ passThrough: true })`).
+
+---
+
+### Interceptors
+
+Interceptors wrap command execution and can observe, transform, or short-circuit the pipeline. They follow a chain-of-responsibility pattern: each interceptor receives a `next` callback that runs the rest of the chain.
+
+```typescript
+@Interceptor()
+export class LatencyInterceptor implements NodecordInterceptor {
+    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>): Promise<unknown> {
+        const start = Date.now();
+        const result = await next();
+        console.log(`Command "${ctx.name}" responded in ${Date.now() - start}ms`);
+        return result;
+    }
+}
+```
+
+#### Global interceptors
+
+Register an interceptor as a provider in any module. The framework detects the `@Interceptor()` watermark and applies it to every command automatically.
+
+```typescript
+@Module({
+    imports: [LoggerModule, UtilModule],
+    providers: [ReadyListener, LatencyInterceptor],
+})
+export class MainModule {}
+```
+
+#### Scoped interceptors
+
+Use `@UseInterceptors()` on a command class to attach interceptors that only run for that command. Scoped interceptors run after global ones.
+
+```typescript
+@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@UseInterceptors(CommandAuditInterceptor)
+export class PingCommand implements CommandHandler {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
+
 ### Bootstrapping
 
 ```typescript
@@ -167,7 +227,7 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 
 ---
 
-## Where things stand
+## Current Status
 
 **Working now:**
 
@@ -176,11 +236,12 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 - Global vs. scoped module registration
 - Provider resolution via `NodecordClient.get<T>()`
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
+- Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
+- Automatic reply deferral via `@DeferReply()`
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
 **Not yet implemented:**
 
-- Interceptors (`@Interceptor` decorator exists but is not wired into the execution pipeline yet)
 - Interaction flows (buttons, modals, select menus, and autocomplete co-located with their parent slash command)
 - Context menu command handling
 - Pipes on parameter decorators
