@@ -16,8 +16,8 @@ export function createCommandParamDecorator(paramType: CommandParamTypes) {
     };
 }
 
-export function Context(): ParameterDecorator {
-    return createCommandParamDecorator(CommandParamTypes.CONTEXT)();
+export function Context(options?: { passThrough?: boolean }): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.CONTEXT)(options);
 }
 
 export function Guild(): ParameterDecorator {

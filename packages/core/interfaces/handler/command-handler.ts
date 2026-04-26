@@ -1,4 +1,5 @@
 import { HandlerTypes } from '../../enums/command-types.enum.js';
+import { NodecordInterceptor } from '../interceptor/interceptor.js';
 
 export interface HandlerMetadata {
     id: string;
@@ -7,7 +8,7 @@ export interface HandlerMetadata {
 }
 
 export interface CommandHandler {
-    execute(...args: unknown[]): Promise<unknown>;
+    execute(...args: unknown[]): any;
 }
 
 /**
@@ -26,4 +27,5 @@ export interface RegisteredCommandHandler<TMetadata = unknown> {
     type: HandlerTypes;
     handler: CommandHandler;
     descriptor: TMetadata;
+    interceptors: NodecordInterceptor[];
 }

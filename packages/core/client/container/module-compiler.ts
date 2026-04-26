@@ -4,6 +4,7 @@ import type { Constructor } from '../../interfaces/common/constructor.js';
 import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/event-listener.js';
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
+import type { NodecordInterceptor, RegisteredInterceptor } from '../../interfaces/interceptor/interceptor.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
@@ -11,6 +12,7 @@ export class ModuleCompiler {
     private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
     private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, CommandHandler>
     private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
+    private interceptorMap = new Map<string, RegisteredInterceptor>(); // Map<interceptorId, RegisteredInterceptor>
 
     constructor(private logger: AbstractLogger) {}
 
@@ -106,6 +108,17 @@ export class ModuleCompiler {
                 continue;
             }
 
+            if (MetadataScanner.isInterceptor(provider)) {
+                const interceptorMeta = MetadataScanner.getInterceptorMetadata(provider)!;
+
+                container.register(provider);
+
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                const instance = container.resolve<NodecordInterceptor>(provider);
+                this.interceptorMap.set(interceptorMeta.id, { interceptor: instance, type: interceptorMeta.type });
+                continue;
+            }
+
             if (!MetadataScanner.isProvider(provider)) {
                 throw new Error(
                     `Class ${provider.name} is not a valid provider. ` + `Make sure it is decorated with @Injectable.`,
@@ -131,7 +144,15 @@ export class ModuleCompiler {
 
             const resolvedHandler = container.resolve(handler) as CommandHandler;
 
-            this.handlerMap.set(handlerId, { handler: resolvedHandler, descriptor, type: handlerType });
+            const interceptorCtors = MetadataScanner.getHandlerInterceptors(handler);
+            const handlerInterceptors = interceptorCtors.map((ctor) => container.resolve<NodecordInterceptor>(ctor));
+
+            this.handlerMap.set(handlerId, {
+                handler: resolvedHandler,
+                descriptor,
+                type: handlerType,
+                interceptors: handlerInterceptors,
+            });
         }
 
         return container;
@@ -143,5 +164,9 @@ export class ModuleCompiler {
 
     getEventListeners(): RegisteredListener<unknown[]>[] {
         return Array.from(this.listenerMap.values());
+    }
+
+    getInterceptors(): RegisteredInterceptor[] {
+        return Array.from(this.interceptorMap.values());
     }
 }

@@ -2,7 +2,7 @@ import { loadAdapter } from '../helpers/load-adapter.js';
 import { NodecordClientOptions } from '../interfaces/client/nodecord-client-options.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { Constructor } from '../interfaces/common/constructor.js';
-import { AbstractClientAdapter } from './abstract-client-adapter.js';
+import { AbstractClientAdapter, type LoadSlashCommandsOptions } from './abstract-client-adapter.js';
 import { CommandExecutor } from './command-executor.js';
 import { ConsoleLogger } from './console-logger.js';
 import { ModuleCompiler } from './container/module-compiler.js';
@@ -56,7 +56,9 @@ export class NodecordClient {
         const executor = new CommandExecutor();
         const handlers = this.moduleCompiler.getHandlers();
         const listeners = this.moduleCompiler.getEventListeners();
-        this.adapter.initialize(executor, handlers, listeners);
+        const interceptors = this.moduleCompiler.getInterceptors();
+
+        this.adapter.initialize(executor, handlers, listeners, interceptors);
     }
 
     get<T>(cls: Constructor<T>): T {
@@ -112,7 +114,7 @@ export class NodecordClient {
         await this.adapter.login(token);
     }
 
-    async loadSlashCommands() {
-        return this.adapter.loadSlashCommands();
+    public async loadSlashCommands(options: LoadSlashCommandsOptions): Promise<void> {
+        await this.adapter.loadSlashCommands(options);
     }
 }

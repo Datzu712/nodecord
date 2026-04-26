@@ -1,15 +1,22 @@
-import { Author, Context, ExecutionContext, Inject, SlashCommand } from '@nodecord/core';
+import { Author, CommandHandler, Context, ExecutionContext, SlashCommand, UseInterceptors } from '@nodecord/core';
 import { ChatInputCommandInteraction, SlashCommandBuilder, User } from 'discord.js';
 
-import { LoggerService } from '../logger/logger.service.js';
+import { CommandAuditInterceptor } from '../../interceptors/command-audit.interceptor.js';
 
 @SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
-export class PingCommand {
-    constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
+@UseInterceptors(CommandAuditInterceptor)
+export class PingCommand implements CommandHandler {
+    constructor() {}
 
-    async execute(@Context() ctx: ExecutionContext<ChatInputCommandInteraction>, @Author() author: User) {
-        this.logger.log('PingCommand executed');
+    async execute(
+        @Context({ passThrough: true }) ctx: ExecutionContext<ChatInputCommandInteraction>,
+        @Author() author: User,
+    ) {
+        const interaction = ctx.getRaw();
+        await interaction.deferReply();
 
-        await ctx.getRaw().reply(`Pong! Hello, ${author.username}!`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await interaction.editReply(`Pong! Hello, ${author.username}!`);
     }
 }

@@ -1,5 +1,5 @@
 export interface ListenerProvider<TEventArgs extends unknown[] = unknown[]> {
-    handler: (...args: TEventArgs) => void;
+    handler: (...args: TEventArgs) => any;
 }
 
 export interface ListenerMetadata {
