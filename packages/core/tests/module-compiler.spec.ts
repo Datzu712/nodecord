@@ -6,6 +6,7 @@ import { ModuleCompiler } from '../client/container/module-compiler.js';
 import { Inject } from '../decorators/inject.js';
 import { Injectable } from '../decorators/injectable.js';
 import { Module } from '../decorators/module.js';
+import { Interceptor } from '../decorators/interceptor.js';
 import { Listener } from '../decorators/listener.js';
 import { SlashCommand } from '../decorators/slash-command.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
@@ -233,6 +234,63 @@ describe('ModuleCompiler', () => {
 
                 const [listener] = compiler.getEventListeners();
                 expect((listener?.listener as MessageListener).handler('hello')).toBe('data: hello');
+            });
+        });
+    });
+
+    describe('interceptors', () => {
+        describe('registration', () => {
+            it('registers a valid @Interceptor and exposes it via getInterceptors()', () => {
+                @Interceptor()
+                class LoggingInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @Module({ providers: [LoggingInterceptor] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const interceptors = compiler.getInterceptors();
+                expect(interceptors).toHaveLength(1);
+                expect(interceptors[0]?.interceptor).toBeInstanceOf(LoggingInterceptor);
+            });
+        });
+
+        describe('execution', () => {
+            it('resolved interceptor instance has its dependencies correctly injected', () => {
+                /**
+                 * The core only resolves the interceptor instance via DI. Invoking intercept() is
+                 * CommandExecutor's responsibility. This test simply verifies that the interceptor's
+                 * dependencies are injected correctly when the instance is resolved.
+                 */
+                @Injectable()
+                class LogService {
+                    log(msg: string) {
+                        return `logged: ${msg}`;
+                    }
+                }
+
+                @Interceptor()
+                class LoggingInterceptor {
+                    constructor(public logger: LogService) {}
+
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @Module({ providers: [LogService, LoggingInterceptor] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [interceptor] = compiler.getInterceptors();
+                expect((interceptor?.interceptor as LoggingInterceptor).logger).toBeInstanceOf(LogService);
             });
         });
     });
