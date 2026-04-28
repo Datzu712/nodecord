@@ -225,6 +225,8 @@ nodecord/
 
 The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspaces. Both packages ship ESM and CJS outputs with full TypeScript declarations.
 
+Tests are written with [Vitest](https://vitest.dev/) and run directly via `pnpm vitest` from the repo root, outside of Turborepo. There's a single `vitest.config.ts` at the root that covers all packages. Turbo cache isn't needed for tests at this stage, and keeping one config avoids scattering `vitest.config.ts` files across every package.
+
 ---
 
 ### Where is the npm package?

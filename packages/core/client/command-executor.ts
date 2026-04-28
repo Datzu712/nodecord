@@ -7,6 +7,8 @@ import type { ExecutionContext } from './execution-context.js';
 
 export type ParamTypeResolver = (ctx: ExecutionContext, data?: unknown) => unknown;
 
+// TODO: CommandExecutor should have zero knowledge of reflect-metadata. All metadata resolution
+// (param metadata, defer-reply flag, etc.) belongs in ModuleCompiler/MetadataScanner.
 export class CommandExecutor {
     private readonly paramResolvers = new Map<CommandParamTypes, ParamTypeResolver>();
 
