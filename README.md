@@ -227,6 +227,10 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 
 ---
 
+### Where is the npm package?
+
+Not published yet! The API is still in development and I want to get more of the core features implemented before doing a release.
+
 ## Current Status
 
 **Working now:**
@@ -246,6 +250,8 @@ The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspac
 - Context menu command handling
 - Pipes on parameter decorators
 - More built-in parameter decorators (`@Option()`, etc.)
+- Robust error handling
+- Testing utilities and mocks for commands and services
 
 ---
 
