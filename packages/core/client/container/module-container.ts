@@ -23,13 +23,13 @@ export class ModuleContainer {
     }
 
     register<T>(cls: Constructor<T>, scope: 'singleton' | 'transient' = 'singleton'): void {
-        const binding = this.#container.bind<T>(cls as ServiceIdentifier<T>).toSelf();
+        const binding = this.#container.bind<T>(cls).toSelf();
         if (scope === 'singleton') binding.inSingletonScope();
         else binding.inTransientScope();
     }
 
     resolve<T>(cls: Constructor<T>): T {
-        if (this.#container.isBound(cls as ServiceIdentifier<T>)) {
+        if (this.#container.isBound(cls)) {
             return this.#container.get<T>(cls as ServiceIdentifier<T>);
         }
         throw new Error(`[${this.moduleName}] No binding found for ${cls.name}`);
@@ -40,7 +40,7 @@ export class ModuleContainer {
     }
 
     registerConstant<T>(cls: Constructor<T>, value: T): void {
-        this.#container.bind<T>(cls as ServiceIdentifier<T>).toConstantValue(value);
+        this.#container.bind<T>(cls).toConstantValue(value);
     }
 
     /**

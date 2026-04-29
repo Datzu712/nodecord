@@ -6,7 +6,9 @@
     "main": "./dist/index.js",
     "scripts": {
         "dev": "tsup --watch",
-        "build": "tsup"
+        "build": "tsup",
+        "lint": "eslint . --ext .ts,.tsx",
+        "typecheck": "tsc --noEmit"
     },
     "exports": {
         ".": {
@@ -52,5 +54,10 @@
     },
     "dependencies": {
         "inversify": "^8.1.0"
-    }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ]
 }

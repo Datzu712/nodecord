@@ -107,7 +107,8 @@ describe('ModuleCompiler', () => {
 
                 @Injectable()
                 class MyService {
-                    constructor(@Inject(UnregisteredDep) private dep: UnregisteredDep) {}
+                    // @ts-expect-error - testing behavior when dependency is not registered
+                    constructor(@Inject(UnregisteredDep) private _dep: UnregisteredDep) {}
                 }
                 @Module({ providers: [MyService] })
                 class AppModule {}

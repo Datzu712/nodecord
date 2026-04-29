@@ -6,7 +6,9 @@
     "main": "./dist/index.js",
     "scripts": {
         "dev": "tsup --watch",
-        "build": "tsup"
+        "build": "tsup",
+        "lint": "eslint adapter testing --ext .ts",
+        "typecheck": "tsc --noEmit"
     },
     "exports": {
         ".": {
@@ -46,5 +48,26 @@
         "vitest": {
             "optional": true
         }
-    }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "discordjs",
+        "discord-framework",
+        "typescript",
+        "dependency-injection",
+        "di",
+        "modular",
+        "testing",
+        "vitest",
+        "framework",
+        "slash-commands",
+        "interceptors",
+        "decorators"
+    ]
 }
