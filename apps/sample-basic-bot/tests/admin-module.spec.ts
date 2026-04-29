@@ -1,4 +1,5 @@
-import { createMockChatInputInteraction, TestingDjsAdapter, TestingModule } from '@nodecord/djs-adapter/testing';
+import { createMockChatInputInteraction, TestingDjsAdapter } from '@nodecord/djs-adapter/testing';
+import { Constructor, NodecordClient, TestingModule } from '@nodecord/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { AdminModule } from '../src/bot/modules/admin/admin.module.js';
@@ -8,17 +9,24 @@ describe('AdminModule', () => {
     const adminServiceMock = {
         getStatus: () => 'mocked status',
     };
-    let testingModule: TestingModule;
-    let adapter: TestingDjsAdapter;
+    const adapter = new TestingDjsAdapter();
 
     beforeAll(() => {
-        testingModule = TestingModule.create(AdminModule).overrideProvider(AdminService, adminServiceMock).compile();
-        adapter = testingModule.getAdapter();
+        const testingModule = TestingModule.create(AdminModule)
+            .overrideProvider(AdminService, adminServiceMock)
+            .build();
+
+        NodecordClient.create({
+            module: testingModule,
+            adapter,
+            options: { logger: false },
+        });
     });
 
     it('should use the mocked AdminService', async () => {
         const interaction = createMockChatInputInteraction({ commandName: 'admin' });
         await adapter.simulateInteraction(interaction);
+
         expect(interaction.deferReply).toHaveBeenCalledOnce();
         expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Bot status: mocked status' });
     });

@@ -6,6 +6,7 @@ import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
+import { TESTING_OVERRIDES_METADATA } from '../../constants/testing.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
@@ -14,11 +15,9 @@ export class ModuleCompiler {
     private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, CommandHandler>
     private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
     private pendingHandlers: Array<{ container: ModuleContainer; handlerClasses: Constructor[] }> = [];
+    private overrides: Map<Constructor, unknown> = new Map();
 
-    constructor(
-        private logger: AbstractLogger,
-        private overrides: Map<Constructor, unknown> = new Map(),
-    ) {}
+    constructor(private logger: AbstractLogger) {}
 
     compile(parentModule: Constructor): ModuleContainer {
         this.compileModule(parentModule, this.globalContainer);
@@ -66,6 +65,14 @@ export class ModuleCompiler {
                     `This usually means a circular import between files (e.g. moduleA imports moduleB which imports moduleA). ` +
                     `Check the imports array of ${parent.moduleName}.`,
             );
+        }
+
+        const testOverrides = Reflect.getMetadata(TESTING_OVERRIDES_METADATA, moduleClass) as
+            | Map<Constructor, unknown>
+            | undefined;
+
+        if (testOverrides) {
+            this.overrides = testOverrides;
         }
 
         if (!MetadataScanner.isModule(moduleClass)) {

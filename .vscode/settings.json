@@ -4,6 +4,7 @@
     "conventionalCommits.scopes": [
         "core",
         "sample-basic-bot",
-        "djs-adapter"
+        "djs-adapter",
+        "core,djs-adapter"
     ]
 }

@@ -58,11 +58,6 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
 
         this.eventManager = new EventManager();
 
-        console.log(
-            'Registering commands',
-            handlers.map((h) => h.handler.constructor.name),
-        );
-
         if (handlers.length) {
             handlers.forEach(({ descriptor, handler, ...rest }) => {
                 if (!isDjsCommandMeta(descriptor)) {
@@ -75,11 +70,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
             });
 
             const responseHandler = new ResponseHandler();
-            const dispatcher = new InteractionCreateDispatcher(
-                this.commandRegistry,
-                executor,
-                responseHandler,
-            );
+            const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor, responseHandler);
             this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,
