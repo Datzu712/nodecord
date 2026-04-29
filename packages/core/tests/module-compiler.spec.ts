@@ -9,6 +9,7 @@ import { Module } from '../decorators/module.js';
 import { Interceptor } from '../decorators/interceptor.js';
 import { Listener } from '../decorators/listener.js';
 import { SlashCommand } from '../decorators/slash-command.js';
+import { UseInterceptors } from '../decorators/use-interceptors.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { ListenerProvider } from '../interfaces/listener/event-listener.js';
 
@@ -239,8 +240,8 @@ describe('ModuleCompiler', () => {
     });
 
     describe('interceptors', () => {
-        describe('registration', () => {
-            it('registers a valid @Interceptor and exposes it via getInterceptors()', () => {
+        describe('module-level', () => {
+            it('interceptor in providers[] is applied to all handlers in the same module', () => {
                 @Interceptor()
                 class LoggingInterceptor {
                     async intercept(_: unknown, next: () => Promise<unknown>) {
@@ -248,25 +249,102 @@ describe('ModuleCompiler', () => {
                     }
                 }
 
-                @Module({ providers: [LoggingInterceptor] })
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @SlashCommand({ name: 'echo', description: 'Echo' })
+                class EchoHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [LoggingInterceptor], handlers: [PingHandler, EchoHandler] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
                 compiler.compile(AppModule);
 
-                const interceptors = compiler.getInterceptors();
-                expect(interceptors).toHaveLength(1);
-                expect(interceptors[0]?.interceptor).toBeInstanceOf(LoggingInterceptor);
+                const [pingHandler, echoHandler] = compiler.getHandlers();
+                expect(pingHandler?.interceptors).toHaveLength(1);
+                expect(pingHandler?.interceptors[0]?.interceptor).toBeInstanceOf(LoggingInterceptor);
+                expect(echoHandler?.interceptors).toHaveLength(1);
+                expect(echoHandler?.interceptors[0]?.interceptor).toBeInstanceOf(LoggingInterceptor);
             });
-        });
 
-        describe('execution', () => {
-            it('resolved interceptor instance has its dependencies correctly injected', () => {
-                /**
-                 * The core only resolves the interceptor instance via DI. Invoking intercept() is
-                 * CommandExecutor's responsibility. This test simply verifies that the interceptor's
-                 * dependencies are injected correctly when the instance is resolved.
-                 */
+            it('interceptor from a parent module is inherited by child module handlers', () => {
+                @Interceptor()
+                class ParentInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @SlashCommand({ name: 'ping' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @SlashCommand({ name: 'echo' })
+                class EchoHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class ChildModule {}
+
+                @Module({ providers: [ParentInterceptor], imports: [ChildModule] })
+                class ParentModule {}
+
+                @Module({ imports: [ParentModule], handlers: [EchoHandler] })
+                class RootModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(RootModule);
+
+                const [pingHandler, echoHandler] = compiler.getHandlers();
+                expect(pingHandler?.interceptors).toHaveLength(1);
+                expect(pingHandler?.interceptors[0]?.interceptor).toBeInstanceOf(ParentInterceptor);
+
+                // EchoHandler is declared in RootModule, which does not import ParentModule, so it should not inherit the interceptor
+                expect(echoHandler?.interceptors).toHaveLength(0);
+            });
+
+            it('parent interceptors come before child module interceptors in the pipeline', () => {
+                @Interceptor()
+                class ParentInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @Interceptor()
+                class ChildInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ChildInterceptor], handlers: [PingHandler] })
+                class ChildModule {}
+
+                @Module({ providers: [ParentInterceptor], imports: [ChildModule] })
+                class ParentModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(ParentModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.interceptors[0]?.interceptor).toBeInstanceOf(ParentInterceptor);
+                expect(handler?.interceptors[1]?.interceptor).toBeInstanceOf(ChildInterceptor);
+            });
+
+            it('interceptor dependencies are correctly injected', () => {
                 @Injectable()
                 class LogService {
                     log(msg: string) {
@@ -283,14 +361,93 @@ describe('ModuleCompiler', () => {
                     }
                 }
 
-                @Module({ providers: [LogService, LoggingInterceptor] })
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [LogService, LoggingInterceptor], handlers: [PingHandler] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
                 compiler.compile(AppModule);
 
-                const [interceptor] = compiler.getInterceptors();
-                expect((interceptor?.interceptor as LoggingInterceptor).logger).toBeInstanceOf(LogService);
+                const [handler] = compiler.getHandlers();
+                expect((handler?.interceptors[0]?.interceptor as LoggingInterceptor).logger).toBeInstanceOf(LogService);
+            });
+        });
+
+        describe('@UseInterceptors', () => {
+            it('handler-level interceptors are appended after module-level interceptors', () => {
+                @Interceptor()
+                class ModuleInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @Interceptor()
+                class HandlerInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                @UseInterceptors(HandlerInterceptor)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ModuleInterceptor], handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.interceptors).toHaveLength(2);
+                expect(handler?.interceptors[0]?.interceptor).toBeInstanceOf(ModuleInterceptor);
+                expect(handler?.interceptors[1]?.interceptor).toBeInstanceOf(HandlerInterceptor);
+            });
+
+            it('throws when @UseInterceptors references a class not decorated with @Interceptor', () => {
+                class NotAnInterceptor {}
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                @UseInterceptors(NotAnInterceptor as any)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow('is not a valid interceptor');
+            });
+
+            it('throws when the same interceptor is registered at module level and via @UseInterceptors', () => {
+                @Interceptor()
+                class DuplicateInterceptor {
+                    async intercept(_: unknown, next: () => Promise<unknown>) {
+                        return next();
+                    }
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                @UseInterceptors(DuplicateInterceptor)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [DuplicateInterceptor], handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow('Duplicate interceptor');
             });
         });
     });

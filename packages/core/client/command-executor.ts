@@ -2,7 +2,7 @@ import { COMMAND_ARGS_METADATA, DEFER_REPLY_METADATA } from '../constants/handle
 import { CommandParamTypes } from '../enums/command-types.enum.js';
 import { CommandHandler } from '../interfaces/handler/command-handler.js';
 import type { ParamMetadata } from '../interfaces/handler/param-metadata.js';
-import type { NodecordInterceptor } from '../interfaces/interceptor/interceptor.js';
+import type { RegisteredInterceptor } from '../interfaces/interceptor/interceptor.js';
 import type { ExecutionContext } from './execution-context.js';
 
 export type ParamTypeResolver = (ctx: ExecutionContext, data?: unknown) => unknown;
@@ -20,10 +20,10 @@ export class CommandExecutor {
     async execute(
         ctx: ExecutionContext<any>,
         handler: CommandHandler,
-        interceptors: NodecordInterceptor[] = [],
+        interceptors: RegisteredInterceptor[] = [],
     ): Promise<unknown> {
         /**
-         * Chain of responsibility pattern for interceptors. See https://gist.github.com/Datzu712/6ed9c6115e00fb6ffd48fd03bf4c77c8 for an example implementation.
+         * Chain of responsibility pattern for interceptors. See https://gist.github.com/Datzu712/6ed9c6115e00fb6ffd48fd03bf4c77c8 for an example of this implementation.
          */
         const final = async () => {
             const metadata = this.getParamMetadata(handler);
@@ -35,7 +35,13 @@ export class CommandExecutor {
             return await handler.execute(...args);
         };
 
-        const pipeline = interceptors.reduceRight((next, interceptor) => () => interceptor.intercept(ctx, next), final);
+        const pipeline = interceptors.reduceRight(
+            (next, { interceptor }) =>
+                async () =>
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                    interceptor.intercept(ctx, next),
+            final,
+        );
 
         return pipeline();
     }

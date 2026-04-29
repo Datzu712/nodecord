@@ -30,8 +30,8 @@ export class MetadataScanner {
         return Reflect.hasMetadata(INTERCEPTOR_WATERMARK, target);
     }
 
-    static getInterceptorMetadata(target: Constructor): { id: string; type?: Constructor } | undefined {
-        return Reflect.getMetadata(INTERCEPTOR_METADATA, target) as { id: string; type?: Constructor } | undefined;
+    static getInterceptorMetadata(target: Constructor): { id: string; type?: Constructor } {
+        return Reflect.getMetadata(INTERCEPTOR_METADATA, target) as { id: string; type?: Constructor };
     }
 
     static getHandlerInterceptors(target: Constructor): Constructor<NodecordInterceptor>[] {

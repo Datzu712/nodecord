@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NodecordClient } from '@nodecord/core';
 
-import { MainModule } from '../src/app.module.js';
+import { BotModule } from '../src/bot.module.js';
 import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
 
 const mockedUser = { id: '1', username: 'juan', discriminator: '0000' } as any;
@@ -14,7 +14,7 @@ describe('UtilModule', () => {
     beforeEach(() => {
         adapter = new TestingDjsAdapter();
         NodecordClient.create({
-            module: MainModule,
+            module: BotModule,
             adapter,
             options: { logger: false },
         });

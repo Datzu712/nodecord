@@ -8,6 +8,7 @@ import { ExecutionContext } from '../client/execution-context.js';
 import { SlashCommand } from '../decorators/slash-command.js';
 import { HandlerTypes } from '../enums/command-types.enum.js';
 import { CommandExecutor } from '../client/command-executor.js';
+import { randomUUID } from 'node:crypto';
 
 describe('CommandExecutor', () => {
     it('should execute interceptors in the correct order', async () => {
@@ -38,7 +39,10 @@ describe('CommandExecutor', () => {
             }
         }
 
-        const interceptors = [new GlobalTestInterceptorA(), new TestInterceptorB()];
+        const interceptors = [
+            { interceptor: new GlobalTestInterceptorA(), metadata: { id: randomUUID() } },
+            { interceptor: new TestInterceptorB(), metadata: { id: randomUUID() } },
+        ];
         const command = new TestCommand();
 
         const ctx = new ExecutionContext('test', HandlerTypes.SLASH, {});
@@ -69,7 +73,9 @@ describe('CommandExecutor', () => {
         const ctx = new ExecutionContext('test', HandlerTypes.SLASH, {});
         const commandExecutor = new CommandExecutor();
 
-        const result = await commandExecutor.execute(ctx, new TestCommand(), [new TransformInterceptor()]);
+        const result = await commandExecutor.execute(ctx, new TestCommand(), [
+            { interceptor: new TransformInterceptor(), metadata: { id: randomUUID() } },
+        ]);
         expect(result).toBe('pong:transformed');
     });
 
@@ -94,7 +100,9 @@ describe('CommandExecutor', () => {
         const ctx = new ExecutionContext('test', HandlerTypes.SLASH, {});
         const commandExecutor = new CommandExecutor();
 
-        const result = await commandExecutor.execute(ctx, new TestCommand(), [new ShortCircuitInterceptor()]);
+        const result = await commandExecutor.execute(ctx, new TestCommand(), [
+            { interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } },
+        ]);
 
         expect(result).toBe('short-circuit');
         expect(commandExecuted.value).toBe(false);

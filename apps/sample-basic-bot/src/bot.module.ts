@@ -9,4 +9,4 @@ import { LatencyInterceptor } from './bot/interceptors/latency.interceptor.js';
     imports: [LoggerModule, AdminModule, UtilModule],
     providers: [ReadyListener, LatencyInterceptor],
 })
-export class MainModule {}
+export class BotModule {}

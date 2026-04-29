@@ -14,7 +14,6 @@ import {
     LoadSlashCommandsOptions,
     type ExecutionContext,
     type RegisteredCommandHandler,
-    type RegisteredInterceptor,
     type RegisteredListener,
 } from '@nodecord/core';
 import { CommandRegistry } from './command-registry.js';
@@ -47,7 +46,6 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         executor: CommandExecutor,
         handlers: RegisteredCommandHandler[],
         listeners: RegisteredListener<unknown[]>[],
-        globalInterceptors: RegisteredInterceptor[],
     ): void {
         if (this.alreadyInitialized) {
             throw new Error(
@@ -80,7 +78,6 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
             const dispatcher = new InteractionCreateDispatcher(
                 this.commandRegistry,
                 executor,
-                globalInterceptors,
                 responseHandler,
             );
             this.eventManager.register({

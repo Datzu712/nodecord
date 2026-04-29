@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { RegisteredCommandHandler, RegisteredListener, RegisteredInterceptor } from '../interfaces/index.js';
+import { RegisteredCommandHandler, RegisteredListener } from '../interfaces/index.js';
 import type { CommandExecutor } from './command-executor.js';
 
 export interface LoadSlashCommandsOptions {
@@ -15,7 +15,6 @@ export abstract class AbstractClientAdapter<TClientInstance = any> {
         executor: CommandExecutor,
         handlers: RegisteredCommandHandler[],
         listeners: RegisteredListener<unknown[]>[],
-        interceptors: RegisteredInterceptor[],
     ): void;
     abstract login(token: string): Promise<void>;
     abstract loadSlashCommands(options: LoadSlashCommandsOptions): Promise<void>;

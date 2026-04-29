@@ -7,8 +7,6 @@ export class StringToEmbedInterceptor implements NodecordInterceptor {
     async intercept(ctx: ExecutionContext, next: () => Promise<unknown>): Promise<unknown> {
         const result = await next();
 
-        console.log('asdd');
-
         if (typeof result !== 'string') return result;
 
         return new EmbedBuilder().setDescription(result);
