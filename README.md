@@ -182,6 +182,34 @@ export class PingCommand implements CommandHandler {
 }
 ```
 
+### Testing
+
+`@nodecord/djs-adapter` ships a `/testing` subpath with utilities for testing commands without connecting to Discord.
+
+`TestingDjsAdapter` is a drop-in replacement for `DiscordJsAdapter` that skips `login()` and `loadSlashCommands()`. Use `simulateInteraction()` to push a mock interaction through the full pipeline module compilation, DI, interceptors, and response handling exactly as it would run in production.
+
+```typescript
+import { NodecordClient } from '@nodecord/core';
+import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
+import { MainModule } from './app.module.js';
+
+const adapter = new TestingDjsAdapter();
+NodecordClient.create({ module: MainModule, adapter, options: { logger: false } });
+
+const interaction = createMockChatInputInteraction({
+    commandName: 'status',
+    user: { id: '1', username: 'john doe' } as any,
+});
+
+await adapter.simulateInteraction(interaction);
+
+expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Bot is online' });
+```
+
+`createMockChatInputInteraction` returns a real `ChatInputCommandInteraction` instance (via `Object.create`) so `instanceof` checks and discord.js type guards work correctly. Pass overrides to control `commandName`, `user`, `guild`, and any other property.
+
+---
+
 ### Bootstrapping
 
 ```typescript
@@ -217,10 +245,11 @@ Each provider and module gets a unique ID generated at decoration time, which pr
 ```text
 nodecord/
 ├── apps/
-│   └── sample-basic-bot/     # Working example: modules, services, commands
+│   └── sample-basic-bot/          # Working example: modules, services, commands, tests
 ├── packages/
-│   ├── core/                 # @nodecord/core
-│   └── djs-adapter/          # @nodecord/djs-adapter — Discord.js integration
+│   ├── core/                      # @nodecord/core
+│   └── djs-adapter/               # @nodecord/djs-adapter
+│       └── testing/               # TestingDjsAdapter, createMockChatInputInteraction
 ```
 
 The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspaces. Both packages ship ESM and CJS outputs with full TypeScript declarations.
@@ -244,6 +273,7 @@ Not published yet! The API is still in development and I want to get more of the
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
 - Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
 - Automatic reply deferral via `@DeferReply()`
+- Testing utilities: `TestingDjsAdapter` and `createMockChatInputInteraction` for testing commands without a live Discord connection
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
 **Not yet implemented:**
@@ -253,7 +283,6 @@ Not published yet! The API is still in development and I want to get more of the
 - Pipes on parameter decorators
 - More built-in parameter decorators (`@Option()`, etc.)
 - Robust error handling
-- Testing utilities and mocks for commands and services
 
 ---
 

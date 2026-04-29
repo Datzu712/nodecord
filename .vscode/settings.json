@@ -3,6 +3,7 @@
     "discord.enabled": true,
     "conventionalCommits.scopes": [
         "core",
-        "sample-basic-bot"
+        "sample-basic-bot",
+        "djs-adapter"
     ]
 }

@@ -2,6 +2,7 @@ import 'reflect-metadata';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NodecordClient } from '@nodecord/core';
+
 import { MainModule } from '../src/app.module.js';
 import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
 

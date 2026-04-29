@@ -3,7 +3,7 @@
 import { EventEmitter } from 'node:events';
 import { Client as DjsClient, Events } from 'discord.js';
 import { type LoadSlashCommandsOptions } from '@nodecord/core';
-import { DiscordJsAdapter } from '../djs-adapter.js';
+import { DiscordJsAdapter } from '../adapter/djs-adapter.js';
 import type { MockInteraction } from './mock-interaction.js';
 
 function createFakeDiscordClient(): DjsClient {
