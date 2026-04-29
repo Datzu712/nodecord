@@ -27,6 +27,8 @@ import { randomUUID } from 'node:crypto';
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
 
+    protected eventManager!: EventManager;
+
     private readonly commandRegistry = new CommandRegistry();
 
     /**
@@ -45,7 +47,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         executor: CommandExecutor,
         handlers: RegisteredCommandHandler[],
         listeners: RegisteredListener<unknown[]>[],
-        interceptors: RegisteredInterceptor[],
+        globalInterceptors: RegisteredInterceptor[],
     ): void {
         if (this.alreadyInitialized) {
             throw new Error(
@@ -56,7 +58,12 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
 
         this.registerParamResolvers(executor);
 
-        const eventManager = new EventManager();
+        this.eventManager = new EventManager();
+
+        console.log(
+            'Registering commands',
+            handlers.map((h) => h.handler.constructor.name),
+        );
 
         if (handlers.length) {
             handlers.forEach(({ descriptor, handler, ...rest }) => {
@@ -73,17 +80,17 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
             const dispatcher = new InteractionCreateDispatcher(
                 this.commandRegistry,
                 executor,
-                interceptors,
+                globalInterceptors,
                 responseHandler,
             );
-            eventManager.register({
+            this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,
             });
         }
 
-        listeners.forEach((l) => eventManager.register(l));
-        eventManager.attach(this.clientInstance);
+        listeners.forEach((l) => this.eventManager.register(l));
+        this.eventManager.attach(this.clientInstance);
     }
 
     async login(token: string): Promise<void> {

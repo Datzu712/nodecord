@@ -7,12 +7,14 @@ import type { ExecutionContext } from '@nodecord/core';
 // other interaction types and potentially support a user-extensible resolver system.
 export class ResponseHandler {
     async resolve(value: unknown, ctx: ExecutionContext<Interaction>): Promise<void> {
+        console.log(value, ctx);
         if (value == null) return;
 
         const interaction = ctx.getRaw();
         if (!interaction.isChatInputCommand()) return;
 
         const method = interaction.deferred || interaction.replied ? 'editReply' : 'reply';
+        console.log(method);
 
         if (typeof value === 'string') {
             await interaction[method]({ content: value });

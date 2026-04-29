@@ -22,7 +22,10 @@ export class InteractionCreateDispatcher implements ListenerProvider<ClientEvent
     // Sadly typescript doesn't infer the tuple type for the event args, so we have to hardcode it here
     async handler(raw: DjsInteraction) {
         const ctx = this.mapInteraction(raw);
-        if (!ctx) return;
+        if (!ctx) {
+            console.log(`Received unsupported interaction type: ${raw.type}`);
+            return;
+        }
 
         const registeredCommand = this.registry.get(ctx.name);
         if (!registeredCommand) return;

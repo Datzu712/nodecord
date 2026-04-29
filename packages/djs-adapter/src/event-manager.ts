@@ -32,4 +32,17 @@ export class EventManager {
             });
         }
     }
+
+    /**
+     * Emits an event and awaits all async listeners before returning.
+     * Intended exclusively for use in testing via TestingAdapter.simulateInteraction().
+     * Do not use this in production code.
+     */
+    public async emitAsync(event: keyof ClientEvents, ...args: unknown[]): Promise<void> {
+        const bucket = this.buckets.get(event);
+        if (!bucket) return;
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        await Promise.all(bucket.listeners.map((l) => l.handler(...args)));
+    }
 }
