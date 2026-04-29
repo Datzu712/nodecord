@@ -5,6 +5,7 @@
         "core",
         "sample-basic-bot",
         "djs-adapter",
-        "core,djs-adapter"
+        "core,djs-adapter",
+        "monorepo"
     ]
 }
