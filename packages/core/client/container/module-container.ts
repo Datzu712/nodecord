@@ -39,6 +39,10 @@ export class ModuleContainer {
         this.interceptors.push(...interceptors);
     }
 
+    registerConstant<T>(cls: Constructor<T>, value: T): void {
+        this.#container.bind<T>(cls as ServiceIdentifier<T>).toConstantValue(value);
+    }
+
     /**
      * Returns all interceptors that apply to handlers in this module,
      * ordered from outermost to innermost scope: global → parent → current.

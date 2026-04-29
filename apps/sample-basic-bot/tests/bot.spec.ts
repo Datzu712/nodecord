@@ -119,7 +119,7 @@ describe('UtilModule', () => {
             await simulation;
 
             expect(interaction.deferReply).toHaveBeenCalledOnce();
-            expect(interaction.editReply).toHaveBeenCalledWith({ content: '6 or 7' });
+            expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Bot status: 6 or 7' });
         });
     });
 });

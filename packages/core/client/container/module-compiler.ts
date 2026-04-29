@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
 import type { Constructor } from '../../interfaces/common/constructor.js';
@@ -14,7 +15,10 @@ export class ModuleCompiler {
     private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
     private pendingHandlers: Array<{ container: ModuleContainer; handlerClasses: Constructor[] }> = [];
 
-    constructor(private logger: AbstractLogger) {}
+    constructor(
+        private logger: AbstractLogger,
+        private overrides: Map<Constructor, unknown> = new Map(),
+    ) {}
 
     compile(parentModule: Constructor): ModuleContainer {
         this.compileModule(parentModule, this.globalContainer);
@@ -92,24 +96,22 @@ export class ModuleCompiler {
         this.moduleMap.set(moduleId, container);
 
         /**
-         * Interceptor bindings are registered before imports compile so that Inversify's
-         * container chain includes them. Resolution is deferred until after imports so that
-         * interceptors can depend on providers from sibling imported modules.
+         * Listener and interceptor bindings are registered before imports compile so that
+         * Inversify's container chain includes them. Resolution is deferred until after imports
+         * so that they can depend on providers from sibling imported modules.
          */
+        const listenerProviders: Constructor[] = [];
         const interceptorProviders: Constructor[] = [];
 
         for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isListener(provider)) {
-                const listenerMeta = MetadataScanner.getListenerMetadata(provider);
-                container.register(provider);
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                const instance = container.resolve<ListenerProvider>(provider);
-                this.listenerMap.set(listenerMeta.id, { metadata: listenerMeta, listener: instance });
+                this.registerProvider(container, provider);
+                listenerProviders.push(provider);
                 continue;
             }
 
             if (MetadataScanner.isInterceptor(provider)) {
-                container.register(provider);
+                this.registerProvider(container, provider);
                 interceptorProviders.push(provider);
                 continue;
             }
@@ -122,17 +124,23 @@ export class ModuleCompiler {
 
             const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
             this.providerMap.set(providerId, moduleId);
-            container.register(provider);
+            this.registerProvider(container, provider);
         }
 
         for (const importedModule of metadata.imports ?? []) {
             this.compileModule(importedModule, container);
         }
 
-        // Resolve interceptors after imports so their dependencies from imported modules are available.
+        // Resolve listeners and interceptors after imports so their dependencies from imported modules are available.
+        for (const provider of listenerProviders) {
+            const listenerMeta = MetadataScanner.getListenerMetadata(provider);
+            const instance = container.resolve<ListenerProvider>(provider);
+            this.listenerMap.set(listenerMeta.id, { metadata: listenerMeta, listener: instance });
+        }
+
         for (const provider of interceptorProviders) {
             const interceptorMeta = MetadataScanner.getInterceptorMetadata(provider);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
             const instance = container.resolve<NodecordInterceptor>(provider);
             container.registerInterceptors({
                 interceptor: instance,
@@ -209,6 +217,14 @@ export class ModuleCompiler {
                     interceptors: allRegisteredInterceptors,
                 });
             }
+        }
+    }
+
+    private registerProvider(container: ModuleContainer, cls: Constructor): void {
+        if (this.overrides.has(cls)) {
+            container.registerConstant(cls, this.overrides.get(cls));
+        } else {
+            container.register(cls);
         }
     }
 
