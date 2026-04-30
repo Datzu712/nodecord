@@ -1,5 +1,10 @@
 # Nodecord
 
+[![CI](https://github.com/Datzu712/nodecord/actions/workflows/ci.yml/badge.svg)](https://github.com/Datzu712/nodecord/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+
 A TypeScript framework for building Discord bots.
 
 Nodecord takes the module/provider pattern from frameworks like NestJS and brings it to Discord bot development. Instead of one giant file full of `client.on(...)` calls and globally shared state, you get a proper dependency injection system, scoped modules, and decorator-driven command definitions.
@@ -114,11 +119,11 @@ export class PingCommand {
 
 #### Parameter decorators
 
-| Decorator | Resolves to |
-|-----------|-------------|
-| `@Context()` | The `ExecutionContext` instance |
-| `@Guild()` | The `Guild` from the interaction, or `null` |
-| `@Author()` | The `User` who triggered the interaction |
+| Decorator    | Resolves to                                 |
+| ------------ | ------------------------------------------- |
+| `@Context()` | The `ExecutionContext` instance             |
+| `@Guild()`   | The `Guild` from the interaction, or `null` |
+| `@Author()`  | The `User` who triggered the interaction    |
 
 `ExecutionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
 
@@ -228,9 +233,7 @@ import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs
 const adapter = new TestingDjsAdapter();
 
 NodecordClient.create({
-    module: TestingModule.create(MainModule)
-        .overrideProvider(DatabaseService, mockDatabaseService)
-        .build(),
+    module: TestingModule.create(MainModule).overrideProvider(DatabaseService, mockDatabaseService).build(),
     adapter,
     options: { logger: false },
 });
@@ -245,7 +248,7 @@ await adapter.simulateInteraction(interaction);
 
 ```typescript
 import { NodecordClient } from '@nodecord/core';
-import { type ClientOptions, GatewayIntentBits } from 'discord.js'; 
+import { type ClientOptions, GatewayIntentBits } from 'discord.js';
 import { MainModule } from './app.module.js';
 
 const client = NodecordClient.create<ClientOptions>({
