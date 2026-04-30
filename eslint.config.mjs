@@ -60,8 +60,7 @@ export default [
         ignores: [
             '**/dist',
             '**/*.mjs',
-            'prisma.config.ts',
-            'jest.config.js',
+            '**/*.js',
             'dist/**',
             '**/out-tsc',
             '**/generated',

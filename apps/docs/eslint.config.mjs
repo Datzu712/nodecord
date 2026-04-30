@@ -1,4 +1,5 @@
 import rootConfig from '../../eslint.config.mjs';
+import eslintPrettier from 'eslint-plugin-prettier';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -17,6 +18,18 @@ export default [
         },
     },
     {
-        ignores: ['.docusaurus/**', 'build/**', '**/*.tsx', '**/*.jsx'],
+        ignores: ['.docusaurus/**', 'build/**'],
+    },
+    {
+        files: ['**/*.{tsx,jsx}'],
+        plugins: {
+            prettier: eslintPrettier,
+        },
+        rules: {
+            'prettier/prettier': 'error',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-require-imports': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+        },
     },
 ];
