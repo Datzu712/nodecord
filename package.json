@@ -41,5 +41,11 @@
     "dependencies": {
         "@swc/core": "^1.15.32",
         "reflect-metadata": "^0.2.2"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@swc/core",
+            "esbuild"
+        ]
     }
 }

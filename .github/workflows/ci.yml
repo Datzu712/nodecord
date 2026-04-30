@@ -21,6 +21,7 @@ jobs:
                   cache: pnpm
 
             - run: pnpm install --frozen-lockfile
+            - run: pnpm build
             - run: pnpm turbo lint --filter='./packages/*'
 
     typecheck:
