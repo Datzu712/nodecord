@@ -5,28 +5,34 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "test": "vitest run",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "typecheck": "turbo run typecheck",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@turbo/gen": "^2.8.20",
-    "@types/node": "^25.5.0",
-    "eslint-config-prettier": "^10.1.1",
+    "@turbo/gen": "^2.9.6",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nodemon": "^3.1.14",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.3",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
-    "turbo": "^2.8.20",
-    "typescript": "5.9.2",
-    "typescript-eslint": "^8.50.0"
+    "turbo": "^2.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.59.1",
+    "vitest": "^4.1.5"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.33.2",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
-    "@swc/core": "^1.15.30",
+    "@swc/core": "^1.15.32",
     "reflect-metadata": "^0.2.2"
   }
 }

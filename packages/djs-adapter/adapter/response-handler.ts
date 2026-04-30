@@ -13,7 +13,6 @@ export class ResponseHandler {
         if (!interaction.isChatInputCommand()) return;
 
         const method = interaction.deferred || interaction.replied ? 'editReply' : 'reply';
-
         if (typeof value === 'string') {
             await interaction[method]({ content: value });
             return;

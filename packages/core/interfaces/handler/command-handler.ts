@@ -1,5 +1,5 @@
-import { HandlerTypes } from '../../enums/command-types.enum.js';
-import { NodecordInterceptor } from '../interceptor/interceptor.js';
+import type { HandlerTypes } from '../../enums/command-types.enum.js';
+import type { RegisteredInterceptor } from '../interceptor/interceptor.js';
 
 export interface HandlerMetadata {
     id: string;
@@ -27,5 +27,5 @@ export interface RegisteredCommandHandler<TMetadata = unknown> {
     type: HandlerTypes;
     handler: CommandHandler;
     descriptor: TMetadata;
-    interceptors: NodecordInterceptor[];
+    interceptors: RegisteredInterceptor[];
 }

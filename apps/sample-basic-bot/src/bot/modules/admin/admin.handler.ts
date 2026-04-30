@@ -11,6 +11,6 @@ export class AdminHandler implements CommandHandler {
     async execute() {
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        return this.adminService.getStatus();
+        return `Bot status: ${this.adminService.getStatus()}`;
     }
 }

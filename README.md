@@ -124,7 +124,7 @@ export class PingCommand {
 
 #### Automatic reply deferral
 
-Place `@DeferReply()` on `execute()` to have the framework will defer the reply before running the handler. The `ResponseHandler` will edit the deferred reply with the return value of `execute()`, so you can return a string or an `InteractionReplyOptions` object instead of calling `reply()` manually.
+Place `@DeferReply()` on `execute()` so the framework will defer the reply before running the handler. The `ResponseHandler` will edit the deferred reply with the return value of `execute()`, so you can return a string or an `InteractionReplyOptions` object instead of calling `reply()` manually.
 
 ```typescript
 @SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows bot status'))
@@ -156,31 +156,90 @@ export class LatencyInterceptor implements NodecordInterceptor {
 }
 ```
 
-#### Global interceptors
+#### Module level interceptors
 
-Register an interceptor as a provider in any module. The framework detects the `@Interceptor()` watermark and applies it to every command automatically.
+Register an interceptor in a module's `providers` array to apply it to all handlers in that module and any modules it imports. Interceptors are inherited down the module tree: a handler in a child module will run its parent's interceptors before its own.
+
+```typescript
+@Module({
+    providers: [LatencyInterceptor],
+    handlers: [PingCommand, StatusCommand],
+})
+export class UtilModule {}
+```
+
+To apply an interceptor across the entire application, register it in the root module:
 
 ```typescript
 @Module({
     imports: [LoggerModule, UtilModule],
-    providers: [ReadyListener, LatencyInterceptor],
+    providers: [ReadyListener, AuditInterceptor],
 })
 export class MainModule {}
 ```
 
-#### Scoped interceptors
+The execution order is always outermost to innermost: root module → parent module → current module → handler-level.
 
-Use `@UseInterceptors()` on a command class to attach interceptors that only run for that command. Scoped interceptors run after global ones.
+#### Handler-level interceptors
+
+Use `@UseInterceptors()` on a command class to attach interceptors that only run for that specific command. These run after all module-level interceptors in the chain.
 
 ```typescript
 @SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
-@UseInterceptors(CommandAuditInterceptor)
+@UseInterceptors(RateLimitInterceptor)
 export class PingCommand implements CommandHandler {
     execute(): string {
         return 'Pong!';
     }
 }
 ```
+
+Declaring the same interceptor both in `providers[]` and via `@UseInterceptors()` on the same handler throws a duplicate interceptor error at startup.
+
+### Testing
+
+`@nodecord/djs-adapter` ships a `/testing` subpath with utilities for testing commands without connecting to Discord.
+
+#### TestingDjsAdapter
+
+`TestingDjsAdapter` replicates the full production pipeline like module compilation, DI, interceptor chain, command dispatch, and response handling but skips `login()` and `loadSlashCommands()`, and exposes `simulateInteraction()` to push mock interactions through the pipeline.
+
+Use it the same way you would bootstrap a real application, just swapping the adapter:
+
+```typescript
+import { NodecordClient } from '@nodecord/core';
+import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
+
+const adapter = new TestingDjsAdapter();
+NodecordClient.create({ module: MainModule, adapter, options: { logger: false } });
+
+const interaction = createMockChatInputInteraction({ commandName: 'status' });
+await adapter.simulateInteraction(interaction);
+```
+
+#### Overriding providers
+
+When you need to replace infrastructure dependencies (ORMs, external services, etc), use `TestingModule` to inject mocks before compilation:
+
+```typescript
+import { TestingModule } from '@nodecord/core';
+import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
+
+const adapter = new TestingDjsAdapter();
+
+NodecordClient.create({
+    module: TestingModule.create(MainModule)
+        .overrideProvider(DatabaseService, mockDatabaseService)
+        .build(),
+    adapter,
+    options: { logger: false },
+});
+
+const interaction = createMockChatInputInteraction({ commandName: 'status' });
+await adapter.simulateInteraction(interaction);
+```
+
+`overrideProvider(cls, mock)` replaces the binding for `cls` across the entire module tree.
 
 ### Bootstrapping
 
@@ -217,13 +276,16 @@ Each provider and module gets a unique ID generated at decoration time, which pr
 ```text
 nodecord/
 ├── apps/
-│   └── sample-basic-bot/     # Working example: modules, services, commands
+│   └── sample-basic-bot/          # Working example: modules, services, commands, tests
 ├── packages/
-│   ├── core/                 # @nodecord/core
-│   └── djs-adapter/          # @nodecord/djs-adapter — Discord.js integration
+│   ├── core/                      # @nodecord/core
+│   └── djs-adapter/               # @nodecord/djs-adapter
+│       └── testing/               # TestingDjsAdapter, createMockChatInputInteraction
 ```
 
 The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspaces. Both packages ship ESM and CJS outputs with full TypeScript declarations.
+
+Tests are written with [Vitest](https://vitest.dev/) and run directly via `pnpm vitest` from the repo root, outside of Turborepo. There's a single `vitest.config.ts` at the root that covers all packages. Turbo cache isn't needed for tests at this stage, and keeping one config avoids scattering `vitest.config.ts` files across every package.
 
 ---
 
@@ -242,6 +304,7 @@ Not published yet! The API is still in development and I want to get more of the
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
 - Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
 - Automatic reply deferral via `@DeferReply()`
+- Testing utilities: `TestingModule` with provider overrides, `TestingDjsAdapter`, and `createMockChatInputInteraction` for testing commands without a live Discord connection
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
 **Not yet implemented:**
@@ -251,7 +314,6 @@ Not published yet! The API is still in development and I want to get more of the
 - Pipes on parameter decorators
 - More built-in parameter decorators (`@Option()`, etc.)
 - Robust error handling
-- Testing utilities and mocks for commands and services
 
 ---
 

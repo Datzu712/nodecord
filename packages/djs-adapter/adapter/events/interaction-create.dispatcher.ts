@@ -1,11 +1,4 @@
-import {
-    CommandExecutor,
-    ExecutionContext,
-    HandlerTypes,
-    Listener,
-    ListenerProvider,
-    type RegisteredInterceptor,
-} from '@nodecord/core';
+import { CommandExecutor, ExecutionContext, HandlerTypes, Listener, ListenerProvider } from '@nodecord/core';
 import { ClientEvents, Events, type Interaction as DjsInteraction } from 'discord.js';
 import { CommandRegistry } from '../command-registry.js';
 import { ResponseHandler } from '../response-handler.js';
@@ -15,7 +8,6 @@ export class InteractionCreateDispatcher implements ListenerProvider<ClientEvent
     constructor(
         private readonly registry: CommandRegistry,
         private readonly executor: CommandExecutor,
-        private readonly globalInterceptors: RegisteredInterceptor[],
         private readonly responseHandler: ResponseHandler,
     ) {}
 
@@ -34,13 +26,7 @@ export class InteractionCreateDispatcher implements ListenerProvider<ClientEvent
             await raw.deferReply();
         }
 
-        const applicable = this.globalInterceptors
-            .filter(({ type }) => !type || raw instanceof type)
-            .map(({ interceptor }) => interceptor);
-
-        const interceptors = [...applicable, ...registeredCommand.interceptors];
-
-        const result = await this.executor.execute(ctx, registeredCommand.handler, interceptors);
+        const result = await this.executor.execute(ctx, registeredCommand.handler, registeredCommand.interceptors);
         if (!isPassThrough) {
             return this.responseHandler.resolve(result, ctx);
         }

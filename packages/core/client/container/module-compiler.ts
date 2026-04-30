@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
 import type { Constructor } from '../../interfaces/common/constructor.js';
 import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/event-listener.js';
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
-import type { NodecordInterceptor, RegisteredInterceptor } from '../../interfaces/interceptor/interceptor.js';
+import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
+import { TESTING_OVERRIDES_METADATA } from '../../constants/testing.js';
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
@@ -12,12 +14,15 @@ export class ModuleCompiler {
     private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
     private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, CommandHandler>
     private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
-    private interceptorMap = new Map<string, RegisteredInterceptor>(); // Map<interceptorId, RegisteredInterceptor>
+    private pendingHandlers: Array<{ container: ModuleContainer; handlerClasses: Constructor[] }> = [];
+    private overrides: Map<Constructor, unknown> = new Map();
 
     constructor(private logger: AbstractLogger) {}
 
     compile(parentModule: Constructor): ModuleContainer {
-        return this.compileModule(parentModule, this.globalContainer);
+        this.compileModule(parentModule, this.globalContainer);
+        this.compilePendingHandlers();
+        return this.globalContainer;
     }
 
     getContainerFor(provider: Constructor): ModuleContainer {
@@ -62,6 +67,14 @@ export class ModuleCompiler {
             );
         }
 
+        const testOverrides = Reflect.getMetadata(TESTING_OVERRIDES_METADATA, moduleClass) as
+            | Map<Constructor, unknown>
+            | undefined;
+
+        if (testOverrides) {
+            this.overrides = testOverrides;
+        }
+
         if (!MetadataScanner.isModule(moduleClass)) {
             throw new Error(
                 `Class ${moduleClass.name} is not a valid module. ` + `Make sure it is decorated with @Module.`,
@@ -88,34 +101,25 @@ export class ModuleCompiler {
         );
 
         this.moduleMap.set(moduleId, container);
-        for (const importedModule of metadata.imports ?? []) {
-            this.compileModule(importedModule, container);
-        }
+
+        /**
+         * Listener and interceptor bindings are registered before imports compile so that
+         * Inversify's container chain includes them. Resolution is deferred until after imports
+         * so that they can depend on providers from sibling imported modules.
+         */
+        const listenerProviders: Constructor[] = [];
+        const interceptorProviders: Constructor[] = [];
 
         for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isListener(provider)) {
-                const metadata = MetadataScanner.getListenerMetadata(provider);
-
-                container.register(provider);
-
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                const instance = container.resolve<ListenerProvider>(provider);
-                this.listenerMap.set(metadata.id, {
-                    metadata,
-                    listener: instance,
-                });
-
+                this.registerProvider(container, provider);
+                listenerProviders.push(provider);
                 continue;
             }
 
             if (MetadataScanner.isInterceptor(provider)) {
-                const interceptorMeta = MetadataScanner.getInterceptorMetadata(provider)!;
-
-                container.register(provider);
-
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                const instance = container.resolve<NodecordInterceptor>(provider);
-                this.interceptorMap.set(interceptorMeta.id, { interceptor: instance, type: interceptorMeta.type });
+                this.registerProvider(container, provider);
+                interceptorProviders.push(provider);
                 continue;
             }
 
@@ -126,36 +130,109 @@ export class ModuleCompiler {
             }
 
             const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
-
             this.providerMap.set(providerId, moduleId);
-            container.register(provider);
+            this.registerProvider(container, provider);
         }
 
-        for (const handler of metadata.handlers ?? []) {
-            if (!MetadataScanner.isHandler(handler)) {
-                throw new Error(
-                    `Class ${handler.name} is not a valid command handler. ` +
-                        `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
-                );
-            }
-            const { id: handlerId, descriptor, type: handlerType } = MetadataScanner.getHandlerMetadata(handler);
+        for (const importedModule of metadata.imports ?? []) {
+            this.compileModule(importedModule, container);
+        }
 
-            container.register(handler);
+        // Resolve listeners and interceptors after imports so their dependencies from imported modules are available.
+        for (const provider of listenerProviders) {
+            const listenerMeta = MetadataScanner.getListenerMetadata(provider);
+            const instance = container.resolve<ListenerProvider>(provider);
+            this.listenerMap.set(listenerMeta.id, { metadata: listenerMeta, listener: instance });
+        }
 
-            const resolvedHandler = container.resolve(handler) as CommandHandler;
+        for (const provider of interceptorProviders) {
+            const interceptorMeta = MetadataScanner.getInterceptorMetadata(provider);
 
-            const interceptorCtors = MetadataScanner.getHandlerInterceptors(handler);
-            const handlerInterceptors = interceptorCtors.map((ctor) => container.resolve<NodecordInterceptor>(ctor));
-
-            this.handlerMap.set(handlerId, {
-                handler: resolvedHandler,
-                descriptor,
-                type: handlerType,
-                interceptors: handlerInterceptors,
+            const instance = container.resolve<NodecordInterceptor>(provider);
+            container.registerInterceptors({
+                interceptor: instance,
+                metadata: { type: interceptorMeta.type, id: interceptorMeta.id },
             });
         }
 
+        /**
+         * Handlers are deferred to a second pass (compilePendingHandlers) instead of being
+         * compiled here. The reason is that compileModule is called recursively for each import,
+         * which means a child module's handlers would be compiled before the parent module has
+         * had a chance to resolve its own interceptors. By deferring, we guarantee that when
+         * getInheritedInterceptors() is called for any handler, every container in the ancestry
+         * chain already has its interceptors fully populated.
+         */
+        if (metadata.handlers?.length) {
+            this.pendingHandlers.push({ container, handlerClasses: metadata.handlers });
+        }
+
         return container;
+    }
+
+    /**
+     * Second compilation phase: compiles all handlers after the full module tree is built.
+     * This guarantees that every container's interceptors are populated before handlers
+     * call getInheritedInterceptors(), regardless of module depth or import order.
+     */
+    private compilePendingHandlers(): void {
+        for (const { container, handlerClasses } of this.pendingHandlers) {
+            for (const handler of handlerClasses) {
+                if (!MetadataScanner.isHandler(handler)) {
+                    throw new Error(
+                        `Class ${handler.name} is not a valid command handler. ` +
+                            `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
+                    );
+                }
+
+                const { id: handlerId, descriptor, type: handlerType } = MetadataScanner.getHandlerMetadata(handler);
+                container.register(handler);
+
+                const resolvedHandler = container.resolve(handler) as CommandHandler;
+                const scopedInterceptors = container.getInheritedInterceptors();
+                const rawHandlerInterceptors = MetadataScanner.getHandlerInterceptors(handler);
+
+                const allRegisteredInterceptors = [...scopedInterceptors];
+
+                for (const rawHandlerInterceptor of rawHandlerInterceptors) {
+                    if (!MetadataScanner.isInterceptor(rawHandlerInterceptor)) {
+                        throw new Error(
+                            `Class ${rawHandlerInterceptor.name} is not a valid interceptor. ` +
+                                `Make sure it is decorated with @Interceptor and that you are passing the class reference (not an instance) to @UseInterceptors.`,
+                        );
+                    }
+
+                    const meta = MetadataScanner.getInterceptorMetadata(rawHandlerInterceptor);
+                    if (allRegisteredInterceptors.some((i) => i.metadata.id === meta.id)) {
+                        throw new Error(
+                            `Duplicate interceptor "${rawHandlerInterceptor.name}" detected for handler ${handler.name}. ` +
+                                `Make sure each interceptor has a unique ID and that you are not registering the same interceptor both globally and at the handler level.`,
+                        );
+                    }
+
+                    container.register(rawHandlerInterceptor);
+                    allRegisteredInterceptors.push({
+                        interceptor: container.resolve<NodecordInterceptor>(rawHandlerInterceptor),
+                        metadata: { type: meta.type, id: meta.id },
+                    });
+                }
+
+                this.handlerMap.set(handlerId, {
+                    handler: resolvedHandler,
+                    descriptor,
+                    type: handlerType,
+                    interceptors: allRegisteredInterceptors,
+                });
+            }
+        }
+    }
+
+    private registerProvider(container: ModuleContainer, cls: Constructor): void {
+        if (this.overrides.has(cls)) {
+            container.registerConstant(cls, this.overrides.get(cls));
+        } else {
+            container.register(cls);
+        }
     }
 
     getHandlers(): RegisteredCommandHandler[] {
@@ -164,9 +241,5 @@ export class ModuleCompiler {
 
     getEventListeners(): RegisteredListener<unknown[]>[] {
         return Array.from(this.listenerMap.values());
-    }
-
-    getInterceptors(): RegisteredInterceptor[] {
-        return Array.from(this.interceptorMap.values());
     }
 }

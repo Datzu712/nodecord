@@ -6,13 +6,20 @@
     "main": "./dist/index.js",
     "scripts": {
         "dev": "tsup --watch",
-        "build": "tsup"
+        "build": "tsup",
+        "lint": "eslint adapter testing --ext .ts",
+        "typecheck": "tsc --noEmit"
     },
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js",
             "require": "./dist/index.cjs"
+        },
+        "./testing": {
+            "types": "./dist/testing/index.d.ts",
+            "import": "./dist/testing/index.js",
+            "require": "./dist/testing/index.cjs"
         }
     },
     "repository": {
@@ -34,6 +41,33 @@
     },
     "peerDependencies": {
         "discord.js": "^14.0.0",
-        "@nodecord/core": "workspace:*"
-    }
+        "@nodecord/core": "workspace:*",
+        "vitest": ">=2.0.0"
+    },
+    "peerDependenciesMeta": {
+        "vitest": {
+            "optional": true
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "discordjs",
+        "discord-framework",
+        "typescript",
+        "dependency-injection",
+        "di",
+        "modular",
+        "testing",
+        "vitest",
+        "framework",
+        "slash-commands",
+        "interceptors",
+        "decorators"
+    ]
 }

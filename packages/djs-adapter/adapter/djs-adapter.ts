@@ -14,7 +14,6 @@ import {
     LoadSlashCommandsOptions,
     type ExecutionContext,
     type RegisteredCommandHandler,
-    type RegisteredInterceptor,
     type RegisteredListener,
 } from '@nodecord/core';
 import { CommandRegistry } from './command-registry.js';
@@ -26,6 +25,8 @@ import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
+
+    protected eventManager!: EventManager;
 
     private readonly commandRegistry = new CommandRegistry();
 
@@ -45,7 +46,6 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         executor: CommandExecutor,
         handlers: RegisteredCommandHandler[],
         listeners: RegisteredListener<unknown[]>[],
-        interceptors: RegisteredInterceptor[],
     ): void {
         if (this.alreadyInitialized) {
             throw new Error(
@@ -56,7 +56,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
 
         this.registerParamResolvers(executor);
 
-        const eventManager = new EventManager();
+        this.eventManager = new EventManager();
 
         if (handlers.length) {
             handlers.forEach(({ descriptor, handler, ...rest }) => {
@@ -70,20 +70,15 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
             });
 
             const responseHandler = new ResponseHandler();
-            const dispatcher = new InteractionCreateDispatcher(
-                this.commandRegistry,
-                executor,
-                interceptors,
-                responseHandler,
-            );
-            eventManager.register({
+            const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor, responseHandler);
+            this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,
             });
         }
 
-        listeners.forEach((l) => eventManager.register(l));
-        eventManager.attach(this.clientInstance);
+        listeners.forEach((l) => this.eventManager.register(l));
+        this.eventManager.attach(this.clientInstance);
     }
 
     async login(token: string): Promise<void> {
