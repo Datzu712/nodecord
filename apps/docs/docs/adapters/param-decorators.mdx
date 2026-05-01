@@ -1,0 +1,55 @@
+---
+title: 'Param decorators'
+---
+
+# Param Decorators
+
+Param decorators let you extract specific values from the execution context directly in the `execute()` method, keeping handlers clean and free of boilerplate.
+
+## `@Ctx()`
+
+Injects the raw `ExecutionContext`, which wraps the underlying interaction and exposes its name and type.
+
+```ts
+execute(@Ctx() ctx: ExecutionContext) {
+  console.log(ctx.name); // 'ping'
+}
+```
+
+## `@Guild()`
+
+Injects the `Guild` object from the interaction. Returns `null` if the command was used in a DM.
+
+```ts
+execute(@Guild() guild: Guild | null) {
+  return guild ? guild.name : 'DM';
+}
+```
+
+## `@Author()`
+
+Injects the `User` who triggered the interaction.
+
+```ts
+execute(@Author() user: User) {
+  return `Hello, ${user.username}!`;
+}
+```
+
+## Combining decorators
+
+You can use multiple param decorators in a single `execute()` method:
+
+```ts
+execute(@Author() user: User, @Guild() guild: Guild | null): string {
+  return `${user.username} in ${guild?.name ?? 'DMs'}`;
+}
+```
+
+## How they work
+
+Param decorators are resolved by the `CommandExecutor` via a registry of `paramResolvers`. Each resolver receives the `ExecutionContext` and returns the value to inject at that parameter position. The discord.js adapter registers resolvers for `CONTEXT`, `GUILD`, and `AUTHOR` on initialization.
+
+## TODO: custom param decorators
+
+In the future, we will expose a way for users to create their own custom param decorators and register them in the executor...

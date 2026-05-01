@@ -1,0 +1,54 @@
+---
+title: TestingModule & Provider Overrides
+---
+
+# TestingModule & Provider Overrides
+
+`TestingModule` compiles a real module through the DI pipeline but lets you replace specific providers with mocks. This sits between a unit test (no framework) and a full e2e test (real providers).
+
+Use it when you want to test a command's behavior through the full interaction pipeline, but you need to control what a service returns.
+
+## Usage
+
+```ts
+import { NodecordClient, TestingModule } from '@nodecord/core';
+import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
+import { AdminModule } from './admin.module';
+import { AdminService } from './admin.service';
+
+describe('AdminModule', () => {
+    const adminServiceMock = {
+        getStatus: () => 'mocked status',
+    };
+    const adapter = new TestingDjsAdapter();
+
+    beforeAll(() => {
+        const testingModule = TestingModule.create(AdminModule)
+            .overrideProvider(AdminService, adminServiceMock)
+            .build();
+
+        NodecordClient.create({
+            module: testingModule,
+            adapter,
+            options: { logger: false },
+        });
+    });
+
+    it('uses the mocked AdminService', async () => {
+        const interaction = createMockChatInputInteraction({ commandName: 'admin' });
+        await adapter.simulateInteraction(interaction);
+
+        expect(interaction.deferReply).toHaveBeenCalledOnce();
+        expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Bot status: mocked status' });
+    });
+});
+```
+
+## How it works
+
+1. `TestingModule.create(Module)` - wraps the target module
+2. `.overrideProvider(ServiceClass, mockObject)` - replaces the provider in the container before compilation
+3. `.build()` - returns the compiled module
+4. Pass it as `module` to `NodecordClient.create()` alongside a `TestingDjsAdapter`
+
+If you only need to test a service's logic, instantiate it directly. Use `TestingModule` when you care about the full handler execution like interceptors, param decorators, and the adapter response.

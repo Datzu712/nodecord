@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #5865f2;
+  --ifm-color-primary-dark: #4752e8;
+  --ifm-color-primary-darker: #3f4ae3;
+  --ifm-color-primary-darkest: #2f39d4;
+  --ifm-color-primary-light: #6974f4;
+  --ifm-color-primary-lighter: #7580f6;
+  --ifm-color-primary-lightest: #909af8;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(88, 101, 242, 0.15);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #7983f5;
+  --ifm-color-primary-dark: #6570f3;
+  --ifm-color-primary-darker: #5562f2;
+  --ifm-color-primary-darkest: #4752e8;
+  --ifm-color-primary-light: #8d96f7;
+  --ifm-color-primary-lighter: #9aa2f8;
+  --ifm-color-primary-lightest: #b0b6fa;
+  --ifm-background-color: #0a0a0f;
+  --ifm-background-surface-color: #0e0e18;
+  --docusaurus-highlighted-code-line-bg: rgba(88, 101, 242, 0.2);
+}
+
+
+/* Navbar translúcida sobre el hero oscuro.
+   backdrop-filter va en ::before para no crear un stacking context
+   en el navbar mismo — de lo contrario el sidebar mobile queda atrapado
+   dentro del stacking context y no cubre el contenido. */
+.navbar {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+.navbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: -1;
+  pointer-events: none;
+}

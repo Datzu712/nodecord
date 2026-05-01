@@ -1,0 +1,113 @@
+.features {
+  padding: 4rem 0 5rem;
+  width: 100%;
+}
+
+/* ── Grid layouts ───────────────────────────────── */
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  max-width: 66.6%;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 996px) {
+  .grid3,
+  .grid2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .grid3,
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Feature card ───────────────────────────────── */
+
+.featureCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.cardVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featureCard:hover {
+  border-color: rgba(88, 101, 242, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(88, 101, 242, 0.12),
+    0 0 32px rgba(88, 101, 242, 0.18);
+}
+
+.cardNumber {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.cardTitle {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.cardDesc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.65;
+  margin-bottom: 0;
+  flex: 1;
+}
+
+/* ── Card code snippets ─────────────────────────── */
+
+.cardCode {
+  margin-top: 1rem !important;
+  margin-bottom: 0 !important;
+  padding: 0.75rem 1rem !important;
+  background: #111520 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.73rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.7);
+  overflow-x: auto;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+/* Syntax tokens in card snippets */
+.ckw   { color: #c792ea; }
+.ctype { color: #22d3ee; }
+.cfn   { color: #dcdcaa; }
+.cstr  { color: #f97316; }
+.cc    { color: rgba(255, 255, 255, 0.25); font-style: italic; }

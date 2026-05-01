@@ -1,0 +1,58 @@
+---
+title: Overview
+---
+
+# Testing Overview
+
+Nodecord supports two levels of testing, neither of which requires a live Discord connection.
+
+| Level | What it tests                                      | Tool                                  |
+| ----- | -------------------------------------------------- | ------------------------------------- |
+| Unit  | A single service or command class in isolation     | Plain instantiation + vitest spies    |
+| E2E   | A module or the full bot through the real pipeline | `TestingModule` + `TestingDjsAdapter` |
+
+## Unit tests
+
+Services and commands are plain TypeScript classes. Instantiate them directly and stub their dependencies, no framework involved:
+
+```ts
+import { vi } from 'vitest';
+import { PingCommand } from './ping.command';
+import { PingService } from './ping.service';
+
+describe('PingCommand', () => {
+    let command: PingCommand;
+
+    beforeEach(() => {
+        const service = { getPong: vi.fn().mockReturnValue('Pong! Hello, test!') };
+        command = new PingCommand(service);
+    });
+
+    it('returns pong message', () => {
+        expect(command.execute()).toBe('Pong! Hello, test!');
+    });
+});
+```
+
+## E2E tests
+
+Use `TestingDjsAdapter` to run the full command pipeline without Discord. You can pass the root module directly, or use `TestingModule` to override specific providers:
+
+```ts
+// Full bot, real providers
+NodecordClient.create({ module: BotModule, adapter, options: { logger: false } });
+
+// Scoped module, mocked providers
+const testingModule = TestingModule.create(AdminModule).overrideProvider(AdminService, adminServiceMock).build();
+
+NodecordClient.create({
+    module: testingModule,
+    adapter: TestingDjsAdapter,
+    options: { logger: false },
+});
+```
+
+## Next steps
+
+- [TestingModule & Provider Overrides](./testing-module) - scoped tests with mock providers
+- [E2E](./e2e-testing) - simulating interactions end to end

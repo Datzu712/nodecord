@@ -18,7 +18,7 @@ export function createMockChatInputInteraction(
         // Defaults
         commandName: 'unknown',
         reply: vi.fn().mockResolvedValue(undefined),
-        deferReply: vi.fn().mockImplementation(() => {
+        deferReply: vi.fn().mockImplementation(async () => {
             overridesWithDefaults.deferred = true;
             return Promise.resolve();
         }),

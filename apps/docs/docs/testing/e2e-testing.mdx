@@ -1,0 +1,94 @@
+---
+title: E2E
+---
+
+# E2E Testing
+
+`TestingDjsAdapter` replaces the real discord.js client with a fake one, letting you run the full pipeline (DI, interceptors, and handler) without a bot token or a live Discord connection.
+
+## Setup
+
+```ts
+import { NodecordClient } from '@nodecord/core';
+import { TestingDjsAdapter, createMockChatInputInteraction } from '@nodecord/djs-adapter/testing';
+import { BotModule } from './bot.module';
+
+describe('UtilModule', () => {
+    let adapter: TestingDjsAdapter;
+
+    beforeEach(() => {
+        adapter = new TestingDjsAdapter();
+        NodecordClient.create({
+            module: BotModule,
+            adapter,
+            options: { logger: false },
+        });
+    });
+});
+```
+
+## Simulating interactions
+
+`createMockChatInputInteraction` accepts an object with the interaction data:
+
+```ts
+const interaction = createMockChatInputInteraction({
+    commandName: 'ping',
+    user: { id: '1', username: 'juan', discriminator: '0000' } as any,
+    guild: null, // null for DM context
+});
+
+await adapter.simulateInteraction(interaction);
+
+expect(interaction.deferReply).toHaveBeenCalledOnce();
+expect(interaction.editReply).toHaveBeenCalledWith('Pong! Hello, juan!');
+```
+
+All properties on `interaction` (`deferReply`, `editReply`, `reply`, etc.) are vitest mock functions.
+
+## Commands with `@DeferReply()`
+
+When a command uses `@DeferReply()`, the framework calls `deferReply()` before executing the handler and `editReply()` with the response, not `reply()`. Assert accordingly:
+
+```ts
+expect(interaction.deferReply).toHaveBeenCalledOnce();
+expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Bot status: online' });
+```
+
+## Async commands with fake timers
+
+If a command has internal async delays, `simulateInteraction` will hang waiting for them. Use vitest's fake timers:
+
+```ts
+it('defers and replies', async () => {
+    vi.useFakeTimers();
+
+    const interaction = createMockChatInputInteraction({ commandName: 'ping', user: mockedUser });
+    const simulation = adapter.simulateInteraction(interaction);
+
+    await vi.runAllTimersAsync();
+    await simulation;
+
+    expect(interaction.editReply).toHaveBeenCalledWith('Pong! Hello, juan!');
+});
+```
+
+## Testing guild vs DM context
+
+Pass `guild` to simulate a server context, or `null` for DMs:
+
+```ts
+// Inside a guild
+const interaction = createMockChatInputInteraction({
+    commandName: 'server-info',
+    guild: { name: 'Test Server', memberCount: 42, createdTimestamp: 0 } as any,
+    user: mockedUser,
+});
+
+// In a DM
+const interaction = createMockChatInputInteraction({
+    commandName: 'server-info',
+    guild: null,
+    user: mockedUser,
+});
+```

@@ -47,7 +47,6 @@ export default [
             // Code quality
             '@typescript-eslint/prefer-nullish-coalescing': 'warn',
             'no-console': ['error', { allow: ['warn', 'error'] }],
-            
 
             // Random disabled rules
             '@typescript-eslint/no-magic-numbers': 'off',
@@ -61,8 +60,7 @@ export default [
         ignores: [
             '**/dist',
             '**/*.mjs',
-            'prisma.config.ts',
-            'jest.config.js',
+            '**/*.js',
             'dist/**',
             '**/out-tsc',
             '**/generated',

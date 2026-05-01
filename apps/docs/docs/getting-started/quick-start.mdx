@@ -1,0 +1,93 @@
+---
+title: Quick Start
+---
+
+# Quick Start
+
+This guide walks you through bootstrapping a minimal Nodecord bot with a single slash command.
+
+## Project structure
+
+Nodecord is organized around feature modules. Each feature lives in its own folder with its commands, services, and a module that wires them together.
+
+```
+src/
+├── index.ts              # entry point
+├── bot.module.ts         # root module
+└── ping/
+    ├── ping.command.ts
+    └── ping.module.ts
+```
+
+As your bot grows, the pattern stays the same.
+
+```
+src/
+├── index.ts
+├── bot.module.ts
+└── bot/
+    ├── events/
+    │   └── ready.listener.ts
+    ├── interceptors/
+    │   └── audit.interceptor.ts
+    └── modules/
+        ├── admin/
+        │   ├── admin.command.ts
+        │   ├── admin.service.ts
+        │   └── admin.module.ts
+        └── util/
+            ├── ping.command.ts
+            └── util.module.ts
+```
+
+## 1. Create a command
+
+```ts title="src/ping/ping.command.ts"
+import { SlashCommand } from '@nodecord/core';
+import { SlashCommandBuilder } from 'discord.js';
+
+@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'))
+export class PingCommand {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
+
+## 2. Create a module
+
+```ts title="src/ping/ping.module.ts"
+import { Module } from '@nodecord/core';
+import { PingCommand } from './ping.command';
+
+@Module({ handlers: [PingCommand] })
+export class PingModule {}
+```
+
+## 3. Create the root module
+
+```ts title="src/bot.module.ts"
+import { Module } from '@nodecord/core';
+import { PingModule } from './ping/ping.module';
+
+@Module({ imports: [PingModule] })
+export class BotModule {}
+```
+
+## 4. Bootstrap the client
+
+```ts title="src/index.ts"
+import type { ClientOptions } from 'discord.js';
+import { NodecordClient } from '@nodecord/core';
+import { BotModule } from './bot.module';
+
+const client = NodecordClient.create<ClientOptions>({
+    module: BotModule,
+    options: {
+        intents: [...],
+        logger: myCustomLogger,
+    },
+});
+
+await client.login(process.env.TOKEN);
+```

@@ -1,0 +1,49 @@
+---
+title: Overview
+---
+
+# Adapter Architecture
+
+One of Nodecord's core design goals is that `@nodecord/core` has **zero Discord dependency**. It knows nothing about discord.js, interactions, or the Discord API. All of that lives in an adapter.
+
+## The adapter contract
+
+Every adapter extends `AbstractClientAdapter` from `@nodecord/core`:
+
+```ts
+import { AbstractClientAdapter, CommandExecutor } from '@nodecord/core';
+
+export abstract class AbstractClientAdapter {
+    abstract initialize(
+        executor: CommandExecutor,
+        handlers: HandlerMetadata[],
+        listeners: ListenerMetadata[],
+    ): Promise<void>;
+
+    abstract login(token: string): Promise<void>;
+    abstract loadSlashCommands(handlers: HandlerMetadata[]): Promise<void>;
+}
+```
+
+The framework calls `initialize()` after compiling the module tree, passing the executor and registered handlers/listeners. Everything else like interaction routing, events handling, etc... are the adapter's responsibility.
+
+## Swapping adapters
+
+To use a different Discord client library, implement `AbstractClientAdapter` for it and pass it to `NodecordClient.create()`:
+
+```ts
+const client = await NodecordClient.create({
+    module: AppModule,
+    adapter: MyCustomAdapter,
+});
+```
+
+The rest of your application, modules, providers, commands, interceptors, remains completely unchanged.
+
+## A note on abstraction
+
+Fully abstracting the underlying Discord library is a long-term effort. At this stage, some parts of your code will touch library-specific types directly, for example `@SlashCommand()` is designed to receive a discord.js `SlashCommandBuilder` when using the discord.js adapter, and `ctx.getRaw()` may be necessary when the framework doesn't expose what you need.
+
+:::caution
+Any code that depends on raw library types is tied to the adapter you're using. Swapping adapters later will require updating those handlers. The more you rely on `ctx.getRaw()` or discord.js types directly, the harder that migration becomes.
+:::

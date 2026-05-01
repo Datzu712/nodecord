@@ -1,0 +1,162 @@
+.footer {
+  background-color: #0a0a0f;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 3.5rem 0 2rem;
+  font-size: 0.875rem;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4rem;
+  padding-bottom: 2.5rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand {
+  max-width: 280px;
+}
+
+.brandLockup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.brandName {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.versionBadge {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.65rem;
+  color: rgba(34, 211, 238, 0.65);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+
+.brandComment {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.22);
+  margin-bottom: 0.85rem;
+}
+
+.commentPunct {
+  color: rgba(34, 211, 238, 0.4);
+}
+
+.brandDesc {
+  color: rgba(255, 255, 255, 0.33);
+  line-height: 1.7;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.linksWrapper {
+  display: flex;
+  gap: 3.5rem;
+  flex-shrink: 0;
+}
+
+.linkGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.groupTitle {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.3rem;
+  padding-left: 0.8rem;
+  position: relative;
+}
+
+.groupTitle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 11px;
+  background: rgba(34, 211, 238, 0.6);
+  border-radius: 2px;
+}
+
+.link {
+  color: rgba(255, 255, 255, 0.38) !important;
+  text-decoration: none !important;
+  position: relative;
+  display: inline-block;
+  transition: color 0.15s ease !important;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(34, 211, 238, 0.7);
+  transition: width 0.22s ease;
+}
+
+.link:hover {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.link:hover::after {
+  width: 100%;
+}
+
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.copyright {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.73rem;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.license {
+  font-size: 0.73rem;
+  color: rgba(255, 255, 255, 0.2) !important;
+  text-decoration: none !important;
+  letter-spacing: 0.03em;
+  transition: color 0.15s ease !important;
+}
+
+.license:hover {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+@media screen and (max-width: 768px) {
+  .top {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .brand {
+    max-width: 100%;
+  }
+}
