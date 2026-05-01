@@ -1,0 +1,34 @@
+---
+title: Introduction
+---
+
+# Introduction
+
+Nodecord is a TypeScript framework for building Discord bots inspired by NestJS. It brings dependency injection, scoped modules, and a decorator-driven API to the Discord ecosystem.
+
+## Why Nodecord?
+
+Most framework-level tooling in the Discord space shares a common set of limitations that become painful as projects grow.
+
+- **No real dependency injection.** Services are typically singletons imported directly, or passed around manually. There is no container, no scoping, and no way to override dependencies for testing without monkey-patching module imports.
+
+- **Tightly coupled to one library.** The framework and the Discord client are the same thing. Switching libraries, or even upgrading major versions, means rewriting your entire bot.
+
+- **Global, flat structure.** Commands are registered in one big list, often auto-loaded from the filesystem by glob pattern. There are no modules, no encapsulation, and no concept of a feature boundary.
+
+- **Testing requires a live connection.** Because everything depends on the Discord client directly, writing tests without a real bot token usually means setting up complex mocks for internals you don't own.
+
+- **No middleware pipeline.** Cross-cutting concerns like logging, permission checks, or response formatting are bolted on via event hooks or static utility functions rather than a composable pipeline.
+
+Nodecord addresses all of this. It brings the same patterns that make backend services maintainable at scale with modules, providers, interceptors, and a testable structure to the Discord ecosystem.
+
+## Key principles
+
+- **Adapter-based** - `@nodecord/core` has zero Discord dependency. discord.js ships as one adapter but you can build your own.
+- **Dependency injection** - powered by Inversify, with scoped module containers and a global provider registry.
+- **Decorator-driven** - `@SlashCommand`, `@ContextMenuCommand`, `@Module`, `@Injectable`, `@UseInterceptors` and more.
+- **Testable** - run full command flows without a live Discord connection.
+
+## Current adapters
+
+There is currently one officially supported adapter: `@nodecord/djs-adapter` for [discord.js v14](https://discord.js.org/docs/packages/discord.js/14.26.2). Since the adapter contract is a single abstract class, anyone can implement support for a different Discord library and contribute it as a community adapter. If you're interested, see the [Adapter Architecture](/docs/adapters/overview) page.

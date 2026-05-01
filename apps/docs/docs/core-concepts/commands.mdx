@@ -1,0 +1,66 @@
+---
+title: Commands
+---
+
+# Commands
+
+Commands are handler classes decorated with `@SlashCommand()`. Each class must implement an `execute()` method that the framework calls when the command is invoked.
+
+## Defining a command
+
+```ts
+import { SlashCommand, DeferReply, Author } from '@nodecord/core';
+import { SlashCommandBuilder } from 'discord.js';
+import { User } from 'discord.js';
+
+@SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows your status'))
+export class StatusCommand {
+    constructor(private readonly statusService: StatusService) {}
+
+    @DeferReply()
+    execute(@Author() user: User): string {
+        return `Hello ${user.username}, bot is online`;
+    }
+}
+```
+
+## `@DeferReply()`
+
+Automatically calls `interaction.deferReply()` before invoking `execute()`. Use this for commands that perform async work and may exceed Discord's 3-second acknowledgement window.
+
+## Return values
+
+The return value of `execute()` is forwarded to the adapter, which handles sending the response. Interceptors can transform this value before it reaches the adapter for example, converting a plain string into a Discord embed.
+
+## Keeping builders in a separate file
+
+As commands grow to include options, subcommands, or choices, the builder definition can get long. The recommended pattern is to extract it into its own file, similar to how DTOs are handled:
+
+```ts title="src/status/status.builder.ts"
+import { SlashCommandBuilder } from 'discord.js';
+
+export const StatusCommandBuilder = new SlashCommandBuilder()
+    .setName('status')
+    .setDescription('Shows the current bot status')
+    .addStringOption((option) =>
+        option.setName('type').setDescription('Status type').setRequired(false),
+    );
+```
+
+```ts title="src/status/status.command.ts"
+import { SlashCommand } from '@nodecord/core';
+import { StatusCommandBuilder } from './status.builder';
+
+@SlashCommand(StatusCommandBuilder)
+export class StatusCommand {
+    execute(): string {
+        return 'Online';
+    }
+}
+```
+
+This keeps the handler class focused on logic and makes the command definition easier to read and maintain on its own.
+
+## Registering commands
+
+Commands are registered by adding them to the `handlers` array of a module. Slash commands are also registered with Discord's API on startup via `loadSlashCommands()`.

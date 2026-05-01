@@ -1,0 +1,73 @@
+---
+title: discord.js Adapter
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# discord.js Adapter
+
+`@nodecord/djs-adapter` is the official adapter for [discord.js v14](https://discord.js.org). It wires the Nodecord framework to a discord.js `Client`, handles interaction routing, and registers slash commands via Discord's REST API.
+
+## Installation
+
+<Tabs groupId="pkg-manager">
+    <TabItem value="pnpm" label="pnpm" default>
+        ```bash pnpm add @nodecord/djs-adapter discord.js ```
+    </TabItem>
+    <TabItem value="npm" label="npm">
+        ```bash npm install @nodecord/djs-adapter discord.js ```
+    </TabItem>
+    <TabItem value="yarn" label="yarn">
+        ```bash yarn add @nodecord/djs-adapter discord.js ```
+    </TabItem>
+    <TabItem value="bun" label="bun">
+        ```bash bun add @nodecord/djs-adapter discord.js ```
+    </TabItem>
+</Tabs>
+
+## Usage
+
+Pass `DiscordJsAdapter` to `NodecordClient.create()`:
+
+```ts
+import { NodecordClient } from '@nodecord/core';
+import { DiscordJsAdapter } from '@nodecord/djs-adapter';
+import { type ClientOptions, Partials, GatewayIntentBits } from 'discord.js';
+
+const { Guilds, MessageContent, GuildMessages, GuildMembers } = GatewayIntentBits;
+
+const client = NodecordClient.create<ClientOptions>({
+    module: BotModule,
+    adapter: DiscordJsAdapter,
+    options: {
+        intents: [Guilds, MessageContent],
+        partials: [Partials.Channel, Partials.GuildMember],
+    },
+});
+await client.login(process.env.TOKEN);
+```
+
+## Bringing your own Client instance
+
+If you need to modify or extend the underlying discord.js `Client`, you can create an instance yourself and pass it to the adapter:
+
+```ts
+import { Client, GatewayIntentBits } from 'discord.js';
+
+const djsClient = new Client({
+    intents: [GatewayIntentBits.Guilds],
+});
+
+const client = await NodecordClient.create({
+    module: AppModule,
+    adapter: new DiscordJsAdapter(djsClient),
+});
+```
+
+## What it does
+
+- Attaches an `interactionCreate` listener that routes interactions to the correct handler via `InteractionCreateDispatcher`
+- Attaches event listeners registered with `@Listener()` via `EventManager`
+- Registers slash commands globally using Discord's REST API on `loadSlashCommands()`
+- Registers param resolvers for `@Ctx()`, `@Guild()`, and `@Author()`

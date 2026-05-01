@@ -1,0 +1,39 @@
+---
+title: Providers & Injection
+---
+
+# Providers & Injection
+
+Providers are classes decorated with `@Injectable()` that can be injected into commands, listeners, interceptors, or other providers via the constructor.
+
+## Defining a provider
+
+```ts
+import { Injectable } from '@nodecord/core';
+
+@Injectable()
+export class DatabaseService {
+    findUser(id: string) {
+        // ...
+    }
+}
+```
+
+## Injecting a provider
+
+Register the provider in a module, then inject it via the constructor:
+
+```ts
+@SlashCommand(...)
+export class ProfileCommand {
+  constructor(private readonly db: DatabaseService) {}
+
+  execute(@Author() user: User) {
+    return this.db.findUser(user.id);
+  }
+}
+```
+
+## Provider scope
+
+By default all providers are singletons within their module's container. Providers declared in a global module are singletons shared across the entire application.

@@ -1,0 +1,48 @@
+---
+title: Installation
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Installation
+
+## Packages
+
+Install the core package, the discord.js adapter, and discord.js itself:
+
+<Tabs groupId="pkg-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+    ```bash
+    pnpm add @nodecord/core @nodecord/djs-adapter discord.js
+    ```
+  </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install @nodecord/core @nodecord/djs-adapter discord.js
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add @nodecord/core @nodecord/djs-adapter discord.js
+    ```
+  </TabItem>
+  <TabItem value="bun" label="bun">
+    ```bash
+    bun add @nodecord/core @nodecord/djs-adapter discord.js
+    ```
+  </TabItem>
+</Tabs>
+
+## TypeScript configuration
+
+Nodecord relies on TypeScript decorators and metadata reflection. Add these two flags to your `tsconfig.json`:
+
+```json
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    }
+}
+```

@@ -1,0 +1,43 @@
+---
+title: Modules
+---
+
+# Modules
+
+Modules are the basic building blocks of a Nodecord application. Every application has at least one root module, and can be composed of many feature modules.
+
+## Defining a module
+
+```ts
+import { Module } from '@nodecord/core';
+import { PingCommand } from './ping.command';
+import { DatabaseService } from './database.service';
+
+@Module({
+    imports: [DatabaseModule],
+    providers: [DatabaseService],
+    handlers: [PingCommand],
+})
+export class AppModule {}
+```
+
+### Module options
+
+| Option      | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `imports`   | Other modules whose exported providers are available in this module  |
+| `providers` | Services and other injectables registered in this module's container |
+| `handlers`  | Command and event handler classes                                    |
+
+## Global modules
+
+Marking a module as global registers its providers in the shared global container, making them available to every other module without importing:
+
+```ts
+@Module({ providers: [ConfigService], global: true })
+export class ConfigModule {}
+```
+
+## Scoped containers
+
+Each module gets its own Inversify container scoped as a child of the global container. This means providers from a parent module are visible to its children, but not the other way around.

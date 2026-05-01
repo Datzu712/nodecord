@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-    title: 'Nodecord',
+    title: 'nodecord',
     tagline:
         'A powerful TypeScript framework for building Discord bots with dependency injection, scoped modules, and decorator-driven commands.',
     favicon: 'img/favicon.ico',
@@ -20,6 +20,8 @@ const config: Config = {
 
     organizationName: 'Datzu712',
     projectName: 'nodecord',
+    deploymentBranch: 'gh-pages',
+    trailingSlash: false,
 
     onBrokenLinks: 'throw',
 
@@ -39,18 +41,7 @@ const config: Config = {
                     sidebarPath: './sidebars.ts',
                     editUrl: 'https://github.com/Datzu712/nodecord/tree/main/apps/docs/',
                 },
-                blog: {
-                    showReadingTime: true,
-                    feedOptions: {
-                        type: ['rss', 'atom'],
-                        xslt: true,
-                    },
-                    editUrl: 'https://github.com/Datzu712/nodecord/tree/main/apps/docs/',
-                    // Useful options to enforce blogging best practices
-                    onInlineTags: 'warn',
-                    onInlineAuthors: 'warn',
-                    onUntruncatedBlogPosts: 'warn',
-                },
+                blog: false,
                 theme: {
                     customCss: './src/css/custom.css',
                 },
@@ -62,7 +53,9 @@ const config: Config = {
         // Replace with your project's social card
         image: 'img/docusaurus-social-card.jpg',
         colorMode: {
-            respectPrefersColorScheme: true,
+            defaultMode: 'dark',
+            disableSwitch: true,
+            respectPrefersColorScheme: false,
         },
         navbar: {
             title: 'Nodecord',
@@ -91,8 +84,8 @@ const config: Config = {
                     title: 'Docs',
                     items: [
                         {
-                            label: 'Tutorial',
-                            to: '/docs/intro',
+                            label: 'Introduction',
+                            to: '/docs/getting-started/introduction',
                         },
                     ],
                 },

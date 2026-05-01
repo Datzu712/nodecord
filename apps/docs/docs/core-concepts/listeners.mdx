@@ -1,0 +1,35 @@
+---
+title: Listeners
+---
+
+# Listeners
+
+Listeners are provider classes decorated with `@Listener(event)` that respond to Discord gateway events.
+
+## Defining a listener
+
+```ts
+import { Listener, ListenerProvider } from '@nodecord/core';
+
+@Listener(Events.ClientReady)
+export class ReadyListener implements ListenerProvider {
+    handler(client: Client) {
+        console.log(`Logged in as ${client.user.tag}`);
+    }
+}
+```
+
+## Registering listeners
+
+Add listeners to the `providers` array of a module. The adapter's `EventManager` attaches them to the underlying Discord client on startup.
+
+```ts
+@Module({
+    providers: [ReadyListener],
+})
+export class AppModule {}
+```
+
+## Available events
+
+The event string passed to `@Listener()` maps directly to the events emitted by the underlying Discord client. When using the discord.js adapter, these correspond to [discord.js Client events](https://discord.js.org/docs/packages/discord.js/14.26.2/Events:Enum).

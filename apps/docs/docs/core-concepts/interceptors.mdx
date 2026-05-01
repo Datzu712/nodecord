@@ -1,0 +1,77 @@
+---
+title: Interceptors
+---
+
+# Interceptors
+
+Interceptors wrap command execution in a chain-of-responsibility pipeline. They can transform inputs, transform return values, add logging, handle errors, or short-circuit execution entirely.
+
+## Defining an interceptor
+
+```ts
+import { Interceptor, ExecutionContext } from '@nodecord/core';
+
+@Interceptor()
+export class LoggingInterceptor {
+    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>) {
+        console.log(`Command: ${ctx.name}`);
+        const result = await next();
+        console.log(`Result: ${String(result)}`);
+        return result;
+    }
+}
+```
+
+## Applying interceptors
+
+Use `@UseInterceptors()` on the handler class:
+
+```ts
+@SlashCommand(...)
+@UseInterceptors(LoggingInterceptor)
+export class PingCommand {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
+
+## Transform interceptors
+
+A common pattern is transforming the return value for example, converting a string into a Discord embed:
+
+```ts
+@Interceptor()
+export class EmbedFormatInterceptor {
+    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>) {
+        const result = await next();
+        if (typeof result === 'string') {
+            return new EmbedBuilder().setDescription(result);
+        }
+        return result;
+    }
+}
+```
+
+## Pipeline order
+
+There are two levels of interceptors, and they always run in this order:
+
+1. **Scoped interceptors** - classes decorated with `@Interceptor()` and registered as `providers` in a module. They are inherited by all handlers in that module and its children.
+2. **Handler interceptors** - passed to `@UseInterceptors()` on the handler class. These run after the scoped ones.
+
+```ts
+@Module({
+    providers: [LoggingInterceptor], // runs first, for every handler in this module
+    handlers: [PingCommand],
+})
+export class AppModule {}
+
+@SlashCommand(...)
+@UseInterceptors(EmbedFormatInterceptor) // runs after scoped interceptors
+export class PingCommand {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
