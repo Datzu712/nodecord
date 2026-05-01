@@ -16,7 +16,7 @@ const config: Config = {
     },
 
     url: 'https://Datzu712.github.io',
-    baseUrl: '/',
+    baseUrl: '/nodecord/',
 
     organizationName: 'Datzu712',
     projectName: 'nodecord',
