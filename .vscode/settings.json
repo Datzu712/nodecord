@@ -1,11 +1,6 @@
 {
     "snyk.advanced.autoSelectOrganization": true,
     "discord.enabled": true,
-    "conventionalCommits.scopes": [
-        "core",
-        "sample-basic-bot",
-        "djs-adapter",
-        "core,djs-adapter",
-        "monorepo"
-    ]
+    "conventionalCommits.scopes": ["core", "sample-basic-bot", "djs-adapter", "core,djs-adapter", "monorepo"],
+    "js/ts.preferences.autoImportFileExcludePatterns": ["@nestjs/*"]
 }

@@ -100,7 +100,8 @@ Register them in the module's `providers` array:
 
 ```typescript
 @Module({
-    providers: [LoggerService, ReadyListener],
+    providers: [LoggerService],
+    listeners: [ReadyListener],
 })
 export class EventsModule {}
 ```
@@ -184,7 +185,8 @@ To apply an interceptor across the entire application, register it in the root m
 ```typescript
 @Module({
     imports: [LoggerModule, UtilModule],
-    providers: [ReadyListener, AuditInterceptor],
+    providers: [AuditInterceptor],
+    listeners: [ReadyListener],
 })
 export class MainModule {}
 ```
@@ -285,11 +287,32 @@ Each provider and module gets a unique ID generated at decoration time, which pr
 ```text
 nodecord/
 ├── apps/
-│   └── sample-basic-bot/          # Working example: modules, services, commands, tests
-├── packages/
-│   ├── core/                      # @nodecord/core
-│   └── djs-adapter/               # @nodecord/djs-adapter
-│       └── testing/               # TestingDjsAdapter, createMockChatInputInteraction
+│   ├── docs/                          # Docusaurus documentation site
+│   │   ├── docs/
+│   │   │   ├── adapters/
+│   │   │   ├── core-concepts/
+│   │   │   ├── getting-started/
+│   │   │   └── testing/
+│   │   └── src/                       # Docusaurus source (components, pages, theme)
+│   └── examples/
+│       └── sample-basic-bot/          # Working example: modules, services, interceptors, commands, tests
+└── packages/
+    ├── core/                          # @nodecord/core
+    │   ├── client/
+    │   │   ├── container/             # ModuleCompiler, ModuleContainer, MetadataScanner
+    │   │   ├── exceptions/            # Typed exception classes
+    │   │   └── testing/
+    │   ├── decorators/                # @Module, @Injectable, @Listener, @SlashCommand, etc.
+    │   ├── enums/
+    │   ├── helpers/
+    │   └── interfaces/                # CommandHandler, ListenerProvider, ModuleMetadata, etc.
+    └── djs-adapter/                   # @nodecord/djs-adapter
+        ├── adapter/
+        │   ├── enums/
+        │   ├── events/
+        │   ├── exceptions/            # Typed exception classes
+        │   └── helpers/
+        └── testing/                   # TestingDjsAdapter, createMockChatInputInteraction
 ```
 
 The monorepo is managed with [Turborepo](https://turbo.build/) and pnpm workspaces. Both packages ship ESM and CJS outputs with full TypeScript declarations.

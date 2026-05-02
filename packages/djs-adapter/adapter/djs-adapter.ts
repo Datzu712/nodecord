@@ -21,6 +21,11 @@ import { EventManager } from './event-manager.js';
 import { InteractionCreateDispatcher } from './events/interaction-create.dispatcher.js';
 import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
 import { ResponseHandler } from './response-handler.js';
+import {
+    AdapterAlreadyInitializedException,
+    AdapterNotInitializedException,
+    InvalidHandlerMetadataException,
+} from './exceptions/adapter.exception.js';
 import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
@@ -48,9 +53,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         listeners: RegisteredListener<unknown[]>[],
     ): void {
         if (this.alreadyInitialized) {
-            throw new Error(
-                'Adapter is already initialized. Adapter should only be initialized by the framework once during setup.',
-            );
+            throw new AdapterAlreadyInitializedException();
         }
         this.alreadyInitialized = true;
 
@@ -61,10 +64,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         if (handlers.length) {
             handlers.forEach(({ descriptor, handler, ...rest }) => {
                 if (!isDjsCommandMeta(descriptor)) {
-                    throw new Error(
-                        `Invalid metadata for handler "${handler.constructor.name}". ` +
-                            `Expected SlashCommandBuilder or ContextMenuCommandBuilder.`,
-                    );
+                    throw new InvalidHandlerMetadataException(handler.constructor.name);
                 }
                 this.commandRegistry.register({ descriptor: descriptor.toJSON(), handler, ...rest });
             });
@@ -83,7 +83,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
 
     async login(token: string): Promise<void> {
         if (!this.alreadyInitialized) {
-            throw new Error('Adapter must be initialized before login. Please ensure the client is properly set up.');
+            throw new AdapterNotInitializedException();
         }
 
         await this.clientInstance.login(token);

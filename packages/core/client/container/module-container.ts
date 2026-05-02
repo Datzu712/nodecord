@@ -1,6 +1,7 @@
 import { Container, type ServiceIdentifier } from 'inversify';
 import type { Constructor } from '../../interfaces/common/constructor.js';
 import { RegisteredInterceptor } from '../../interfaces/index.js';
+import { UnresolvedBindingException } from '../exceptions/module.js';
 
 /**
  * Scoped DI container for a single module, backed by Inversify.
@@ -32,7 +33,7 @@ export class ModuleContainer {
         if (this.#container.isBound(cls)) {
             return this.#container.get<T>(cls as ServiceIdentifier<T>);
         }
-        throw new Error(`[${this.moduleName}] No binding found for ${cls.name}`);
+        throw new UnresolvedBindingException(cls.name, this.moduleName);
     }
 
     registerInterceptors(...interceptors: RegisteredInterceptor[]): void {

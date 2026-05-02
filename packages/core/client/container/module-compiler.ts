@@ -7,12 +7,32 @@ import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js'
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 import { TESTING_OVERRIDES_METADATA } from '../../constants/testing.js';
+import {
+    DuplicateInterceptorException,
+    InternalCompilerException,
+    InvalidHandlerException,
+    InvalidInterceptorException,
+    InvalidListenerException,
+    InvalidModuleException,
+    InvalidProviderException,
+    MissingContractMethodException,
+    PossibleCircularImportException,
+    ProviderNotFoundException,
+} from '../exceptions/module.js';
+
+interface ModuleCompileContext {
+    parent: ModuleContainer;
+    importIndex: number;
+    importTrace: Constructor[];
+    providers: Constructor[];
+    handlers: Constructor[];
+}
 
 export class ModuleCompiler {
     private globalContainer = new ModuleContainer();
     private moduleMap = new Map<unknown, ModuleContainer>(); // Map<moduleId, ModuleContainer>
     private providerMap = new Map<unknown, unknown>(); // Map<providerId, moduleId>
-    private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, CommandHandler>
+    private handlerMap = new Map<unknown, RegisteredCommandHandler>(); // Map<handlerId, RegisteredCommandHandler>
     private listenerMap = new Map<unknown, RegisteredListener<unknown[]>>();
     private pendingHandlers: Array<{ container: ModuleContainer; handlerClasses: Constructor[] }> = [];
     private overrides: Map<Constructor, unknown> = new Map();
@@ -20,39 +40,37 @@ export class ModuleCompiler {
     constructor(private logger: AbstractLogger) {}
 
     compile(parentModule: Constructor): ModuleContainer {
-        this.compileModule(parentModule, this.globalContainer);
+        this.compileModule(parentModule, {
+            parent: this.globalContainer,
+            importIndex: -1,
+            importTrace: [],
+            providers: [],
+            handlers: [],
+        });
         this.compilePendingHandlers();
         return this.globalContainer;
     }
 
     getContainerFor(provider: Constructor): ModuleContainer {
         if (!MetadataScanner.isProvider(provider)) {
-            throw new Error(
-                `Class ${provider.name} is not a valid provider. ` + `Make sure it is decorated with @Injectable.`,
-            );
+            throw new InvalidProviderException(provider.name);
         }
 
         const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
         const moduleId = this.providerMap.get(providerId);
         if (!moduleId) {
-            throw new Error(
-                `${provider.name} is not registered in any module. ` +
-                    `Make sure it is listed in the providers array of its module.`,
-            );
+            throw new ProviderNotFoundException(provider.name);
         }
 
         const targetModule = this.moduleMap.get(moduleId);
         if (!targetModule) {
-            throw new Error(
-                `Internal error: ${provider.name} is mapped to a module that was not compiled. ` +
-                    `This is likely a bug in ModuleCompiler.`,
-            );
+            throw new InternalCompilerException(provider.name);
         }
 
         return targetModule;
     }
 
-    private compileModule(moduleClass: Constructor | undefined, parent: ModuleContainer): ModuleContainer {
+    private compileModule(moduleClass: Constructor | undefined, context: ModuleCompileContext): ModuleContainer {
         /**
          * CJS resolves module in runtime, so that means if ModuleA imports ModuleB, but ModuleB also imports ModuleA, then when we try to resolve ModuleA,
          * it will try to resolve ModuleB first, and then when it tries to resolve ModuleA again, it will get undefined because ModuleA is not fully loaded yet
@@ -60,10 +78,12 @@ export class ModuleCompiler {
          * This only happens in CJS, because ESM just throws an error like "ReferenceError: Cannot access 'AdminModule' before initialization"
          */
         if (!moduleClass) {
-            throw new Error(
-                `[${parent.moduleName}] An import resolved to ${moduleClass}. ` +
-                    `This usually means a circular import between files (e.g. moduleA imports moduleB which imports moduleA). ` +
-                    `Check the imports array of ${parent.moduleName}.`,
+            throw new PossibleCircularImportException(
+                context.parent.moduleName,
+                context.importIndex,
+                context.importTrace,
+                context.providers,
+                context.handlers,
             );
         }
 
@@ -76,15 +96,13 @@ export class ModuleCompiler {
         }
 
         if (!MetadataScanner.isModule(moduleClass)) {
-            throw new Error(
-                `Class ${moduleClass.name} is not a valid module. ` + `Make sure it is decorated with @Module.`,
-            );
+            throw new InvalidModuleException(moduleClass.name);
         }
 
         const moduleId = MetadataScanner.getModuleId(moduleClass);
 
         const metadata = MetadataScanner.getModuleMetadata(moduleClass);
-        const container = metadata.global ? this.globalContainer : new ModuleContainer(moduleClass, parent);
+        const container = metadata.global ? this.globalContainer : new ModuleContainer(moduleClass, context.parent);
 
         const moduleRef = this.moduleMap.get(moduleId);
         if (moduleRef) {
@@ -110,23 +128,26 @@ export class ModuleCompiler {
         const listenerProviders: Constructor[] = [];
         const interceptorProviders: Constructor[] = [];
 
-        for (const provider of metadata.providers ?? []) {
-            if (MetadataScanner.isListener(provider)) {
-                this.registerProvider(container, provider);
-                listenerProviders.push(provider);
-                continue;
+        for (const listener of metadata.listeners ?? []) {
+            if (!MetadataScanner.isListener(listener)) {
+                throw new InvalidListenerException(listener.name);
             }
+            this.assertListenerContract(listener);
+            container.register(listener);
 
+            listenerProviders.push(listener);
+        }
+
+        for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isInterceptor(provider)) {
+                this.assertInterceptorContract(provider);
                 this.registerProvider(container, provider);
                 interceptorProviders.push(provider);
                 continue;
             }
 
             if (!MetadataScanner.isProvider(provider)) {
-                throw new Error(
-                    `Class ${provider.name} is not a valid provider. ` + `Make sure it is decorated with @Injectable.`,
-                );
+                throw new InvalidProviderException(provider.name);
             }
 
             const providerId = MetadataScanner.getProviderMetadata(provider)!.id;
@@ -135,7 +156,13 @@ export class ModuleCompiler {
         }
 
         for (const importedModule of metadata.imports ?? []) {
-            this.compileModule(importedModule, container);
+            this.compileModule(importedModule, {
+                parent: container,
+                importIndex: metadata.imports!.indexOf(importedModule),
+                importTrace: metadata.imports!,
+                providers: metadata.providers ?? [],
+                handlers: metadata.handlers ?? [],
+            });
         }
 
         // Resolve listeners and interceptors after imports so their dependencies from imported modules are available.
@@ -179,11 +206,9 @@ export class ModuleCompiler {
         for (const { container, handlerClasses } of this.pendingHandlers) {
             for (const handler of handlerClasses) {
                 if (!MetadataScanner.isHandler(handler)) {
-                    throw new Error(
-                        `Class ${handler.name} is not a valid command handler. ` +
-                            `Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
-                    );
+                    throw new InvalidHandlerException(handler.name);
                 }
+                this.assertHandlerContract(handler);
 
                 const { id: handlerId, descriptor, type: handlerType } = MetadataScanner.getHandlerMetadata(handler);
                 container.register(handler);
@@ -196,18 +221,13 @@ export class ModuleCompiler {
 
                 for (const rawHandlerInterceptor of rawHandlerInterceptors) {
                     if (!MetadataScanner.isInterceptor(rawHandlerInterceptor)) {
-                        throw new Error(
-                            `Class ${rawHandlerInterceptor.name} is not a valid interceptor. ` +
-                                `Make sure it is decorated with @Interceptor and that you are passing the class reference (not an instance) to @UseInterceptors.`,
-                        );
+                        throw new InvalidInterceptorException(rawHandlerInterceptor.name);
                     }
+                    this.assertInterceptorContract(rawHandlerInterceptor);
 
                     const meta = MetadataScanner.getInterceptorMetadata(rawHandlerInterceptor);
                     if (allRegisteredInterceptors.some((i) => i.metadata.id === meta.id)) {
-                        throw new Error(
-                            `Duplicate interceptor "${rawHandlerInterceptor.name}" detected for handler ${handler.name}. ` +
-                                `Make sure each interceptor has a unique ID and that you are not registering the same interceptor both globally and at the handler level.`,
-                        );
+                        throw new DuplicateInterceptorException(rawHandlerInterceptor.name, handler.name);
                     }
 
                     container.register(rawHandlerInterceptor);
@@ -232,6 +252,28 @@ export class ModuleCompiler {
             container.registerConstant(cls, this.overrides.get(cls));
         } else {
             container.register(cls);
+        }
+    }
+
+    // private isListenerProvider(cls: Constructor): cls is Constructor<ListenerProvider> {
+    //     return MetadataScanner.isListener(cls) && 'handler' in cls.prototype;
+    // }
+
+    private assertListenerContract(cls: Constructor): void {
+        if (!('handler' in cls.prototype)) {
+            throw new MissingContractMethodException(cls.name, 'ListenerProvider', 'handler');
+        }
+    }
+
+    private assertHandlerContract(cls: Constructor): void {
+        if (!('execute' in cls.prototype)) {
+            throw new MissingContractMethodException(cls.name, 'CommandHandler', 'execute');
+        }
+    }
+
+    private assertInterceptorContract(cls: Constructor): void {
+        if (!('intercept' in cls.prototype)) {
+            throw new MissingContractMethodException(cls.name, 'NodecordInterceptor', 'intercept');
         }
     }
 

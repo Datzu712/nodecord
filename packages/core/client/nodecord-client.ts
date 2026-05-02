@@ -6,6 +6,7 @@ import { AbstractClientAdapter, type LoadSlashCommandsOptions } from './abstract
 import { CommandExecutor } from './command-executor.js';
 import { ConsoleLogger } from './console-logger.js';
 import { ModuleCompiler } from './container/module-compiler.js';
+import { MissingRequiredClientOptionsException } from './exceptions/client.js';
 
 interface NodecordClientConstructor<IAdapterOptions extends object> {
     module: Constructor;
@@ -38,7 +39,7 @@ export class NodecordClient {
         options,
     }: NodecordClientConstructor<IAdapterOptions>): NodecordClient {
         if (!options) {
-            throw new Error('Client options are required to initialize NodecordClient.');
+            throw new MissingRequiredClientOptionsException();
         }
 
         const logger = options.logger === false ? mutedLogger : (options.logger ?? new ConsoleLogger('NodecordClient'));

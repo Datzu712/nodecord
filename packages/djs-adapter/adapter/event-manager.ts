@@ -1,5 +1,6 @@
 import type { Client as DjsClient, ClientEvents } from 'discord.js';
 import type { ListenerProvider, RegisteredListener } from '@nodecord/core';
+import { MixedListenerTypeException } from './exceptions/event-manager.exception.js';
 
 export class EventManager {
     private readonly buckets = new Map<keyof ClientEvents, { once: boolean; listeners: ListenerProvider[] }>();
@@ -15,7 +16,7 @@ export class EventManager {
         }
 
         if (bucket.once !== once) {
-            throw new Error(`Cannot mix 'on' and 'once' listeners for event "${key}".`);
+            throw new MixedListenerTypeException(key);
         }
 
         bucket.listeners.push(listener);
