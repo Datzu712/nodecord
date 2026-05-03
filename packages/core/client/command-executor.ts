@@ -23,7 +23,7 @@ export class CommandExecutor {
 
     // TODO: use observable for interceptors and convert params to a single object
     async execute(
-        ctx: ExecutionContext<any>,
+        ctx: ExecutionContext,
         handler: CommandHandler,
         interceptors: RegisteredInterceptor[] = [],
         exceptionHandlers: RegisteredExceptionHandler[] = [],
