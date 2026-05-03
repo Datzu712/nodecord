@@ -26,7 +26,12 @@ export class InteractionCreateDispatcher implements ListenerProvider<ClientEvent
             await raw.deferReply();
         }
 
-        const result = await this.executor.execute(ctx, registeredCommand.handler, registeredCommand.interceptors);
+        const result = await this.executor.execute(
+            ctx,
+            registeredCommand.handler,
+            registeredCommand.interceptors,
+            registeredCommand.exceptionHandlers,
+        );
         if (!isPassThrough) {
             return this.responseHandler.resolve(result, ctx);
         }

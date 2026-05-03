@@ -1,5 +1,6 @@
 import type { HandlerTypes } from '../../enums/command-types.enum.js';
 import type { RegisteredInterceptor } from '../interceptor/interceptor.js';
+import type { RegisteredExceptionHandler } from '../exception-handler/exception-handler.js';
 
 export interface HandlerMetadata {
     id: string;
@@ -28,4 +29,5 @@ export interface RegisteredCommandHandler<TMetadata = unknown> {
     handler: CommandHandler;
     descriptor: TMetadata;
     interceptors: RegisteredInterceptor[];
+    exceptionHandlers: RegisteredExceptionHandler[];
 }

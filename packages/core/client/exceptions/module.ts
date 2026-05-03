@@ -74,6 +74,15 @@ export class DuplicateInterceptorException extends NodecordCoreException {
     }
 }
 
+export class InvalidExceptionHandlerException extends NodecordCoreException {
+    constructor(handlerName: string) {
+        super(
+            `Class ${handlerName} is not a valid exception handler. Make sure it is decorated with @OnException.`,
+            NodecordExceptionCode.INVALID_EXCEPTION_HANDLER,
+        );
+    }
+}
+
 export class MissingContractMethodException extends NodecordCoreException {
     constructor(className: string, contractName: string, method: string) {
         super(
@@ -161,7 +170,7 @@ export class PossibleCircularImportException extends NodecordCoreException {
     }
 
     private static formatList(items: Constructor[]): string {
-        const visible = items.slice(0, MAX_ITEMS).map((c) => c.name);
+        const visible = items.slice(0, MAX_ITEMS).map((c) => c?.name ?? 'undefined');
         const remaining = items.length - MAX_ITEMS;
 
         if (remaining > 0) {

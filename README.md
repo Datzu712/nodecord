@@ -10,7 +10,7 @@ A TypeScript framework for building Discord bots.
 
 Nodecord takes the module/provider pattern from frameworks like NestJS and brings it to Discord bot development. Instead of one giant file full of `client.on(...)` calls and globally shared state, you get a proper dependency injection system, scoped modules, and decorator-driven command definitions.
 
-> **Current status:** Core DI, Discord.js adapter, slash command registration, event handling, parameter decorators, and interceptors are working.
+> **Current status:** Core DI, Discord.js adapter, slash command registration, event handling, parameter decorators, interceptors, and exception handlers are working.
 
 ## Links
 
@@ -209,6 +209,58 @@ export class PingCommand implements CommandHandler {
 
 Declaring the same interceptor both in `providers[]` and via `@UseInterceptors()` on the same handler throws a duplicate interceptor error at startup.
 
+---
+
+### Exception handlers
+
+Exception handlers catch exceptions thrown during command execution (including exceptions thrown inside interceptors). Decorate a class with `@OnException(...exceptions)` and implement `ExceptionHandler` to handle one or more exception types.
+
+```typescript
+@OnException(DatabaseError)
+export class DatabaseErrorHandler implements ExceptionHandler {
+    handle(exception: DatabaseError, ctx: ExecutionContext): void {
+        console.error(`Command "${ctx.name}" failed:`, exception.message);
+        ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
+    }
+}
+```
+
+`handle()` receives the thrown exception and the `ExecutionContext`. The exception type is `unknown` so you can cast it to whatever type you registered with `@OnException`.
+
+#### Module-level exception handlers
+
+Register exception handlers in `providers[]` to apply them to all handlers in that module and its children.
+
+```typescript
+@Module({
+    imports: [DatabaseModule],
+    providers: [DatabaseErrorHandler],
+    handlers: [PingCommand, StatusCommand],
+})
+export class AppModule {}
+```
+
+#### Handler-level exception handlers
+
+Use `@UseExceptionHandler()` on a command class to attach exception handlers that only apply to that specific command. Handler-level exception handlers take priority over module-level ones.
+
+```typescript
+@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@UseExceptionHandler(RateLimitErrorHandler)
+export class PingCommand implements CommandHandler {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
+
+#### Pipeline behavior
+
+- Only one exception handler executes per exception: the first one whose registered exception type matches via `instanceof`.
+- Handler-level exception handlers are checked before module-level ones.
+- If no handler matches, the exception is rethrown.
+- Exceptions thrown inside interceptors (both before and after `next()`) are caught and routed through the same exception handler pipeline.
+
 ### Testing
 
 `@nodecord/djs-adapter` ships a `/testing` subpath with utilities for testing commands without connecting to Discord.
@@ -335,6 +387,7 @@ Not published yet! The API is still in development and I want to get more of the
 - Provider resolution via `NodecordClient.get<T>()`
 - Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
 - Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
+- Exception handlers: `@OnException` for module-level and `@UseExceptionHandler` for handler-level exception handling
 - Automatic reply deferral via `@DeferReply()`
 - Testing utilities: `TestingModule` with provider overrides, `TestingDjsAdapter`, and `createMockChatInputInteraction` for testing commands without a live Discord connection
 - Full TypeScript strict mode throughout, dual ESM/CJS output
@@ -345,7 +398,6 @@ Not published yet! The API is still in development and I want to get more of the
 - Context menu command handling
 - Pipes on parameter decorators
 - More built-in parameter decorators (`@Option()`, etc.)
-- Robust error handling
 
 ---
 

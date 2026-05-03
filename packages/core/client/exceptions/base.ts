@@ -11,7 +11,9 @@ export abstract class BaseFrameworkException<TCode extends string = string> exte
         super(message);
         this.name = this.constructor.name;
 
-        Error.captureStackTrace(this, this.constructor);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

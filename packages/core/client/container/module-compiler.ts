@@ -6,10 +6,15 @@ import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
+import type {
+    ExceptionHandler,
+    RegisteredExceptionHandler,
+} from '../../interfaces/exception-handler/exception-handler.js';
 import { TESTING_OVERRIDES_METADATA } from '../../constants/testing.js';
 import {
     DuplicateInterceptorException,
     InternalCompilerException,
+    InvalidExceptionHandlerException,
     InvalidHandlerException,
     InvalidInterceptorException,
     InvalidListenerException,
@@ -138,7 +143,16 @@ export class ModuleCompiler {
             listenerProviders.push(listener);
         }
 
+        const exceptionHandlerProviders: Constructor[] = [];
+
         for (const provider of metadata.providers ?? []) {
+            if (MetadataScanner.isExceptionHandler(provider)) {
+                this.assertExceptionHandlerContract(provider);
+                this.registerProvider(container, provider);
+                exceptionHandlerProviders.push(provider);
+                continue;
+            }
+
             if (MetadataScanner.isInterceptor(provider)) {
                 this.assertInterceptorContract(provider);
                 this.registerProvider(container, provider);
@@ -180,6 +194,12 @@ export class ModuleCompiler {
                 interceptor: instance,
                 metadata: { type: interceptorMeta.type, id: interceptorMeta.id },
             });
+        }
+
+        for (const provider of exceptionHandlerProviders) {
+            const meta = MetadataScanner.getExceptionHandlerMetadata(provider);
+            const instance = container.resolve<ExceptionHandler>(provider);
+            container.registerExceptionHandlers({ handler: instance, metadata: meta });
         }
 
         /**
@@ -237,11 +257,30 @@ export class ModuleCompiler {
                     });
                 }
 
+                // Handler-level exception handlers take priority over module-level ones.
+                const rawHandlerExceptionHandlers = MetadataScanner.getHandlerExceptionHandlers(handler);
+                const handlerLevelExceptionHandlers: RegisteredExceptionHandler[] = [];
+
+                for (const rawExceptionHandler of rawHandlerExceptionHandlers) {
+                    if (!MetadataScanner.isExceptionHandler(rawExceptionHandler)) {
+                        throw new InvalidExceptionHandlerException(rawExceptionHandler.name);
+                    }
+                    this.assertExceptionHandlerContract(rawExceptionHandler);
+
+                    const meta = MetadataScanner.getExceptionHandlerMetadata(rawExceptionHandler);
+                    container.register(rawExceptionHandler);
+                    handlerLevelExceptionHandlers.push({
+                        handler: container.resolve<ExceptionHandler>(rawExceptionHandler),
+                        metadata: meta,
+                    });
+                }
+
                 this.handlerMap.set(handlerId, {
                     handler: resolvedHandler,
                     descriptor,
                     type: handlerType,
                     interceptors: allRegisteredInterceptors,
+                    exceptionHandlers: [...handlerLevelExceptionHandlers, ...container.getInheritedExceptionHandlers()],
                 });
             }
         }
@@ -274,6 +313,12 @@ export class ModuleCompiler {
     private assertInterceptorContract(cls: Constructor): void {
         if (!('intercept' in cls.prototype)) {
             throw new MissingContractMethodException(cls.name, 'NodecordInterceptor', 'intercept');
+        }
+    }
+
+    private assertExceptionHandlerContract(cls: Constructor): void {
+        if (!('handle' in cls.prototype)) {
+            throw new MissingContractMethodException(cls.name, 'ExceptionHandler', 'handle');
         }
     }
 

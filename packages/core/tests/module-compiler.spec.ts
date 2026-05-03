@@ -12,7 +12,14 @@ import { SlashCommand } from '../decorators/slash-command.js';
 import { UseInterceptors } from '../decorators/use-interceptors.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { ListenerProvider } from '../interfaces/listener/event-listener.js';
-import { MissingContractMethodException, PossibleCircularImportException } from '../client/exceptions/module.js';
+import {
+    InvalidExceptionHandlerException,
+    MissingContractMethodException,
+    PossibleCircularImportException,
+} from '../client/exceptions/module.js';
+import { OnException } from '../decorators/on-exception.js';
+import { UseExceptionHandler } from '../decorators/use-exception-handler.js';
+import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 
 const mockLogger: AbstractLogger = {
     log: vi.fn(),
@@ -458,7 +465,7 @@ describe('ModuleCompiler', () => {
 
                 @SlashCommand({ name: 'ping', description: 'Pong' })
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                @UseInterceptors(BadInterceptor)
+                @UseInterceptors(BadInterceptor as any)
                 class PingHandler {
                     execute() {}
                 }
@@ -582,6 +589,130 @@ describe('ModuleCompiler', () => {
             compiler.compile(RootModule);
 
             expect(() => compiler.getContainerFor(LocalService).resolve(LocalService)).toThrow();
+        });
+    });
+
+    describe('exception handlers', () => {
+        describe('registration', () => {
+            it('throws when a exceptionHandler in providers[] is not decorated with @OnException, @Interceptor or @Injectable', () => {
+                class PlainHandler {}
+
+                @Module({ providers: [PlainHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow('is not a valid provider');
+            });
+
+            it('throws when a exceptionHandler does not implement ExceptionHandler (missing handle method)', () => {
+                @OnException(Error)
+                class BadHandler {}
+
+                @Module({ providers: [BadHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
+            it('throws when a @UseExceptionHandler references a class not decorated with @OnException', () => {
+                class NotAHandler {}
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @UseExceptionHandler(NotAHandler as any)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(InvalidExceptionHandlerException);
+            });
+
+            it('registers a valid exception handler and attaches it to all handlers in the module', () => {
+                @OnException(Error)
+                class ScopedErrorHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @SlashCommand({ name: 'echo', description: 'Echo' })
+                class EchoHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ScopedErrorHandler], handlers: [PingHandler, EchoHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [ping, echo] = compiler.getHandlers();
+                expect(ping?.exceptionHandlers).toHaveLength(1);
+                expect(ping?.exceptionHandlers[0]?.handler).toBeInstanceOf(ScopedErrorHandler);
+                expect(echo?.exceptionHandlers).toHaveLength(1);
+                expect(echo?.exceptionHandlers[0]?.handler).toBeInstanceOf(ScopedErrorHandler);
+            });
+
+            it('exception handlers from parent modules are inherited by child module handlers', () => {
+                @OnException(Error)
+                class ParentErrorHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class ChildModule {}
+
+                @Module({ providers: [ParentErrorHandler], imports: [ChildModule] })
+                class ParentModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(ParentModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.exceptionHandlers).toHaveLength(1);
+                expect(handler?.exceptionHandlers[0]?.handler).toBeInstanceOf(ParentErrorHandler);
+            });
+
+            it('@OnException are placed before module-level handlers', () => {
+                @OnException()
+                class ModuleLevelHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @OnException(Error)
+                class HandlerLevelHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                @UseExceptionHandler(HandlerLevelHandler)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ModuleLevelHandler], handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.exceptionHandlers[0]?.handler).toBeInstanceOf(HandlerLevelHandler);
+                expect(handler?.exceptionHandlers[1]?.handler).toBeInstanceOf(ModuleLevelHandler);
+            });
         });
     });
 
