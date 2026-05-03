@@ -45,7 +45,7 @@ keeping `ExecutionContext` clean as more context types are added.
 A new way to catch exceptions thrown during command execution without wrapping
 every `execute()` method in a try/catch.
 
-**Module-level**
+#### Module-level
 
 Apply to every handler in the module:
 
@@ -57,7 +57,7 @@ Apply to every handler in the module:
 export class ItemsModule {}
 ```
 
-**Handler-level**
+#### Handler-level
 
 Apply only to a specific command:
 
