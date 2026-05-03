@@ -42,7 +42,7 @@ export class InteractionCreateDispatcher implements ListenerProvider<ClientEvent
      * The raw interaction is passed through so handlers can access it via parameter decorators.
      * Returns undefined for interaction types not yet supported by the framework.
      */
-    private mapInteraction(raw: DjsInteraction): ExecutionContext<DjsInteraction> | undefined {
+    private mapInteraction(raw: DjsInteraction): ExecutionContext | undefined {
         if (raw.isChatInputCommand()) {
             return new ExecutionContext(raw.commandName, HandlerTypes.SLASH, raw);
         }

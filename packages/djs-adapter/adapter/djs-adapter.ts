@@ -112,12 +112,12 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
 
         executor.registerParamResolver(
             CommandParamTypes.GUILD,
-            (ctx: ExecutionContext<Interaction>) => ctx.getRaw().guild,
+            (ctx: ExecutionContext) => ctx.getRaw<Interaction>().guild,
         );
 
         executor.registerParamResolver(
             CommandParamTypes.AUTHOR,
-            (ctx: ExecutionContext<Interaction>) => ctx.getRaw().user,
+            (ctx: ExecutionContext) => ctx.getRaw<Interaction>().user,
         );
     }
 }

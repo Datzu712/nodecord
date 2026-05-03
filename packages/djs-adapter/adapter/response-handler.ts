@@ -6,10 +6,10 @@ import type { ExecutionContext } from '@nodecord/core';
 // but only handles ChatInputCommandInteraction. A more robust solution should account for
 // other interaction types and potentially support a user-extensible resolver system.
 export class ResponseHandler {
-    async resolve(value: unknown, ctx: ExecutionContext<Interaction>): Promise<void> {
+    async resolve(value: unknown, ctx: ExecutionContext): Promise<void> {
         if (value == null) return;
 
-        const interaction = ctx.getRaw();
+        const interaction = ctx.getRaw<Interaction>();
         if (!interaction.isChatInputCommand()) return;
 
         const method = interaction.deferred || interaction.replied ? 'editReply' : 'reply';
