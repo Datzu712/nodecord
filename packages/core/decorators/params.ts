@@ -27,3 +27,5 @@ export function Guild(): ParameterDecorator {
 export function Author(): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.AUTHOR)();
 }
+
+export const Ctx = Context;

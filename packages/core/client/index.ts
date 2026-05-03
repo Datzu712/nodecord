@@ -5,3 +5,5 @@ export type { ParamTypeResolver } from './command-executor.js';
 export { ExecutionContext } from './execution-context.js';
 export { ModuleCompiler } from './container/module-compiler.js';
 export { TestingModule } from './testing/testing-module.js';
+
+export * from './exceptions/index.js';

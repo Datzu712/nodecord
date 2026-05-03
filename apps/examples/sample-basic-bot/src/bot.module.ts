@@ -7,6 +7,7 @@ import { LatencyInterceptor } from './bot/interceptors/latency.interceptor.js';
 
 @Module({
     imports: [LoggerModule, AdminModule, UtilModule],
-    providers: [ReadyListener, LatencyInterceptor],
+    providers: [LatencyInterceptor],
+    listeners: [ReadyListener],
 })
 export class BotModule {}

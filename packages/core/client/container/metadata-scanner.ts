@@ -8,6 +8,15 @@ import type { ListenerMetadata } from '../../interfaces/listener/event-listener.
 import type { HandlerMetadata } from '../../interfaces/handler/command-handler.js';
 import { INTERCEPTOR_METADATA, INTERCEPTOR_WATERMARK } from '../../constants/interceptor.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
+import {
+    EXCEPTION_HANDLER_METADATA,
+    EXCEPTION_HANDLER_WATERMARK,
+    USE_EXCEPTION_HANDLER_METADATA,
+} from '../../constants/exception-handler.js';
+import type {
+    ExceptionHandler,
+    ExceptionHandlerMetadata,
+} from '../../interfaces/exception-handler/exception-handler.js';
 
 export class MetadataScanner {
     static getModuleId(target: Constructor): string {
@@ -60,5 +69,21 @@ export class MetadataScanner {
 
     static getListenerMetadata(target: Constructor) {
         return Reflect.getMetadata(LISTENER_METADATA, target) as ListenerMetadata;
+    }
+
+    static isExceptionHandler(target: Constructor): boolean {
+        return Reflect.hasMetadata(EXCEPTION_HANDLER_WATERMARK, target);
+    }
+
+    static getExceptionHandlerMetadata(target: Constructor): ExceptionHandlerMetadata {
+        return Reflect.getMetadata(EXCEPTION_HANDLER_METADATA, target) as ExceptionHandlerMetadata;
+    }
+
+    static getHandlerExceptionHandlers(target: Constructor): Constructor<ExceptionHandler>[] {
+        return (
+            (Reflect.getMetadata(USE_EXCEPTION_HANDLER_METADATA, target) as
+                | Constructor<ExceptionHandler>[]
+                | undefined) ?? []
+        );
     }
 }

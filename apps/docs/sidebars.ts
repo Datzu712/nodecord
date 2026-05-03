@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
                 'core-concepts/commands',
                 'core-concepts/listeners',
                 'core-concepts/interceptors',
+                'core-concepts/exception-handlers',
             ],
         },
         {

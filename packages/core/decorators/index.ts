@@ -7,3 +7,5 @@ export * from './slash-command.js';
 export * from './interceptor.js';
 export * from './use-interceptors.js';
 export * from './listener.js';
+export * from './on-exception.js';
+export * from './use-exception-handler.js';

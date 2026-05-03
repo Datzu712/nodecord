@@ -4,3 +4,8 @@ export type { InteractionRequest } from './handler/interaction-request.js';
 export type { CommandHandler, RegisteredCommandHandler } from './handler/command-handler.js';
 export type { ListenerProvider, RegisteredListener } from './listener/event-listener.js';
 export type { ParamMetadata } from './handler/param-metadata.js';
+export type {
+    ExceptionHandler,
+    ExceptionHandlerMetadata,
+    RegisteredExceptionHandler,
+} from './exception-handler/exception-handler.js';

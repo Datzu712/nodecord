@@ -5,11 +5,8 @@ import { ChatInputCommandInteraction, SlashCommandBuilder, User } from 'discord.
 export class PingCommand implements CommandHandler {
     constructor() {}
 
-    async execute(
-        @Context({ passThrough: true }) ctx: ExecutionContext<ChatInputCommandInteraction>,
-        @Author() author: User,
-    ) {
-        const interaction = ctx.getRaw();
+    async execute(@Context({ passThrough: true }) ctx: ExecutionContext, @Author() author: User) {
+        const interaction = ctx.getRaw<ChatInputCommandInteraction>();
         await interaction.deferReply();
 
         await new Promise((resolve) => setTimeout(resolve, 1000));

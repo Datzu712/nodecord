@@ -1,13 +1,13 @@
 import type { HandlerTypes } from '../enums/command-types.enum.js';
 
-export class ExecutionContext<TRaw = any> {
+export class ExecutionContext {
     constructor(
         readonly name: string,
         readonly type: HandlerTypes,
-        private readonly raw: TRaw,
+        private readonly raw: unknown,
     ) {}
 
-    getRaw() {
-        return this.raw;
+    getRaw<T>(): T {
+        return this.raw as T;
     }
 }

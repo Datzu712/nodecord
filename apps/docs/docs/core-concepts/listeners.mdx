@@ -21,11 +21,11 @@ export class ReadyListener implements ListenerProvider {
 
 ## Registering listeners
 
-Add listeners to the `providers` array of a module. The adapter's `EventManager` attaches them to the underlying Discord client on startup.
+Add listeners to the `listeners` array of a module. The adapter's `EventManager` attaches them to the underlying Discord client on startup.
 
 ```ts
 @Module({
-    providers: [ReadyListener],
+    listeners: [ReadyListener],
 })
 export class AppModule {}
 ```

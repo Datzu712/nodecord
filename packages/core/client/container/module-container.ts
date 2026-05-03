@@ -1,6 +1,7 @@
 import { Container, type ServiceIdentifier } from 'inversify';
 import type { Constructor } from '../../interfaces/common/constructor.js';
-import { RegisteredInterceptor } from '../../interfaces/index.js';
+import { RegisteredExceptionHandler, RegisteredInterceptor } from '../../interfaces/index.js';
+import { UnresolvedBindingException } from '../exceptions/module.js';
 
 /**
  * Scoped DI container for a single module, backed by Inversify.
@@ -15,6 +16,7 @@ export class ModuleContainer {
 
     private parentContainer?: ModuleContainer | undefined;
     private interceptors: RegisteredInterceptor[] = [];
+    private exceptionHandlers: RegisteredExceptionHandler[] = [];
 
     constructor(moduleClass?: Constructor, parent?: ModuleContainer) {
         this.#container = new Container({ parent: parent ? parent.#container : undefined });
@@ -32,11 +34,15 @@ export class ModuleContainer {
         if (this.#container.isBound(cls)) {
             return this.#container.get<T>(cls as ServiceIdentifier<T>);
         }
-        throw new Error(`[${this.moduleName}] No binding found for ${cls.name}`);
+        throw new UnresolvedBindingException(cls.name, this.moduleName);
     }
 
     registerInterceptors(...interceptors: RegisteredInterceptor[]): void {
         this.interceptors.push(...interceptors);
+    }
+
+    registerExceptionHandlers(...handlers: RegisteredExceptionHandler[]): void {
+        this.exceptionHandlers.push(...handlers);
     }
 
     registerConstant<T>(cls: Constructor<T>, value: T): void {
@@ -59,5 +65,15 @@ export class ModuleContainer {
             current = current.parentContainer;
         }
         return [...chain, ...this.interceptors];
+    }
+
+    getInheritedExceptionHandlers(): RegisteredExceptionHandler[] {
+        let chain: RegisteredExceptionHandler[] = [];
+        let current: ModuleContainer | undefined = this.parentContainer;
+        while (current) {
+            chain = current.exceptionHandlers.concat(chain);
+            current = current.parentContainer;
+        }
+        return chain.concat(this.exceptionHandlers);
     }
 }

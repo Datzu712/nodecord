@@ -12,6 +12,14 @@ import { SlashCommand } from '../decorators/slash-command.js';
 import { UseInterceptors } from '../decorators/use-interceptors.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { ListenerProvider } from '../interfaces/listener/event-listener.js';
+import {
+    InvalidExceptionHandlerException,
+    MissingContractMethodException,
+    PossibleCircularImportException,
+} from '../client/exceptions/module.js';
+import { OnException } from '../decorators/on-exception.js';
+import { UseExceptionHandler } from '../decorators/use-exception-handler.js';
+import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 
 const mockLogger: AbstractLogger = {
     log: vi.fn(),
@@ -30,7 +38,7 @@ describe('ModuleCompiler', () => {
         it('throws when moduleClass is undefined', () => {
             const compiler = new ModuleCompiler(mockLogger);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect(() => compiler.compile(undefined as any)).toThrow('An import resolved to undefined');
+            expect(() => compiler.compile(undefined as any)).toThrow(PossibleCircularImportException);
         });
 
         it('throws when class is not decorated with @Module', () => {
@@ -130,16 +138,31 @@ describe('ModuleCompiler', () => {
             it('throws when a handler in handlers[] is not decorated with a command decorator', () => {
                 class PlainHandler {}
 
-                @Module({ handlers: [PlainHandler] })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @Module({ handlers: [PlainHandler as any] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
                 expect(() => compiler.compile(AppModule)).toThrow('is not a valid command handler');
             });
 
-            it('registers a valid handler and exposes it via getHandlers()', () => {
+            it('throws when a handler does not implement CommandHandler (missing execute method)', () => {
                 @SlashCommand({ name: 'ping', description: 'Pong' })
                 class PingHandler {}
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @Module({ handlers: [PingHandler as any] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
+            it('registers a valid handler and exposes it via getHandlers()', () => {
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
 
                 @Module({ handlers: [PingHandler] })
                 class AppModule {}
@@ -175,14 +198,27 @@ describe('ModuleCompiler', () => {
 
     describe('listeners', () => {
         describe('registration', () => {
-            it('throws when a listener in providers[] is not decorated with @Listener or @Injectable', () => {
-                class PlainListener {}
+            it('throws when a listener does not implement ListenerProvider (missing handler method)', () => {
+                @Listener('ready')
+                class ReadyListener {}
 
-                @Module({ providers: [PlainListener] })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @Module({ listeners: [ReadyListener as any] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
-                expect(() => compiler.compile(AppModule)).toThrow('is not a valid provider');
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
+            it('throws when a listener in listeners[] is not decorated with a listener decorator', () => {
+                class PlainListener {}
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @Module({ listeners: [PlainListener as any] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow('is not a valid event listener');
             });
 
             it('registers a valid @Listener and exposes it via getEventListeners()', () => {
@@ -191,7 +227,7 @@ describe('ModuleCompiler', () => {
                     handler() {}
                 }
 
-                @Module({ providers: [ReadyListener] })
+                @Module({ listeners: [ReadyListener] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
@@ -228,7 +264,7 @@ describe('ModuleCompiler', () => {
                     }
                 }
 
-                @Module({ providers: [SomeDependency, MessageListener] })
+                @Module({ providers: [SomeDependency], listeners: [MessageListener] })
                 class AppModule {}
 
                 const compiler = new ModuleCompiler(mockLogger);
@@ -412,6 +448,35 @@ describe('ModuleCompiler', () => {
                 expect(handler?.interceptors[1]?.interceptor).toBeInstanceOf(HandlerInterceptor);
             });
 
+            it('throws when a module-level interceptor does not implement NodecordInterceptor (missing intercept method)', () => {
+                @Interceptor()
+                class BadInterceptor {}
+
+                @Module({ providers: [BadInterceptor] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
+            it('throws when a handler-level interceptor does not implement NodecordInterceptor (missing intercept method)', () => {
+                @Interceptor()
+                class BadInterceptor {}
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                @UseInterceptors(BadInterceptor as any)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
             it('throws when @UseInterceptors references a class not decorated with @Interceptor', () => {
                 class NotAnInterceptor {}
 
@@ -524,6 +589,130 @@ describe('ModuleCompiler', () => {
             compiler.compile(RootModule);
 
             expect(() => compiler.getContainerFor(LocalService).resolve(LocalService)).toThrow();
+        });
+    });
+
+    describe('exception handlers', () => {
+        describe('registration', () => {
+            it('throws when a exceptionHandler in providers[] is not decorated with @OnException, @Interceptor or @Injectable', () => {
+                class PlainHandler {}
+
+                @Module({ providers: [PlainHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow('is not a valid provider');
+            });
+
+            it('throws when a exceptionHandler does not implement ExceptionHandler (missing handle method)', () => {
+                @OnException(Error)
+                class BadHandler {}
+
+                @Module({ providers: [BadHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(MissingContractMethodException);
+            });
+
+            it('throws when a @UseExceptionHandler references a class not decorated with @OnException', () => {
+                class NotAHandler {}
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                @UseExceptionHandler(NotAHandler as any)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                expect(() => compiler.compile(AppModule)).toThrow(InvalidExceptionHandlerException);
+            });
+
+            it('registers a valid exception handler and attaches it to all handlers in the module', () => {
+                @OnException(Error)
+                class ScopedErrorHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @SlashCommand({ name: 'echo', description: 'Echo' })
+                class EchoHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ScopedErrorHandler], handlers: [PingHandler, EchoHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [ping, echo] = compiler.getHandlers();
+                expect(ping?.exceptionHandlers).toHaveLength(1);
+                expect(ping?.exceptionHandlers[0]?.handler).toBeInstanceOf(ScopedErrorHandler);
+                expect(echo?.exceptionHandlers).toHaveLength(1);
+                expect(echo?.exceptionHandlers[0]?.handler).toBeInstanceOf(ScopedErrorHandler);
+            });
+
+            it('exception handlers from parent modules are inherited by child module handlers', () => {
+                @OnException(Error)
+                class ParentErrorHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping' })
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ handlers: [PingHandler] })
+                class ChildModule {}
+
+                @Module({ providers: [ParentErrorHandler], imports: [ChildModule] })
+                class ParentModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(ParentModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.exceptionHandlers).toHaveLength(1);
+                expect(handler?.exceptionHandlers[0]?.handler).toBeInstanceOf(ParentErrorHandler);
+            });
+
+            it('@OnException are placed before module-level handlers', () => {
+                @OnException()
+                class ModuleLevelHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @OnException(Error)
+                class HandlerLevelHandler implements ExceptionHandler {
+                    handle() {}
+                }
+
+                @SlashCommand({ name: 'ping', description: 'Pong' })
+                @UseExceptionHandler(HandlerLevelHandler)
+                class PingHandler {
+                    execute() {}
+                }
+
+                @Module({ providers: [ModuleLevelHandler], handlers: [PingHandler] })
+                class AppModule {}
+
+                const compiler = new ModuleCompiler(mockLogger);
+                compiler.compile(AppModule);
+
+                const [handler] = compiler.getHandlers();
+                expect(handler?.exceptionHandlers[0]?.handler).toBeInstanceOf(HandlerLevelHandler);
+                expect(handler?.exceptionHandlers[1]?.handler).toBeInstanceOf(ModuleLevelHandler);
+            });
         });
     });
 

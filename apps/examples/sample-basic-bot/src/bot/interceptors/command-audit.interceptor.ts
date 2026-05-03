@@ -7,11 +7,8 @@ import { LoggerService } from '../modules/logger/logger.service.js';
 export class CommandAuditInterceptor implements NodecordInterceptor {
     constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
 
-    async intercept(
-        ctx: ExecutionContext<ChatInputCommandInteraction>,
-        next: () => Promise<unknown>,
-    ): Promise<unknown> {
-        const interaction = ctx.getRaw();
+    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>): Promise<unknown> {
+        const interaction = ctx.getRaw<ChatInputCommandInteraction>();
         this.logger.log(`Command "${ctx.name}" triggered by ${interaction.user.username}`);
         return next();
     }

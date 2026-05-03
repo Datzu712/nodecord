@@ -1,0 +1,93 @@
+---
+title: Exception handlers
+---
+
+# Exception handlers
+
+Exception handlers catch exceptions thrown during command execution, including exceptions thrown inside interceptors. They give you a structured way to respond to specific error types without wrapping every `execute()` method in a try/catch.
+
+## Defining an exception handler
+
+Decorate a class with `@OnException(...exceptions)` and implement the `ExceptionHandler` interface:
+
+```ts
+import { OnException, ExceptionHandler, ExecutionContext } from '@nodecord/core';
+
+@OnException(DatabaseError)
+export class DatabaseErrorHandler implements ExceptionHandler {
+    handle(exception: unknown, ctx: ExecutionContext): void {
+        const err = exception as DatabaseError;
+        console.error(`Command "${ctx.name}" failed:`, err.message);
+        ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
+    }
+}
+```
+
+`handle()` receives:
+
+- `exception` — the thrown value (`unknown`; cast it to the type you registered)
+- `ctx` — the `ExecutionContext` for the command that failed
+
+## Module-level exception handlers
+
+Register an exception handler in a module's `providers[]` to apply it to every handler in that module and any modules it imports.
+
+```ts
+@Module({
+    providers: [DatabaseErrorHandler],
+    handlers: [CreateItemCommand, DeleteItemCommand],
+})
+export class ItemsModule {}
+```
+
+## Handler-level exception handlers
+
+Use `@UseExceptionHandler()` on a command class to attach exception handlers that only apply to that specific command:
+
+```ts
+@SlashCommand(...)
+@UseExceptionHandler(RateLimitErrorHandler)
+export class PingCommand implements CommandHandler {
+    execute(): string {
+        return 'Pong!';
+    }
+}
+```
+
+Handler-level exception handlers are checked before module-level ones, so they take priority when multiple handlers match the same exception type.
+
+## Pipeline behavior
+
+The exception handler pipeline runs after the full interceptor chain. Only one handler executes per exception:
+
+1. The framework collects all registered exception handlers (handler-level first, then module-level).
+2. It finds the first handler whose registered exception type matches the thrown exception via `instanceof`.
+3. That handler's `handle()` method is called.
+4. If no handler matches, the exception is rethrown.
+
+```
+[InterceptorA before] → [InterceptorB before] → [execute()] → throws
+                                                     ↓
+                                             [exception handler]
+```
+
+Note that when an exception is thrown inside `execute()`, the "after" portions of interceptors (code after `await next()`) do not run. Exceptions thrown inside interceptors themselves are also routed through the exception handler pipeline.
+
+## Multiple handlers for the same exception
+
+You can register multiple handlers that match the same exception type, but only the first match runs. If more than one handler matches, the framework logs a debug message listing the skipped handlers.
+
+To control which handler takes priority, use `@UseExceptionHandler()` at the command level. Those always run before module-level handlers.
+
+## Registering handlers for multiple exception types
+
+`@OnException()` accepts multiple exception classes:
+
+```ts
+@OnException(NetworkError, TimeoutError)
+export class NetworkErrorHandler implements ExceptionHandler {
+    handle(exception: unknown, ctx: ExecutionContext): void {
+        // handles both NetworkError and TimeoutError
+    }
+}
+```
