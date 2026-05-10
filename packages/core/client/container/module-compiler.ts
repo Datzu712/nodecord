@@ -2,28 +2,32 @@
 import { MetadataScanner } from './metadata-scanner.js';
 import { ModuleContainer } from './module-container.js';
 import type { Constructor } from '../../interfaces/common/constructor.js';
-import { ListenerProvider, RegisteredListener } from '../../interfaces/listener/event-listener.js';
+import type {
+    ListenerMetadata,
+    ListenerProvider,
+    RegisteredListener,
+} from '../../interfaces/listener/event-listener.js';
 import type { AbstractLogger } from '../../interfaces/common/abstract-logger.js';
 import { CommandHandler, RegisteredCommandHandler } from '../../interfaces/handler/command-handler.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 import type {
     ExceptionHandler,
+    ExceptionHandlerMetadata,
     RegisteredExceptionHandler,
 } from '../../interfaces/exception-handler/exception-handler.js';
 import { TESTING_OVERRIDES_METADATA } from '../../constants/testing.js';
 import {
     DuplicateInterceptorException,
     InternalCompilerException,
-    InvalidExceptionHandlerException,
-    InvalidHandlerException,
-    InvalidInterceptorException,
-    InvalidListenerException,
     InvalidModuleException,
     InvalidProviderException,
-    MissingContractMethodException,
     PossibleCircularImportException,
     ProviderNotFoundException,
 } from '../exceptions/module.js';
+import { compileHandlerMetadata } from './resolvers/handler-metadata.js';
+import { compileListenerMetadata } from './resolvers/listener-metadata.js';
+import { compileInterceptorMetadata } from './resolvers/interceptor-metadata.js';
+import { compileExceptionHandlerMetadata } from './resolvers/exception-handler-metadata.js';
 
 interface ModuleCompileContext {
     parent: ModuleContainer;
@@ -52,7 +56,7 @@ export class ModuleCompiler {
             providers: [],
             handlers: [],
         });
-        this.compilePendingHandlers();
+        this.registerPendingHandlers();
         return this.globalContainer;
     }
 
@@ -130,33 +134,29 @@ export class ModuleCompiler {
          * Inversify's container chain includes them. Resolution is deferred until after imports
          * so that they can depend on providers from sibling imported modules.
          */
-        const listenerProviders: Constructor[] = [];
-        const interceptorProviders: Constructor[] = [];
+        const listenerProviders: Array<{ cls: Constructor; meta: ListenerMetadata }> = [];
+        const interceptorProviders: Array<{ cls: Constructor; meta: { id: string; type?: Constructor } }> = [];
 
         for (const listener of metadata.listeners ?? []) {
-            if (!MetadataScanner.isListener(listener)) {
-                throw new InvalidListenerException(listener.name);
-            }
-            this.assertListenerContract(listener);
+            const meta = compileListenerMetadata(listener);
             container.register(listener);
-
-            listenerProviders.push(listener);
+            listenerProviders.push({ cls: listener, meta });
         }
 
-        const exceptionHandlerProviders: Constructor[] = [];
+        const exceptionHandlerProviders: Array<{ cls: Constructor; meta: ExceptionHandlerMetadata }> = [];
 
         for (const provider of metadata.providers ?? []) {
             if (MetadataScanner.isExceptionHandler(provider)) {
-                this.assertExceptionHandlerContract(provider);
+                const meta = compileExceptionHandlerMetadata(provider);
                 this.registerProvider(container, provider);
-                exceptionHandlerProviders.push(provider);
+                exceptionHandlerProviders.push({ cls: provider, meta });
                 continue;
             }
 
             if (MetadataScanner.isInterceptor(provider)) {
-                this.assertInterceptorContract(provider);
+                const meta = compileInterceptorMetadata(provider);
                 this.registerProvider(container, provider);
-                interceptorProviders.push(provider);
+                interceptorProviders.push({ cls: provider, meta });
                 continue;
             }
 
@@ -169,10 +169,10 @@ export class ModuleCompiler {
             this.registerProvider(container, provider);
         }
 
-        for (const importedModule of metadata.imports ?? []) {
+        for (const [i, importedModule] of (metadata.imports ?? []).entries()) {
             this.compileModule(importedModule, {
                 parent: container,
-                importIndex: metadata.imports!.indexOf(importedModule),
+                importIndex: i,
                 importTrace: metadata.imports!,
                 providers: metadata.providers ?? [],
                 handlers: metadata.handlers ?? [],
@@ -180,30 +180,26 @@ export class ModuleCompiler {
         }
 
         // Resolve listeners and interceptors after imports so their dependencies from imported modules are available.
-        for (const provider of listenerProviders) {
-            const listenerMeta = MetadataScanner.getListenerMetadata(provider);
-            const instance = container.resolve<ListenerProvider>(provider);
-            this.listenerMap.set(listenerMeta.id, { metadata: listenerMeta, listener: instance });
+        for (const { cls, meta } of listenerProviders) {
+            const instance = container.resolve<ListenerProvider>(cls);
+            this.listenerMap.set(meta.id, { metadata: meta, listener: instance });
         }
 
-        for (const provider of interceptorProviders) {
-            const interceptorMeta = MetadataScanner.getInterceptorMetadata(provider);
-
-            const instance = container.resolve<NodecordInterceptor>(provider);
+        for (const { cls, meta } of interceptorProviders) {
+            const instance = container.resolve<NodecordInterceptor>(cls);
             container.registerInterceptors({
                 interceptor: instance,
-                metadata: { type: interceptorMeta.type, id: interceptorMeta.id },
+                metadata: { type: meta.type, id: meta.id },
             });
         }
 
-        for (const provider of exceptionHandlerProviders) {
-            const meta = MetadataScanner.getExceptionHandlerMetadata(provider);
-            const instance = container.resolve<ExceptionHandler>(provider);
+        for (const { cls, meta } of exceptionHandlerProviders) {
+            const instance = container.resolve<ExceptionHandler>(cls);
             container.registerExceptionHandlers({ handler: instance, metadata: meta });
         }
 
         /**
-         * Handlers are deferred to a second pass (compilePendingHandlers) instead of being
+         * Handlers are deferred to a second pass (registerPendingHandlers) instead of being
          * compiled here. The reason is that compileModule is called recursively for each import,
          * which means a child module's handlers would be compiled before the parent module has
          * had a chance to resolve its own interceptors. By deferring, we guarantee that when
@@ -222,15 +218,11 @@ export class ModuleCompiler {
      * This guarantees that every container's interceptors are populated before handlers
      * call getInheritedInterceptors(), regardless of module depth or import order.
      */
-    private compilePendingHandlers(): void {
+    private registerPendingHandlers(): void {
         for (const { container, handlerClasses } of this.pendingHandlers) {
             for (const handler of handlerClasses) {
-                if (!MetadataScanner.isHandler(handler)) {
-                    throw new InvalidHandlerException(handler.name);
-                }
-                this.assertHandlerContract(handler);
+                const compiledHandler = compileHandlerMetadata(handler);
 
-                const { id: handlerId, descriptor, type: handlerType } = MetadataScanner.getHandlerMetadata(handler);
                 container.register(handler);
 
                 const resolvedHandler = container.resolve(handler) as CommandHandler;
@@ -240,12 +232,8 @@ export class ModuleCompiler {
                 const allRegisteredInterceptors = [...scopedInterceptors];
 
                 for (const rawHandlerInterceptor of rawHandlerInterceptors) {
-                    if (!MetadataScanner.isInterceptor(rawHandlerInterceptor)) {
-                        throw new InvalidInterceptorException(rawHandlerInterceptor.name);
-                    }
-                    this.assertInterceptorContract(rawHandlerInterceptor);
+                    const meta = compileInterceptorMetadata(rawHandlerInterceptor);
 
-                    const meta = MetadataScanner.getInterceptorMetadata(rawHandlerInterceptor);
                     if (allRegisteredInterceptors.some((i) => i.metadata.id === meta.id)) {
                         throw new DuplicateInterceptorException(rawHandlerInterceptor.name, handler.name);
                     }
@@ -262,12 +250,7 @@ export class ModuleCompiler {
                 const handlerLevelExceptionHandlers: RegisteredExceptionHandler[] = [];
 
                 for (const rawExceptionHandler of rawHandlerExceptionHandlers) {
-                    if (!MetadataScanner.isExceptionHandler(rawExceptionHandler)) {
-                        throw new InvalidExceptionHandlerException(rawExceptionHandler.name);
-                    }
-                    this.assertExceptionHandlerContract(rawExceptionHandler);
-
-                    const meta = MetadataScanner.getExceptionHandlerMetadata(rawExceptionHandler);
+                    const meta = compileExceptionHandlerMetadata(rawExceptionHandler);
                     container.register(rawExceptionHandler);
                     handlerLevelExceptionHandlers.push({
                         handler: container.resolve<ExceptionHandler>(rawExceptionHandler),
@@ -275,10 +258,9 @@ export class ModuleCompiler {
                     });
                 }
 
-                this.handlerMap.set(handlerId, {
+                this.handlerMap.set(compiledHandler.metadata.id, {
+                    ...compiledHandler,
                     handler: resolvedHandler,
-                    descriptor,
-                    type: handlerType,
                     interceptors: allRegisteredInterceptors,
                     exceptionHandlers: [...handlerLevelExceptionHandlers, ...container.getInheritedExceptionHandlers()],
                 });
@@ -291,34 +273,6 @@ export class ModuleCompiler {
             container.registerConstant(cls, this.overrides.get(cls));
         } else {
             container.register(cls);
-        }
-    }
-
-    // private isListenerProvider(cls: Constructor): cls is Constructor<ListenerProvider> {
-    //     return MetadataScanner.isListener(cls) && 'handler' in cls.prototype;
-    // }
-
-    private assertListenerContract(cls: Constructor): void {
-        if (!('handler' in cls.prototype)) {
-            throw new MissingContractMethodException(cls.name, 'ListenerProvider', 'handler');
-        }
-    }
-
-    private assertHandlerContract(cls: Constructor): void {
-        if (!('execute' in cls.prototype)) {
-            throw new MissingContractMethodException(cls.name, 'CommandHandler', 'execute');
-        }
-    }
-
-    private assertInterceptorContract(cls: Constructor): void {
-        if (!('intercept' in cls.prototype)) {
-            throw new MissingContractMethodException(cls.name, 'NodecordInterceptor', 'intercept');
-        }
-    }
-
-    private assertExceptionHandlerContract(cls: Constructor): void {
-        if (!('handle' in cls.prototype)) {
-            throw new MissingContractMethodException(cls.name, 'ExceptionHandler', 'handle');
         }
     }
 

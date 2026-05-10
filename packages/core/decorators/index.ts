@@ -9,3 +9,4 @@ export * from './use-interceptors.js';
 export * from './listener.js';
 export * from './on-exception.js';
 export * from './use-exception-handler.js';
+export * from './autocomplete.js';

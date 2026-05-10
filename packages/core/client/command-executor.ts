@@ -6,12 +6,16 @@ import type { ParamMetadata } from '../interfaces/handler/param-metadata.js';
 import type { RegisteredInterceptor } from '../interfaces/interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
-import type { ExecutionContext } from './execution-context.js';
+import type { ExecutionContext } from '../context/execution-context.js';
 
 export type ParamTypeResolver = (ctx: ExecutionContext, data?: unknown) => unknown;
 
-// TODO: CommandExecutor should have zero knowledge of reflect-metadata. All metadata resolution
-// (param metadata, defer-reply flag, etc.) belongs in ModuleCompiler/MetadataScanner.
+export interface ExecuteParams {
+    caller: () => any;
+    interceptors?: RegisteredInterceptor[];
+    exceptionHandlers?: RegisteredExceptionHandler[];
+}
+
 export class CommandExecutor {
     private readonly paramResolvers = new Map<CommandParamTypes, ParamTypeResolver>();
 
@@ -21,24 +25,20 @@ export class CommandExecutor {
         this.paramResolvers.set(type, resolver);
     }
 
-    // TODO: use observable for interceptors and convert params to a single object
+    resolveArgs(handler: CommandHandler, ctx: ExecutionContext, methodName = 'execute'): unknown[] {
+        return this.getParamMetadata(handler, methodName)
+            .sort((a, b) => a.index - b.index)
+            .map((meta) => this.paramResolvers.get(meta.type)?.(ctx, meta.data));
+    }
+
     async execute(
         ctx: ExecutionContext,
-        handler: CommandHandler,
-        interceptors: RegisteredInterceptor[] = [],
-        exceptionHandlers: RegisteredExceptionHandler[] = [],
+        { caller, interceptors = [], exceptionHandlers = [] }: ExecuteParams,
     ): Promise<unknown> {
         /**
          * Chain of responsibility pattern for interceptors. See https://gist.github.com/Datzu712/6ed9c6115e00fb6ffd48fd03bf4c77c8 for an example of this implementation.
          */
-        const final = async () => {
-            const metadata = this.getParamMetadata(handler);
-            const args = metadata
-                .sort((a, b) => a.index - b.index)
-                .map((meta) => this.paramResolvers.get(meta.type)?.(ctx, meta.data));
-
-            return await handler.execute(...args);
-        };
+        const final = caller;
 
         const pipeline = interceptors.reduceRight(
             (next, { interceptor }) =>
@@ -79,16 +79,16 @@ export class CommandExecutor {
     }
 
     isPassThrough(handler: CommandHandler): boolean {
-        return this.getParamMetadata(handler).some(
+        return this.getParamMetadata(handler, 'execute').some(
             (m) =>
                 m.type === CommandParamTypes.CONTEXT &&
                 (m.data as { passThrough?: boolean } | undefined)?.passThrough === true,
         );
     }
 
-    private getParamMetadata(handler: CommandHandler): ParamMetadata[] {
+    private getParamMetadata(handler: CommandHandler, methodName: string): ParamMetadata[] {
         return (
-            (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler.constructor, 'execute') as
+            (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler.constructor, methodName) as
                 | ParamMetadata[]
                 | undefined) ?? []
         );

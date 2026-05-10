@@ -42,9 +42,7 @@ import { SlashCommandBuilder } from 'discord.js';
 export const StatusCommandBuilder = new SlashCommandBuilder()
     .setName('status')
     .setDescription('Shows the current bot status')
-    .addStringOption((option) =>
-        option.setName('type').setDescription('Status type').setRequired(false),
-    );
+    .addStringOption((option) => option.setName('type').setDescription('Status type').setRequired(false));
 ```
 
 ```ts title="src/status/status.command.ts"
@@ -60,6 +58,46 @@ export class StatusCommand {
 ```
 
 This keeps the handler class focused on logic and makes the command definition easier to read and maintain on its own.
+
+## Autocomplete (discord.js adapter)
+
+To add autocomplete to a command option, mark the option with `.setAutocomplete(true)` in the builder, then add a method decorated with `@Autocomplete('option-name')` in the handler class. The method must return an array of `{ name, value }` objects.
+
+```ts
+import { SlashCommand, Autocomplete, Option } from '@nodecord/core';
+import { SlashCommandBuilder } from 'discord.js';
+
+@SlashCommand(
+    new SlashCommandBuilder()
+        .setName('search')
+        .setDescription('Search for something')
+        .addStringOption((opt) =>
+            opt.setName('query').setDescription('Search query').setRequired(true).setAutocomplete(true),
+        ),
+)
+export class SearchCommand {
+    execute(@Option('query') query: string): string {
+        return `Results for: ${query}`;
+    }
+
+    @Autocomplete('query')
+    async autocompleteQuery(@Option('query') focused: string) {
+        return db.search(focused).map((r) => ({ name: r.title, value: r.id }));
+    }
+}
+```
+
+Multiple autocomplete options on the same command get their own methods:
+
+```ts
+@Autocomplete('query')
+async autocompleteQuery(@Option('query') focused: string) { ... }
+
+@Autocomplete('category')
+async autocompleteCategory() { ... }
+```
+
+Autocomplete methods support the same param decorators as `execute()`. If no method matches the focused option, Discord receives an empty choices array.
 
 ## Registering commands
 

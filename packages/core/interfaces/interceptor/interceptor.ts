@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '../../client/execution-context.js';
+import type { ExecutionContext } from '../../context/execution-context.js';
 
 export interface NodecordInterceptor<N = any, R = any> {
     intercept(ctx: ExecutionContext, next: () => Promise<N>): Promise<R>;

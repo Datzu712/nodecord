@@ -29,3 +29,7 @@ export function Author(): ParameterDecorator {
 }
 
 export const Ctx = Context;
+
+export function Option(name?: string): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.OPTION)(name);
+}

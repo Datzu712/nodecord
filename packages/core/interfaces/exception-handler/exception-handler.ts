@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '../../client/execution-context.js';
+import type { ExecutionContext } from '../../context/execution-context.js';
 import type { Constructor } from '../common/constructor.js';
 
 export interface ExceptionHandler {

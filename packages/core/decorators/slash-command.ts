@@ -11,14 +11,14 @@ import { HandlerMetadata } from '../interfaces/handler/command-handler.js';
  * The metadata parameter depends on the adapter. For example, the discord.js adapter accepts either a SlashCommandBuilder.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function SlashCommand(descriptor: any): ClassDecorator {
+export function SlashCommand(definition: any): ClassDecorator {
     return (target) => {
         injectable()(target);
 
         const metadata: HandlerMetadata = {
             id: randomUUID(),
             type: HandlerTypes.SLASH,
-            descriptor,
+            definition,
         };
 
         Reflect.defineMetadata(HANDLER_WATERMARK, true, target);
