@@ -13,6 +13,7 @@ export function compileHandlerMetadata(target: Constructor): CompiledCommandHand
     }
 
     const shouldDefer = MetadataScanner.isDeferReply(target);
+    const isPassThrough = MetadataScanner.isPassThrough(target);
     const autocompleteEntries = MetadataScanner.getAutocompleteEntries(target);
     const metadata = MetadataScanner.getHandlerMetadata(target);
 

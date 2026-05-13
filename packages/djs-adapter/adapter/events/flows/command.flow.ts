@@ -1,5 +1,5 @@
 import type { Interaction as DjsInteraction } from 'discord.js';
-import type { CommandExecutor, ExecutionContext } from '@nodecord/core';
+import { CommandParamTypes, type CommandExecutor, type ExecutionContext } from '@nodecord/core';
 import type { DjsRegisteredCommand } from '../../command-registry.js';
 import type { ResponseHandler } from '../../response-handler.js';
 
@@ -10,18 +10,21 @@ export class CommandInteractionFlow {
     ) {}
 
     async handle(raw: DjsInteraction, ctx: ExecutionContext, cmd: DjsRegisteredCommand): Promise<void> {
-        const isPassThrough = this.executor.isPassThrough(cmd.handler);
-        const shouldDeferReply = this.executor.isDeferReply(cmd.handler);
+        const isPassThrough = cmd.executeOptions.params.some(
+            (p) => p.type === CommandParamTypes.CONTEXT && (p.data as { passThrough?: boolean })?.passThrough,
+        );
+        console.log(isPassThrough);
+        const shouldDeferReply = cmd.executeOptions.shouldDefer;
 
         if (shouldDeferReply && raw.isChatInputCommand()) {
             await raw.deferReply();
         }
 
-        const caller = async () =>
-            (await cmd.handler.execute(...this.executor.resolveArgs(cmd.handler, ctx))) as Promise<unknown>;
+        const resolvedArgs = this.executor.resolveArgs(cmd.handler, ctx);
+        const handlerCaller = async () => (await cmd.handler.execute(...resolvedArgs)) as Promise<unknown>;
 
         const result = await this.executor.execute(ctx, {
-            caller,
+            caller: handlerCaller,
             interceptors: cmd.interceptors,
             exceptionHandlers: cmd.exceptionHandlers,
         });

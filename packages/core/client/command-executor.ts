@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { COMMAND_ARGS_METADATA, DEFER_REPLY_METADATA } from '../constants/handler.js';
 import { CommandParamTypes } from '../enums/command-types.enum.js';
-import { CommandHandler } from '../interfaces/handler/command-handler.js';
-import type { ParamMetadata } from '../interfaces/handler/param-metadata.js';
+import { RegisteredCommandHandler } from '../interfaces/handler/command-handler.js';
 import type { RegisteredInterceptor } from '../interfaces/interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
@@ -25,8 +23,8 @@ export class CommandExecutor {
         this.paramResolvers.set(type, resolver);
     }
 
-    resolveArgs(handler: CommandHandler, ctx: ExecutionContext, methodName = 'execute'): unknown[] {
-        return this.getParamMetadata(handler, methodName)
+    resolveArgs(handler: RegisteredCommandHandler, ctx: ExecutionContext): unknown[] {
+        return handler.executeOptions.params
             .sort((a, b) => a.index - b.index)
             .map((meta) => this.paramResolvers.get(meta.type)?.(ctx, meta.data));
     }
@@ -72,25 +70,5 @@ export class CommandExecutor {
 
             throw exception;
         }
-    }
-
-    isDeferReply(handler: CommandHandler): boolean {
-        return Reflect.getMetadata(DEFER_REPLY_METADATA, handler.constructor, 'execute') === true;
-    }
-
-    isPassThrough(handler: CommandHandler): boolean {
-        return this.getParamMetadata(handler, 'execute').some(
-            (m) =>
-                m.type === CommandParamTypes.CONTEXT &&
-                (m.data as { passThrough?: boolean } | undefined)?.passThrough === true,
-        );
-    }
-
-    private getParamMetadata(handler: CommandHandler, methodName: string): ParamMetadata[] {
-        return (
-            (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler.constructor, methodName) as
-                | ParamMetadata[]
-                | undefined) ?? []
-        );
     }
 }

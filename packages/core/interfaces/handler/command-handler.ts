@@ -16,7 +16,12 @@ export interface CommandHandler {
 }
 
 export interface ExecuteOptions {
+    /** If true, the framework will defer the reply to the interaction before executing the handler. */
     shouldDefer: boolean;
+
+    /** If true, the framework will not attempt to send a response after the handler execution, leaving it up to the handler to manage the interaction response. */
+    shouldPassThrough: boolean;
+
     params: ParamMetadata[];
 }
 
