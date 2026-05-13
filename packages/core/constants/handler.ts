@@ -14,3 +14,6 @@ export const USE_INTERCEPTORS_METADATA = 'nodecord:handler:use-interceptors';
 
 // Set by @DeferReply on the execute method to signal that deferReply() should be called automatically.
 export const DEFER_REPLY_METADATA = 'nodecord:handler:defer-reply';
+
+// Set by @Autocomplete on the method to signal that the method should be registered as an autocomplete handler.
+export const AUTOCOMPLETE_ENTRIES_METADATA = 'nodecord:handler:autocomplete-entries';

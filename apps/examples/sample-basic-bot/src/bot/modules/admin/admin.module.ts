@@ -4,7 +4,7 @@ import { AdminService } from './admin.service.js';
 import { AdminHandler } from './admin.handler.js';
 
 @Module({
-    imports: [LoggerModule], // <-- This will trigger the circular import exception for demonstration
+    imports: [LoggerModule],
     providers: [AdminService],
     handlers: [AdminHandler],
 })

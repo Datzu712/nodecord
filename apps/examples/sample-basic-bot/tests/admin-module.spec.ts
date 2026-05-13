@@ -1,5 +1,5 @@
 import { createMockChatInputInteraction, TestingDjsAdapter } from '@nodecord/djs-adapter/testing';
-import { Constructor, NodecordClient, TestingModule } from '@nodecord/core';
+import { NodecordClient, TestingModule } from '@nodecord/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { AdminModule } from '../src/bot/modules/admin/admin.module.js';

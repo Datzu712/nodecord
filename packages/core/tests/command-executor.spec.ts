@@ -6,7 +6,7 @@ import { Interceptor } from '../decorators/interceptor.js';
 import { OnException } from '../decorators/on-exception.js';
 import { CommandHandler, NodecordInterceptor } from '../interfaces/index.js';
 import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
-import { ExecutionContext } from '../client/execution-context.js';
+import { ExecutionContext } from '../context/execution-context.js';
 import { SlashCommand } from '../decorators/slash-command.js';
 import { HandlerTypes } from '../enums/command-types.enum.js';
 import { CommandExecutor } from '../client/command-executor.js';
@@ -63,7 +63,7 @@ describe('CommandExecutor', () => {
                 { interceptor: new InterceptorB(), metadata: { id: randomUUID() } },
             ];
 
-            await makeExecutor().execute(makeCtx(), new TestCommand(), interceptors);
+            await makeExecutor().execute(makeCtx(), { caller: () => new TestCommand().execute(), interceptors });
 
             expect(executionOrder).toEqual(['1:before', '2:before', 'command', '2:after', '1:after']);
         });
@@ -84,9 +84,11 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            const result = await makeExecutor().execute(makeCtx(), new TestCommand(), [
-                { interceptor: new TransformInterceptor(), metadata: { id: randomUUID() } },
-            ]);
+            const command = new TestCommand();
+            const result = await makeExecutor().execute(makeCtx(), {
+                caller: () => command.execute(),
+                interceptors: [{ interceptor: new TransformInterceptor(), metadata: { id: randomUUID() } }],
+            });
 
             expect(result).toBe('pong:transformed');
         });
@@ -109,9 +111,11 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            const result = await makeExecutor().execute(makeCtx(), new TestCommand(), [
-                { interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } },
-            ]);
+            const command = new TestCommand();
+            const result = await makeExecutor().execute(makeCtx(), {
+                caller: () => command.execute(),
+                interceptors: [{ interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } }],
+            });
 
             expect(result).toBe('short-circuit');
             expect(commandExecuted.value).toBe(false);
@@ -138,12 +142,10 @@ describe('CommandExecutor', () => {
                 const handler = new AppErrorHandler();
                 const ctx = makeCtx();
 
-                await makeExecutor().execute(
-                    ctx,
-                    new TestCommand(),
-                    [],
-                    [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
-                );
+                await makeExecutor().execute(ctx, {
+                    caller: () => new TestCommand().execute(),
+                    exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
+                });
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(AppError), ctx);
             });
@@ -167,12 +169,10 @@ describe('CommandExecutor', () => {
                 const handler = new OtherHandler();
 
                 await expect(
-                    makeExecutor().execute(
-                        makeCtx(),
-                        new TestCommand(),
-                        [],
-                        [{ handler, metadata: { id: randomUUID(), exceptions: [OtherError] } }],
-                    ),
+                    makeExecutor().execute(makeCtx(), {
+                        caller: () => new TestCommand().execute(),
+                        exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [OtherError] } }],
+                    }),
                 ).rejects.toThrow(AppError);
 
                 expect(handler.handle).not.toHaveBeenCalled();
@@ -196,12 +196,10 @@ describe('CommandExecutor', () => {
                 const handler = new AppErrorHandler();
                 const ctx = makeCtx('ping');
 
-                await makeExecutor().execute(
-                    ctx,
-                    new TestCommand(),
-                    [],
-                    [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
-                );
+                await makeExecutor().execute(ctx, {
+                    caller: () => new TestCommand().execute(),
+                    exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
+                });
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(AppError), ctx);
             });
@@ -225,12 +223,12 @@ describe('CommandExecutor', () => {
                 }
 
                 await expect(
-                    makeExecutor().execute(
-                        makeCtx(),
-                        new TestCommand(),
-                        [],
-                        [{ handler: new BrokenHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } }],
-                    ),
+                    makeExecutor().execute(makeCtx(), {
+                        caller: () => new TestCommand().execute(),
+                        exceptionHandlers: [
+                            { handler: new BrokenHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } },
+                        ],
+                    }),
                 ).rejects.toThrow(HandlerError);
             });
         });
@@ -259,15 +257,13 @@ describe('CommandExecutor', () => {
                 const first = new FirstHandler();
                 const second = new SecondHandler();
 
-                await makeExecutor().execute(
-                    makeCtx(),
-                    new TestCommand(),
-                    [],
-                    [
+                await makeExecutor().execute(makeCtx(), {
+                    caller: () => new TestCommand().execute(),
+                    exceptionHandlers: [
                         { handler: first, metadata: { id: randomUUID(), exceptions: [AppError] } },
                         { handler: second, metadata: { id: randomUUID(), exceptions: [AppError] } },
                     ],
-                );
+                });
 
                 expect(first.handle).toHaveBeenCalledOnce();
                 expect(second.handle).not.toHaveBeenCalled();
@@ -293,15 +289,13 @@ describe('CommandExecutor', () => {
                     }
                 }
 
-                await makeExecutor().execute(
-                    makeCtx(),
-                    new TestCommand(),
-                    [],
-                    [
+                await makeExecutor().execute(makeCtx(), {
+                    caller: () => new TestCommand().execute(),
+                    exceptionHandlers: [
                         { handler: new HandlerA(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                         { handler: new HandlerB(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     ],
-                );
+                });
 
                 expect(mockLogger.debug).toHaveBeenCalledWith(
                     expect.stringContaining('Multiple exception handlers matched'),
@@ -334,12 +328,11 @@ describe('CommandExecutor', () => {
                 const handler = new InterceptorErrorHandler();
                 const command = new TestCommand();
 
-                await makeExecutor().execute(
-                    makeCtx(),
-                    command,
-                    [{ interceptor: new ThrowingInterceptor(), metadata: { id: randomUUID() } }],
-                    [{ handler, metadata: { id: randomUUID(), exceptions: [InterceptorError] } }],
-                );
+                await makeExecutor().execute(makeCtx(), {
+                    caller: () => command.execute(),
+                    interceptors: [{ interceptor: new ThrowingInterceptor(), metadata: { id: randomUUID() } }],
+                    exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [InterceptorError] } }],
+                });
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(InterceptorError), expect.any(ExecutionContext));
                 expect(command.execute).not.toHaveBeenCalled();
@@ -368,12 +361,11 @@ describe('CommandExecutor', () => {
 
                 const handler = new PostErrorHandler();
 
-                await makeExecutor().execute(
-                    makeCtx(),
-                    new TestCommand(),
-                    [{ interceptor: new PostThrowInterceptor(), metadata: { id: randomUUID() } }],
-                    [{ handler, metadata: { id: randomUUID(), exceptions: [PostError] } }],
-                );
+                await makeExecutor().execute(makeCtx(), {
+                    caller: () => new TestCommand().execute(),
+                    interceptors: [{ interceptor: new PostThrowInterceptor(), metadata: { id: randomUUID() } }],
+                    exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [PostError] } }],
+                });
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(PostError), expect.any(ExecutionContext));
             });
@@ -397,13 +389,11 @@ describe('CommandExecutor', () => {
                 }
 
                 const handler = new ErrorHandler();
-
-                const result = await makeExecutor().execute(
-                    makeCtx(),
-                    new TestCommand(),
-                    [{ interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } }],
-                    [{ handler, metadata: { id: randomUUID(), exceptions: [Error] } }],
-                );
+                const result = await makeExecutor().execute(makeCtx(), {
+                    caller: () => new TestCommand().execute(),
+                    interceptors: [{ interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } }],
+                    exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [Error] } }],
+                });
 
                 expect(result).toBe('short-circuit');
                 expect(handler.handle).not.toHaveBeenCalled();
@@ -449,15 +439,16 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            await makeExecutor().execute(
-                makeCtx(),
-                new TestCommand(),
-                [
+            await makeExecutor().execute(makeCtx(), {
+                caller: () => new TestCommand().execute(),
+                interceptors: [
                     { interceptor: new InterceptorA(), metadata: { id: randomUUID() } },
                     { interceptor: new InterceptorB(), metadata: { id: randomUUID() } },
                 ],
-                [{ handler: new AppErrorHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } }],
-            );
+                exceptionHandlers: [
+                    { handler: new AppErrorHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } },
+                ],
+            });
 
             expect(order).toEqual(['A:before', 'B:before', 'command', 'exception:handler']);
         });
@@ -495,16 +486,14 @@ describe('CommandExecutor', () => {
             }
 
             // handler-level is prepended before module-level (mirrors compilePendingHandlers behavior)
-            await makeExecutor().execute(
-                makeCtx(),
-                new TestCommand(),
-                [],
-                [
+            await makeExecutor().execute(makeCtx(), {
+                caller: () => new TestCommand().execute(),
+                exceptionHandlers: [
                     { handler: new HandlerLevel(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     { handler: new ModuleLevelA(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     { handler: new ModuleLevelB(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                 ],
-            );
+            });
 
             // only the first match runs — module-level handlers are never reached
             expect(order).toEqual(['handler-level']);

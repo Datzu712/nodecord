@@ -1,11 +1,18 @@
 import { Constructor } from '../../interfaces/common/constructor.js';
 import { INJECTABLE_METADATA, INJECTABLE_WATERMARK } from '../../constants/injectable.js';
-import { HANDLER_METADATA, HANDLER_WATERMARK, USE_INTERCEPTORS_METADATA } from '../../constants/handler.js';
+import {
+    AUTOCOMPLETE_ENTRIES_METADATA,
+    COMMAND_ARGS_METADATA,
+    DEFER_REPLY_METADATA,
+    HANDLER_METADATA,
+    HANDLER_WATERMARK,
+    USE_INTERCEPTORS_METADATA,
+} from '../../constants/handler.js';
 import { MODULE_ID, MODULE_METADATA } from '../../constants/module.js';
 import type { ModuleMetadata } from '../../interfaces/module/module-metadata.interface.js';
 import { LISTENER_METADATA, LISTENER_WATERMARK } from '../../constants/listener.js';
 import type { ListenerMetadata } from '../../interfaces/listener/event-listener.js';
-import type { HandlerMetadata } from '../../interfaces/handler/command-handler.js';
+import type { AutocompleteEntry, HandlerMetadata } from '../../interfaces/handler/command-handler.js';
 import { INTERCEPTOR_METADATA, INTERCEPTOR_WATERMARK } from '../../constants/interceptor.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 import {
@@ -17,6 +24,7 @@ import type {
     ExceptionHandler,
     ExceptionHandlerMetadata,
 } from '../../interfaces/exception-handler/exception-handler.js';
+import { ParamMetadata } from '../../interfaces/index.js';
 
 export class MetadataScanner {
     static getModuleId(target: Constructor): string {
@@ -64,7 +72,7 @@ export class MetadataScanner {
     }
 
     static getHandlerMetadata(target: Constructor) {
-        return Reflect.getMetadata(HANDLER_METADATA, target) as HandlerMetadata;
+        return Reflect.getMetadata(HANDLER_METADATA, target) as Pick<HandlerMetadata, 'id' | 'definition' | 'type'>;
     }
 
     static getListenerMetadata(target: Constructor) {
@@ -85,5 +93,16 @@ export class MetadataScanner {
                 | Constructor<ExceptionHandler>[]
                 | undefined) ?? []
         );
+    }
+    static isDeferReply(target: Constructor): boolean {
+        return Reflect.hasMetadata(DEFER_REPLY_METADATA, target, 'execute');
+    }
+
+    static getAutocompleteEntries(target: Constructor) {
+        return (Reflect.getMetadata(AUTOCOMPLETE_ENTRIES_METADATA, target) as AutocompleteEntry[]) ?? [];
+    }
+
+    static getHandlerParams(handler: Constructor): ParamMetadata[] {
+        return (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler, 'execute') as ParamMetadata[]) ?? [];
     }
 }

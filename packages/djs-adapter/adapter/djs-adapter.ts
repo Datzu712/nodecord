@@ -2,6 +2,7 @@ import {
     Client as DjsClient,
     type ClientOptions,
     type ApplicationCommandDataResolvable,
+    type ChatInputCommandInteraction,
     Events,
     type Interaction,
     REST,
@@ -13,14 +14,12 @@ import {
     CommandParamTypes,
     LoadSlashCommandsOptions,
     type ExecutionContext,
-    type RegisteredCommandHandler,
-    type RegisteredListener,
+    type InitAdapterOptions,
 } from '@nodecord/core';
 import { CommandRegistry } from './command-registry.js';
 import { EventManager } from './event-manager.js';
-import { InteractionCreateDispatcher } from './events/interaction-create.dispatcher.js';
+import { InteractionDispatcher } from './events/interaction-dispatcher.js';
 import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
-import { ResponseHandler } from './response-handler.js';
 import {
     AdapterAlreadyInitializedException,
     AdapterNotInitializedException,
@@ -30,7 +29,6 @@ import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
-
     protected eventManager!: EventManager;
 
     private readonly commandRegistry = new CommandRegistry();
@@ -47,11 +45,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         }
     }
 
-    initialize(
-        executor: CommandExecutor,
-        handlers: RegisteredCommandHandler[],
-        listeners: RegisteredListener<unknown[]>[],
-    ): void {
+    override initialize({ executor, handlers, listeners, logger }: InitAdapterOptions): void {
         if (this.alreadyInitialized) {
             throw new AdapterAlreadyInitializedException();
         }
@@ -62,15 +56,18 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         this.eventManager = new EventManager();
 
         if (handlers.length) {
-            handlers.forEach(({ descriptor, handler, ...rest }) => {
-                if (!isDjsCommandMeta(descriptor)) {
+            handlers.forEach(({ metadata, handler, ...rest }) => {
+                if (!isDjsCommandMeta(metadata.definition)) {
                     throw new InvalidHandlerMetadataException(handler.constructor.name);
                 }
-                this.commandRegistry.register({ descriptor: descriptor.toJSON(), handler, ...rest });
+                this.commandRegistry.register({
+                    metadata: { ...metadata, definition: metadata.definition.toJSON() },
+                    handler,
+                    ...rest,
+                });
             });
 
-            const responseHandler = new ResponseHandler();
-            const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor, responseHandler);
+            const dispatcher = new InteractionDispatcher(this.commandRegistry, executor, logger);
             this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,
@@ -95,7 +92,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     async loadSlashCommands({ token, clientId, restVersion = '10' }: LoadSlashCommandsOptions): Promise<void> {
         const commands = this.commandRegistry
             .getAll()
-            .map((cmd) => cmd.descriptor) as ApplicationCommandDataResolvable[];
+            .map((cmd) => cmd.metadata.definition) as ApplicationCommandDataResolvable[];
 
         const rest = new REST({ version: restVersion }).setToken(token);
         await rest.put(Routes.applicationCommands(clientId), {
@@ -119,5 +116,13 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
             CommandParamTypes.AUTHOR,
             (ctx: ExecutionContext) => ctx.getRaw<Interaction>().user,
         );
+
+        executor.registerParamResolver(CommandParamTypes.OPTION, (ctx: ExecutionContext, data?: unknown) => {
+            const interaction = ctx.getRaw<ChatInputCommandInteraction>();
+            if (data === undefined) {
+                return Object.fromEntries(interaction.options.data.map((opt) => [opt.name, opt.value]));
+            }
+            return interaction.options.get(data as string)?.value;
+        });
     }
 }
