@@ -14,13 +14,11 @@ import {
     CommandParamTypes,
     LoadSlashCommandsOptions,
     type ExecutionContext,
-    type RegisteredCommandHandler,
-    type RegisteredListener,
+    type InitAdapterOptions,
 } from '@nodecord/core';
 import { CommandRegistry } from './command-registry.js';
 import { EventManager } from './event-manager.js';
 import { InteractionDispatcher } from './events/interaction-dispatcher.js';
-import { ConsoleLogger } from '@nodecord/core';
 import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
 import {
     AdapterAlreadyInitializedException,
@@ -31,7 +29,6 @@ import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
-
     protected eventManager!: EventManager;
 
     private readonly commandRegistry = new CommandRegistry();
@@ -48,11 +45,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         }
     }
 
-    initialize(
-        executor: CommandExecutor,
-        handlers: RegisteredCommandHandler[],
-        listeners: RegisteredListener<unknown[]>[],
-    ): void {
+    override initialize({ executor, handlers, listeners, logger }: InitAdapterOptions): void {
         if (this.alreadyInitialized) {
             throw new AdapterAlreadyInitializedException();
         }
@@ -74,11 +67,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
                 });
             });
 
-            const dispatcher = new InteractionDispatcher(
-                this.commandRegistry,
-                executor,
-                new ConsoleLogger('ExceptionHandler'),
-            );
+            const dispatcher = new InteractionDispatcher(this.commandRegistry, executor, logger);
             this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,

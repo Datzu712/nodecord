@@ -24,7 +24,7 @@ export class InteractionDispatcher implements ListenerProvider<ClientEvents[Even
     constructor(
         private readonly registry: CommandRegistry,
         executor: CommandExecutor,
-        logger: AbstractLogger,
+        logger?: AbstractLogger | false,
     ) {
         this.commandFlow = new CommandInteractionFlow(executor, this.responseHandler);
         this.autocompleteFlow = new AutocompleteInteractionFlow(executor);
@@ -33,6 +33,7 @@ export class InteractionDispatcher implements ListenerProvider<ClientEvents[Even
 
     // Sadly typescript doesn't infer the tuple type for the event args, so we have to hardcode it here
     async handler(raw: DjsInteraction) {
+        debugger;
         const ctx = this.mapInteraction(raw);
         if (!ctx) return;
 

@@ -58,7 +58,11 @@ export class NodecordClient {
         const handlers = this.moduleCompiler.getHandlers();
         const listeners = this.moduleCompiler.getEventListeners();
 
-        this.adapter.initialize(executor, handlers, listeners);
+        this.adapter.initialize({
+            executor,
+            handlers,
+            listeners,
+        });
     }
 
     get<T>(cls: Constructor<T>): T {
