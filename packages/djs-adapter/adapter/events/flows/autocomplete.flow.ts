@@ -18,7 +18,7 @@ export class AutocompleteInteractionFlow {
 
         const [methodName] = autoCompleteEntry;
         const caller = async () => {
-            const args = this.executor.resolveArgs(cmd.handler, ctx, methodName);
+            const args = this.executor.resolveArgs(cmd, ctx);
 
             /**
              * I would like to add "[key: string]: ((...args: unknown[]) => any) | undefined;" to the CommandHandler interface to avoid this unsafe access

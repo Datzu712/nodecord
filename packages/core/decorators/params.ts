@@ -6,9 +6,8 @@ export function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: unknown): ParameterDecorator {
         return (target, key, index) => {
             const existing =
-                (Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) as
-                    | ParamMetadata[]
-                    | undefined) ?? [];
+                (Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) as ParamMetadata[]) ??
+                [];
 
             existing.push({ index, type: paramType, data });
             Reflect.defineMetadata(COMMAND_ARGS_METADATA, existing, target.constructor, key as string);

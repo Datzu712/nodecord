@@ -20,7 +20,7 @@ export class CommandInteractionFlow {
             await raw.deferReply();
         }
 
-        const resolvedArgs = this.executor.resolveArgs(cmd.handler, ctx);
+        const resolvedArgs = this.executor.resolveArgs(cmd, ctx);
         const handlerCaller = async () => (await cmd.handler.execute(...resolvedArgs)) as Promise<unknown>;
 
         const result = await this.executor.execute(ctx, {
