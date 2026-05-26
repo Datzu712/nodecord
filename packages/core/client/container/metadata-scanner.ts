@@ -1,10 +1,10 @@
 import { Constructor } from '../../interfaces/common/constructor.js';
 import { INJECTABLE_METADATA, INJECTABLE_WATERMARK } from '../../constants/injectable.js';
 import {
-    AUTOCOMPLETE_ENTRIES_METADATA,
     COMMAND_ARGS_METADATA,
+    COMMAND_HANDLER_METADATA,
     DEFER_REPLY_METADATA,
-    HANDLER_METADATA,
+    EXECUTIONS_METADATA,
     HANDLER_WATERMARK,
     USE_INTERCEPTORS_METADATA,
 } from '../../constants/handler.js';
@@ -12,7 +12,6 @@ import { MODULE_ID, MODULE_METADATA } from '../../constants/module.js';
 import type { ModuleMetadata } from '../../interfaces/module/module-metadata.interface.js';
 import { LISTENER_METADATA, LISTENER_WATERMARK } from '../../constants/listener.js';
 import type { ListenerMetadata } from '../../interfaces/listener/event-listener.js';
-import type { AutocompleteEntry, HandlerMetadata } from '../../interfaces/handler/command-handler.js';
 import { INTERCEPTOR_METADATA, INTERCEPTOR_WATERMARK } from '../../constants/interceptor.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 import {
@@ -25,6 +24,8 @@ import type {
     ExceptionHandlerMetadata,
 } from '../../interfaces/exception-handler/exception-handler.js';
 import { ParamMetadata } from '../../interfaces/index.js';
+import { CommandHandlerMetadata, ExecutionKind } from '../../interfaces/handler/command-handler.js';
+import { ExecutorMetadata } from '../../interfaces/handler/executor-metadata.js';
 
 export class MetadataScanner {
     static getModuleId(target: Constructor): string {
@@ -71,10 +72,6 @@ export class MetadataScanner {
         return Reflect.hasMetadata(LISTENER_WATERMARK, target);
     }
 
-    static getHandlerMetadata(target: Constructor) {
-        return Reflect.getMetadata(HANDLER_METADATA, target) as Pick<HandlerMetadata, 'id' | 'definition' | 'type'>;
-    }
-
     static getListenerMetadata(target: Constructor) {
         return Reflect.getMetadata(LISTENER_METADATA, target) as ListenerMetadata;
     }
@@ -94,15 +91,30 @@ export class MetadataScanner {
                 | undefined) ?? []
         );
     }
-    static isDeferReply(target: Constructor): boolean {
-        return Reflect.hasMetadata(DEFER_REPLY_METADATA, target, 'execute');
+    static isExecutorDeferReply(target: Constructor, methodKey: string): boolean {
+        return Reflect.hasMetadata(DEFER_REPLY_METADATA, target, methodKey);
     }
 
-    static getAutocompleteEntries(target: Constructor) {
-        return (Reflect.getMetadata(AUTOCOMPLETE_ENTRIES_METADATA, target) as AutocompleteEntry[]) ?? [];
+    static isExecutorEphemeral(target: Constructor, methodKey: string): boolean {
+        throw new Error('Ephemeral executors are not implemented yet'); // not implemented yet
+        return Reflect.hasMetadata('TODO', target, methodKey);
     }
 
-    static getHandlerParams(handler: Constructor): ParamMetadata[] {
-        return (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler, 'execute') as ParamMetadata[]) ?? [];
+    static getHandlerExecutorParams(handler: Constructor, methodKey: string): ParamMetadata[] {
+        return (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler, methodKey) as ParamMetadata[]) ?? [];
+    }
+
+    static getCommandHandlerEntrypointMetadata(handler: Constructor) {
+        return Reflect.getMetadata(COMMAND_HANDLER_METADATA, handler) as CommandHandlerMetadata | undefined;
+    }
+
+    static getCommandHandlerExecutors(
+        handler: Constructor,
+    ): ExecutorMetadata<Exclude<ExecutionKind, 'slashCommand'>>[] {
+        return (
+            (Reflect.getMetadata(EXECUTIONS_METADATA, handler) as
+                | ExecutorMetadata<Exclude<ExecutionKind, 'slashCommand'>>[]
+                | undefined) ?? []
+        );
     }
 }

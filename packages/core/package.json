@@ -39,16 +39,20 @@
     ],
     "keywords": [
         "discord",
-        "client",
-        "bot",
-        "discordapp",
-        "node",
-        "api",
-        "typescript",
+        "discord-bot",
         "framework",
-        "tool"
+        "typescript",
+        "dependency-injection",
+        "di",
+        "decorators",
+        "modular",
+        "inversify",
+        "slash-commands",
+        "interceptors",
+        "nestjs"
     ],
     "devDependencies": {
+        "discord-api-types": "^0.38.47",
         "tsup": "latest",
         "typescript": "latest"
     },

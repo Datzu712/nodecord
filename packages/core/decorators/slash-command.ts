@@ -1,27 +1,26 @@
 import { injectable } from 'inversify';
 import { randomUUID } from 'node:crypto';
 
-import { HandlerTypes } from '../enums/command-types.enum.js';
-import { HANDLER_METADATA, HANDLER_WATERMARK } from '../constants/handler.js';
-import { HandlerMetadata } from '../interfaces/handler/command-handler.js';
+import { COMMAND_HANDLER_METADATA, HANDLER_WATERMARK } from '../constants/handler.js';
+import { CommandHandlerMetadata } from '../interfaces/handler/command-handler.js';
+import { ApplicationCommandTypes } from '../constants/application-command-types.js';
 
 /**
  * Class decorator for slash command handlers.
  *
  * The metadata parameter depends on the adapter. For example, the discord.js adapter accepts either a SlashCommandBuilder.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function SlashCommand(definition: any): ClassDecorator {
+export function SlashCommand(meta: Omit<CommandHandlerMetadata, 'id' | 'applicationCommandType'>): ClassDecorator {
     return (target) => {
         injectable()(target);
 
-        const metadata: HandlerMetadata = {
+        const metadata = {
             id: randomUUID(),
-            type: HandlerTypes.SLASH,
-            definition,
+            applicationCommandType: ApplicationCommandTypes.ChatInput,
+            ...meta,
         };
 
         Reflect.defineMetadata(HANDLER_WATERMARK, true, target);
-        Reflect.defineMetadata(HANDLER_METADATA, metadata, target);
+        Reflect.defineMetadata(COMMAND_HANDLER_METADATA, metadata, target);
     };
 }

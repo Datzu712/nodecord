@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { CommandParamTypes } from '../enums/command-types.enum.js';
-import { RegisteredCommandHandler } from '../interfaces/handler/command-handler.js';
 import type { RegisteredInterceptor } from '../interfaces/interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { ExecutionContext } from '../context/execution-context.js';
+import type { ParamMetadata } from '../interfaces/index.js';
 
 export type ParamTypeResolver = (ctx: ExecutionContext, data?: unknown) => unknown;
 
@@ -23,8 +23,8 @@ export class CommandExecutor {
         this.paramResolvers.set(type, resolver);
     }
 
-    resolveArgs(handler: RegisteredCommandHandler, ctx: ExecutionContext): unknown[] {
-        return handler.executeOptions.params
+    resolveArgs(cmdParams: ParamMetadata[], ctx: ExecutionContext): unknown[] {
+        return cmdParams
             .sort((a, b) => a.index - b.index)
             .map((meta) => this.paramResolvers.get(meta.type)?.(ctx, meta.data));
     }

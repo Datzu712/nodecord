@@ -1,5 +1,5 @@
 import type { Interaction as DjsInteraction } from 'discord.js';
-import { CommandParamTypes, type CommandExecutor, type ExecutionContext } from '@nodecord/core';
+import { type CommandExecutor, type ExecutionContext } from '@nodecord/core';
 import type { DjsRegisteredCommand } from '../../command-registry.js';
 import type { ResponseHandler } from '../../response-handler.js';
 
@@ -10,10 +10,8 @@ export class CommandInteractionFlow {
     ) {}
 
     async handle(raw: DjsInteraction, ctx: ExecutionContext, cmd: DjsRegisteredCommand): Promise<void> {
-        const isPassThrough = cmd.executeOptions.params.some(
-            (p) => p.type === CommandParamTypes.CONTEXT && (p.data as { passThrough?: boolean })?.passThrough,
-        );
-        console.log(isPassThrough);
+        const isPassThrough = cmd.executeOptions.shouldPassThrough;
+
         const shouldDeferReply = cmd.executeOptions.shouldDefer;
 
         if (shouldDeferReply && raw.isChatInputCommand()) {

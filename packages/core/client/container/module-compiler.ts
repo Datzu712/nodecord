@@ -24,7 +24,7 @@ import {
     PossibleCircularImportException,
     ProviderNotFoundException,
 } from '../exceptions/module.js';
-import { compileHandlerMetadata } from './resolvers/handler-metadata.js';
+import { compileCommandHandlerMetadata } from './resolvers/handler-metadata.js';
 import { compileListenerMetadata } from './resolvers/listener-metadata.js';
 import { compileInterceptorMetadata } from './resolvers/interceptor-metadata.js';
 import { compileExceptionHandlerMetadata } from './resolvers/exception-handler-metadata.js';
@@ -221,7 +221,7 @@ export class ModuleCompiler {
     private registerPendingHandlers(): void {
         for (const { container, handlerClasses } of this.pendingHandlers) {
             for (const handler of handlerClasses) {
-                const compiledHandler = compileHandlerMetadata(handler);
+                const compiledHandler = compileCommandHandlerMetadata(handler);
 
                 container.register(handler);
 

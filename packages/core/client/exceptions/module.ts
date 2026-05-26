@@ -32,7 +32,7 @@ export class InvalidListenerException extends NodecordCoreException {
 export class InvalidHandlerException extends NodecordCoreException {
     constructor(handlerName: string) {
         super(
-            `Class ${handlerName} is not a valid command handler. Make sure it is decorated with a command decorator (e.g. @SlashCommand).`,
+            `Class ${handlerName} is not a valid command handler. Make sure it is decorated with a command decorator (e.g. @SlashCommand) and implements the "CommandHandler" interface.`,
             NodecordExceptionCode.INVALID_HANDLER,
         );
     }
@@ -113,6 +113,46 @@ export class InternalCompilerException extends NodecordCoreException {
                 `This is likely a bug in ModuleCompiler.`,
             ].join('\n'),
             NodecordExceptionCode.INTERNAL_ERROR,
+        );
+    }
+}
+
+export class InvalidOptionContextException extends NodecordCoreException {
+    constructor({
+        focusedOptions,
+        methodName, // There are no real use case of a @Options outside `execute` entrypoint method of a @SlashCommand handler, but we can keep this generic in case theres a new use case in the future
+        className,
+    }: {
+        focusedOptions: string[];
+        methodName: string;
+        className: string;
+    }) {
+        super(
+            [
+                `@Option(${focusedOptions.map((o) => `"${o}"`).join(', ')}) in ${className}.${methodName}() can only be used inside a @SlashCommand handler class.`,
+                `Make sure "${className}" is decorated with @SlashCommand before using @Option.`,
+            ].join('\n'),
+            NodecordExceptionCode.INVALID_OPTION_CONTEXT,
+        );
+    }
+}
+
+export class InvalidAutocompleteContextException extends NodecordCoreException {
+    constructor({
+        methodName,
+        targetOptions,
+        className,
+    }: {
+        methodName: string;
+        targetOptions: string[];
+        className: string;
+    }) {
+        super(
+            [
+                `@Autocomplete(${targetOptions.map((o) => `"${o}"`).join(', ')}) on ${className}.${methodName}() can only be used inside a @SlashCommand handler class.`,
+                `Make sure "${className}" is decorated with @SlashCommand before using @Autocomplete.`,
+            ].join('\n'),
+            NodecordExceptionCode.INVALID_AUTOCOMPLETE_CONTEXT,
         );
     }
 }
