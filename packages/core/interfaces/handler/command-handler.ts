@@ -3,26 +3,6 @@ import type { RegisteredExceptionHandler } from '../exception-handler/exception-
 import { ExecuteOptions } from './execute-options.js';
 import { ApplicationCommandTypes } from '../../constants/application-command-types.js';
 
-/**
- * Defines the kind of interaction an executor handles within a handler's interaction flow.
- * Each kind may expose different options, repliable interactions (slashCommand, contextMenu, button, modal)
- * extend {@link RepliableExecuteOptions}, while non-repliable ones (autocomplete) extend {@link BaseExecuteOptions} directly,
- * since Discord does not allow defer or ephemeral responses for those interaction types.
- *
- * todo: move constant to packages/core/constants
- */
-export const ExecutionKind = {
-    // Entrypoints:
-    SLASH_COMMAND: 'slashCommand', // CHAT_INPUT type 1
-    CONTEXT_MENU: 'contextMenu', // USER type 2 or MESSAGE type 3
-
-    // Sub interactions that might be triggered by the entrypoint:
-    BUTTON: 'button',
-    AUTOCOMPLETE: 'autocomplete',
-} as const;
-
-export type ExecutionKind = (typeof ExecutionKind)[keyof typeof ExecutionKind];
-
 export interface CommandHandler {
     /**
      * Entry point for the interaction flow. The framework will call this method with the resolved arguments when the interaction (slash commands, context menus) is received.
@@ -63,7 +43,7 @@ export interface CompiledCommandHandler {
     /**
      * Map<executor method key, ExecuteOptions>.
      */
-    executions: Map<string, ExecuteOptions>;
+    executors: [executorMethodKey: string, executorOptions: ExecuteOptions][];
 }
 
 /**

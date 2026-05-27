@@ -1,4 +1,4 @@
-import { type ExecutionKind } from './command-handler.js';
+import { type ExecutionKind } from '../../constants/execution-kind.js';
 
 /**
  * Metadata for a sub-interaction executor method within a handler.

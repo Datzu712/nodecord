@@ -6,9 +6,9 @@ import { Interceptor } from '../decorators/interceptor.js';
 import { OnException } from '../decorators/on-exception.js';
 import { CommandHandler, NodecordInterceptor } from '../interfaces/index.js';
 import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
-import { ExecutionContext } from '../context/execution-context.js';
+import { InteractionContext } from '../context/interaction-context.js';
 import { SlashCommand } from '../decorators/slash-command.js';
-import { HandlerTypes } from '../enums/command-types.enum.js';
+import { ExecutionKind } from '../constants/execution-kind.js';
 import { CommandExecutor } from '../client/command-executor.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import { randomUUID } from 'node:crypto';
@@ -22,7 +22,7 @@ const mockLogger: AbstractLogger = {
 };
 
 const makeExecutor = () => new CommandExecutor(mockLogger);
-const makeCtx = (name = 'test') => new ExecutionContext(name, HandlerTypes.SLASH, {});
+const makeCtx = (name = 'test') => new InteractionContext(name, ExecutionKind.SLASH_COMMAND, {});
 
 describe('CommandExecutor', () => {
     beforeEach(() => {
@@ -35,7 +35,7 @@ describe('CommandExecutor', () => {
 
             @Interceptor()
             class InterceptorA implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     executionOrder.push('1:before');
                     await next();
                     executionOrder.push('1:after');
@@ -44,14 +44,17 @@ describe('CommandExecutor', () => {
 
             @Interceptor()
             class InterceptorB implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     executionOrder.push('2:before');
                     await next();
                     executionOrder.push('2:after');
                 }
             }
 
-            @SlashCommand('test')
+            @SlashCommand({
+                name: 'test',
+                description: 'A test command',
+            })
             class TestCommand implements CommandHandler {
                 async execute() {
                     executionOrder.push('command');
@@ -71,13 +74,16 @@ describe('CommandExecutor', () => {
         it('propagates the return value of execute() through the interceptor pipeline', async () => {
             @Interceptor()
             class TransformInterceptor implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     const result = await next();
                     return result + ':transformed';
                 }
             }
 
-            @SlashCommand('test')
+            @SlashCommand({
+                name: 'test',
+                description: 'A test command',
+            })
             class TestCommand implements CommandHandler {
                 async execute() {
                     return 'pong';
@@ -98,12 +104,15 @@ describe('CommandExecutor', () => {
 
             @Interceptor()
             class ShortCircuitInterceptor implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, _next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, _next: () => Promise<unknown>) {
                     return 'short-circuit';
                 }
             }
 
-            @SlashCommand('test')
+            @SlashCommand({
+                name: 'test',
+                description: 'A test command',
+            })
             class TestCommand implements CommandHandler {
                 async execute() {
                     commandExecuted.value = true;
@@ -132,7 +141,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError('boom');
@@ -159,7 +171,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError('unhandled');
@@ -178,7 +193,7 @@ describe('CommandExecutor', () => {
                 expect(handler.handle).not.toHaveBeenCalled();
             });
 
-            it('passes the ExecutionContext to the exception handler', async () => {
+            it('passes the InteractionContext to the exception handler', async () => {
                 class AppError extends Error {}
 
                 @OnException(AppError)
@@ -186,7 +201,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('ping')
+                @SlashCommand({
+                    name: 'ping',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError();
@@ -215,7 +233,10 @@ describe('CommandExecutor', () => {
                     }
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError();
@@ -247,7 +268,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError();
@@ -282,7 +306,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute() {
                         throw new AppError();
@@ -310,7 +337,7 @@ describe('CommandExecutor', () => {
 
                 @Interceptor()
                 class ThrowingInterceptor implements NodecordInterceptor {
-                    async intercept(_ctx: ExecutionContext, _next: () => Promise<unknown>) {
+                    async intercept(_ctx: InteractionContext, _next: () => Promise<unknown>) {
                         throw new InterceptorError('interceptor failed');
                     }
                 }
@@ -320,7 +347,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute = vi.fn();
                 }
@@ -334,7 +364,7 @@ describe('CommandExecutor', () => {
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [InterceptorError] } }],
                 });
 
-                expect(handler.handle).toHaveBeenCalledWith(expect.any(InterceptorError), expect.any(ExecutionContext));
+                expect(handler.handle).toHaveBeenCalledWith(expect.any(InterceptorError), expect.any(InteractionContext));
                 expect(command.execute).not.toHaveBeenCalled();
             });
 
@@ -343,7 +373,7 @@ describe('CommandExecutor', () => {
 
                 @Interceptor()
                 class PostThrowInterceptor implements NodecordInterceptor {
-                    async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                    async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                         await next();
                         throw new PostError('post-next exception');
                     }
@@ -354,7 +384,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute = vi.fn();
                 }
@@ -367,13 +400,13 @@ describe('CommandExecutor', () => {
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [PostError] } }],
                 });
 
-                expect(handler.handle).toHaveBeenCalledWith(expect.any(PostError), expect.any(ExecutionContext));
+                expect(handler.handle).toHaveBeenCalledWith(expect.any(PostError), expect.any(InteractionContext));
             });
 
             it('does not call the exception handler when the interceptor short-circuits without throwing', async () => {
                 @Interceptor()
                 class ShortCircuitInterceptor implements NodecordInterceptor {
-                    async intercept(_ctx: ExecutionContext, _next: () => Promise<unknown>) {
+                    async intercept(_ctx: InteractionContext, _next: () => Promise<unknown>) {
                         return 'short-circuit';
                     }
                 }
@@ -383,7 +416,10 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand('test')
+                @SlashCommand({
+                    name: 'test',
+                    description: 'A test command',
+                })
                 class TestCommand implements CommandHandler {
                     execute = vi.fn();
                 }
@@ -408,7 +444,7 @@ describe('CommandExecutor', () => {
 
             @Interceptor()
             class InterceptorA implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     order.push('A:before');
                     await next();
                     order.push('A:after'); // should NOT be reached
@@ -417,7 +453,7 @@ describe('CommandExecutor', () => {
 
             @Interceptor()
             class InterceptorB implements NodecordInterceptor {
-                async intercept(_ctx: ExecutionContext, next: () => Promise<unknown>) {
+                async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     order.push('B:before');
                     await next();
                     order.push('B:after'); // should NOT be reached
@@ -431,7 +467,10 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand('test')
+            @SlashCommand({
+                name: 'test',
+                description: 'A test command',
+            })
             class TestCommand implements CommandHandler {
                 execute() {
                     order.push('command');
@@ -478,7 +517,10 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand('test')
+            @SlashCommand({
+                name: 'test',
+                description: 'A test command',
+            })
             class TestCommand implements CommandHandler {
                 execute() {
                     throw new AppError();

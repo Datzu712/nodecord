@@ -24,7 +24,8 @@ import type {
     ExceptionHandlerMetadata,
 } from '../../interfaces/exception-handler/exception-handler.js';
 import { ParamMetadata } from '../../interfaces/index.js';
-import { CommandHandlerMetadata, ExecutionKind } from '../../interfaces/handler/command-handler.js';
+import { CommandHandlerMetadata } from '../../interfaces/handler/command-handler.js';
+import { ExecutionKind } from '../../constants/execution-kind.js';
 import { ExecutorMetadata } from '../../interfaces/handler/executor-metadata.js';
 
 export class MetadataScanner {
@@ -96,7 +97,9 @@ export class MetadataScanner {
     }
 
     static isExecutorEphemeral(target: Constructor, methodKey: string): boolean {
-        throw new Error('Ephemeral executors are not implemented yet'); // not implemented yet
+        console.warn('Ephemeral executors are not implemented yet. Returning false for all executors.');
+        return false;
+        //throw new Error('Ephemeral executors are not implemented yet'); // not implemented yet
         return Reflect.hasMetadata('TODO', target, methodKey);
     }
 

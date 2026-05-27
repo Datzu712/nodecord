@@ -1,7 +1,7 @@
-import type { ExecutionContext } from '../../context/execution-context.js';
+import type { InteractionContext } from '../../context/interaction-context.js';
 
 export interface NodecordInterceptor<N = any, R = any> {
-    intercept(ctx: ExecutionContext, next: () => Promise<N>): Promise<R>;
+    intercept(ctx: InteractionContext, next: () => Promise<N>): Promise<R>;
 }
 
 export interface RegisteredInterceptor {

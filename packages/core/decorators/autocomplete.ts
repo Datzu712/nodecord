@@ -1,5 +1,5 @@
 import { EXECUTIONS_METADATA } from '../constants/handler.js';
-import { ExecutionKind } from '../interfaces/handler/command-handler.js';
+import { ExecutionKind } from '../constants/execution-kind.js';
 
 export function Autocomplete(...options: string[]): MethodDecorator {
     return (target, methodKey) => {

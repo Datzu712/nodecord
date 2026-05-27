@@ -1,4 +1,4 @@
-import { ExecutionKind } from '../../../../interfaces/handler/command-handler.js';
+import { ExecutionKind } from '../../../../constants/execution-kind.js';
 import { BaseExecuteOptions } from '../../../../interfaces/handler/execute-options.js';
 import { SlashCommandExecuteOptions } from '../../../../interfaces/handler/executions/slash-command.js';
 import type { Constructor } from '../../../../interfaces/index.js';

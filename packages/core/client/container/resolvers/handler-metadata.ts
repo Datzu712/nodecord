@@ -1,5 +1,6 @@
-import { CommandParamTypes } from '../../../enums/command-types.enum.js';
-import { CompiledCommandHandler, ExecutionKind } from '../../../interfaces/handler/command-handler.js';
+import { CommandParamTypes } from '../../../constants/command-types.js';
+import { CompiledCommandHandler } from '../../../interfaces/handler/command-handler.js';
+import { ExecutionKind } from '../../../constants/execution-kind.js';
 import { ApplicationCommandTypes } from '../../../constants/application-command-types.js';
 import { BaseExecuteOptions, ExecuteOptions } from '../../../interfaces/handler/execute-options.js';
 import { ExecutorMetadata } from '../../../interfaces/handler/executor-metadata.js';

@@ -1,5 +1,5 @@
 import { COMMAND_ARGS_METADATA } from '../constants/handler.js';
-import { CommandParamTypes } from '../enums/command-types.enum.js';
+import { CommandParamTypes } from '../constants/command-types.js';
 import type { BaseParamMetadata } from '../interfaces/handler/param-metadata.js';
 
 export function createCommandParamDecorator(paramType: CommandParamTypes) {

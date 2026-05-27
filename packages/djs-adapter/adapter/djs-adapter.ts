@@ -16,22 +16,14 @@ import {
     type ExecutionContext,
     type InitAdapterOptions,
 } from '@nodecord/core';
-import { CommandRegistry } from './command-registry.js';
 import { EventManager } from './event-manager.js';
 import { InteractionDispatcher } from './events/interaction-dispatcher.js';
-import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
-import {
-    AdapterAlreadyInitializedException,
-    AdapterNotInitializedException,
-    InvalidHandlerMetadataException,
-} from './exceptions/adapter.exception.js';
+import { AdapterAlreadyInitializedException, AdapterNotInitializedException } from './exceptions/adapter.exception.js';
 import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
     protected eventManager!: EventManager;
-
-    private readonly commandRegistry = new CommandRegistry();
 
     /**
      * Accepts either an already-created Client instance or raw ClientOptions.
@@ -56,18 +48,7 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         this.eventManager = new EventManager();
 
         if (handlers.length) {
-            handlers.forEach(({ metadata, handler, ...rest }) => {
-                if (!isDjsCommandMeta(metadata.definition)) {
-                    throw new InvalidHandlerMetadataException(handler.constructor.name);
-                }
-                this.commandRegistry.register({
-                    metadata: { ...metadata, definition: metadata.definition.toJSON() },
-                    handler,
-                    ...rest,
-                });
-            });
-
-            const dispatcher = new InteractionDispatcher(this.commandRegistry, executor, logger);
+            const dispatcher = new InteractionDispatcher(handlers, executor, logger);
             this.eventManager.register({
                 metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
                 listener: dispatcher,

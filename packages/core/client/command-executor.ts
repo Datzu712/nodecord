@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { CommandParamTypes } from '../enums/command-types.enum.js';
+import { CommandParamTypes } from '../constants/command-types.js';
 import type { RegisteredInterceptor } from '../interfaces/interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
-import type { ExecutionContext } from '../context/execution-context.js';
-import type { ParamMetadata } from '../interfaces/index.js';
+import type { InteractionContext } from '../context/interaction-context.js';
+import type { ParamMetadata, RegisteredCommandHandler } from '../interfaces/index.js';
+import { NodecordExceptionCode } from '../constants/exceptions.js';
 
-export type ParamTypeResolver = (ctx: ExecutionContext, data?: unknown) => unknown;
+export type ParamTypeResolver = (ctx: InteractionContext, data?: unknown) => unknown;
 
 export interface ExecuteParams {
     caller: () => any;
@@ -17,20 +18,48 @@ export interface ExecuteParams {
 export class CommandExecutor {
     private readonly paramResolvers = new Map<CommandParamTypes, ParamTypeResolver>();
 
-    constructor(private readonly logger: AbstractLogger) {}
+    constructor(
+        private readonly logger: AbstractLogger,
+        private readonly commandHandlers: RegisteredCommandHandler[],
+    ) {}
 
     registerParamResolver(type: CommandParamTypes, resolver: ParamTypeResolver): void {
         this.paramResolvers.set(type, resolver);
     }
 
-    resolveArgs(cmdParams: ParamMetadata[], ctx: ExecutionContext): unknown[] {
-        return cmdParams
+    resolveExecutorArgs(executorParams: ParamMetadata[], ctx: InteractionContext): unknown[] {
+        return executorParams
             .sort((a, b) => a.index - b.index)
             .map((meta) => this.paramResolvers.get(meta.type)?.(ctx, meta.data));
     }
 
-    async execute(
-        ctx: ExecutionContext,
+    async execute(ctx: InteractionContext): Promise<void> {
+        const cmd = this.commandHandlers.find((cmd) => cmd.metadata.name === ctx.name);
+        if (!cmd) return;
+
+        const targetExecutor = cmd.executors.find(([_, options]) => options.kind === ctx.type);
+        if (!targetExecutor) {
+            this.logger.debug(
+                `Command ${cmd.metadata.name} doesn't have a executor flow for the interaction type ${ctx.type}. Skipping...`,
+                'CommandExecutor',
+            );
+
+            return;
+        }
+
+        const [methodKey, executorOptions] = targetExecutor;
+
+        if (!(methodKey in cmd.handler)) {
+            throw new NodecordExceptionCode(...);
+        }
+
+        const resolvedParams = this.resolveExecutorArgs(executorOptions.params, ctx);
+
+        return await this.runExecutor(ctx, { caller }) 
+    }
+
+    private async runExecutor(
+        ctx: InteractionContext,
         { caller, interceptors = [], exceptionHandlers = [] }: ExecuteParams,
     ): Promise<unknown> {
         /**

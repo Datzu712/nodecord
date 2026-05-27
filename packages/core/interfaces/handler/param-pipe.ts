@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '../../context/execution-context.js';
+import type { InteractionContext } from '../../context/interaction-context.js';
 
 /**
  * Class that implements this interface should be decorated with `@Injectable()` decorator so the framework can
@@ -11,5 +11,5 @@ export interface ParamPipe<T = unknown> {
      *
      * @param value The value to be transformed
      */
-    transform(value: T, ctx: ExecutionContext): T | Promise<T>;
+    transform(value: T, ctx: InteractionContext): T | Promise<T>;
 }

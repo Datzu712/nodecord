@@ -1,4 +1,4 @@
-import { NodecordExceptionCode } from '../../enums/exceptions.js';
+import { NodecordExceptionCode } from '../../constants/exceptions.js';
 import { Constructor } from '../../interfaces/index.js';
 import { NodecordCoreException } from './base.js';
 

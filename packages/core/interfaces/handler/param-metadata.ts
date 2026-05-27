@@ -1,4 +1,4 @@
-import type { CommandParamTypes } from '../../enums/command-types.enum.js';
+import { CommandParamTypes } from '../../constants/command-types.js';
 
 export interface BaseParamMetadata {
     index: number;
@@ -6,15 +6,15 @@ export interface BaseParamMetadata {
     data?: unknown;
 }
 
-export interface ContextParamMetadata {
-    type: CommandParamTypes.CONTEXT;
+export interface ContextParamMetadata extends BaseParamMetadata {
+    type: 'CONTEXT';
     data: {
         passThrough?: boolean;
     };
 }
 
-export interface OptionParamMetadata {
-    type: CommandParamTypes.OPTION;
+export interface OptionParamMetadata extends BaseParamMetadata {
+    type: 'OPTION';
     data: string[];
 }
 
