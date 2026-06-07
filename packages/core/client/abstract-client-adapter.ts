@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AbstractLogger, RegisteredCommandHandler, RegisteredListener } from '../interfaces/index.js';
+import { AbstractLogger, RegisteredListener } from '../interfaces/index.js';
 import type { CommandExecutor } from './command-executor.js';
 
 export interface LoadSlashCommandsOptions {
@@ -10,7 +10,6 @@ export interface LoadSlashCommandsOptions {
 
 export interface InitAdapterOptions {
     executor: CommandExecutor;
-    handlers: RegisteredCommandHandler[];
     listeners: RegisteredListener<unknown[]>[];
     logger?: AbstractLogger | false;
 }

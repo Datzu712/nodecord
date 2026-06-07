@@ -1,10 +1,10 @@
-export interface AutocompleteChoice<T extends string | number | boolean = string | number | boolean> {
+export interface AutocompleteChoice<T extends string | number = string | number> {
     name: string;
     value: T;
 }
 
 export interface FocusedOption {
     name: string;
-    value: string | number | boolean;
+    value: string | number;
     type: number;
 }

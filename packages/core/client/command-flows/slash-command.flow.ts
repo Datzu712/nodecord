@@ -2,6 +2,7 @@ import { ChatInputCommandContext } from '../../context/chat-input-command-contex
 import { BaseCommandFlow } from '../../interfaces/handler/base-command-flow.js';
 import { SlashCommandExecuteOptions } from '../../interfaces/handler/executions/slash-command.js';
 import { AbstractLogger, RegisteredCommandHandler } from '../../interfaces/index.js';
+import type { InteractionReplyOptions } from '../../interfaces/interactions/repliable.js';
 import { CommandPipelineBuilder } from '../command-pipeline-builder.js';
 
 export class ChatInputCommandFlow implements BaseCommandFlow {
@@ -19,10 +20,10 @@ export class ChatInputCommandFlow implements BaseCommandFlow {
             );
             return;
         }
-        const [_, options] = executeOptions;
+        const [, executorOptions] = executeOptions;
 
-        const shouldDefer = options.defer;
-        const shouldHandleResponse = !options.passThrough;
+        const shouldDefer = executorOptions.defer;
+        const shouldHandleResponse = !executorOptions.passThrough;
 
         if (shouldDefer) {
             await ctx.deferReply();
@@ -33,14 +34,18 @@ export class ChatInputCommandFlow implements BaseCommandFlow {
             ctx,
             interceptors: cmd.interceptors,
             exceptionHandlers: cmd.exceptionHandlers,
-            params: options.params,
+            params: executorOptions.params,
         });
 
         const result = await pipeline.execute();
 
-        // todo: add someway to handle returns as responses
-        if (shouldHandleResponse) {
-            console.log(result);
+        if (!shouldHandleResponse || result == null) return;
+        const replyOptions: InteractionReplyOptions = typeof result === 'string' ? { content: result } : result;
+
+        if (shouldDefer) {
+            await ctx.editReply(replyOptions);
+        } else {
+            await ctx.reply(replyOptions);
         }
     }
 }

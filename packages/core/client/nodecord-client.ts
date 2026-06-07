@@ -61,7 +61,6 @@ export class NodecordClient {
 
         this.adapter.initialize({
             executor,
-            handlers,
             listeners,
         });
     }

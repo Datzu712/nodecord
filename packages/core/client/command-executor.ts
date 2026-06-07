@@ -1,4 +1,5 @@
 import { CommandAutocompleteFlow } from './command-flows/autocomplete.flow.js';
+import { ChatInputCommandFlow } from './command-flows/slash-command.flow.js';
 
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { InteractionContext } from '../context/interaction-context.js';
@@ -14,6 +15,7 @@ export class CommandExecutor {
         private readonly commandHandlers: RegisteredCommandHandler[],
     ) {
         this.commandFlows.set('autocomplete', new CommandAutocompleteFlow(logger));
+        this.commandFlows.set('slashCommand', new ChatInputCommandFlow(logger));
     }
 
     async execute(ctx: InteractionContext): Promise<void> {

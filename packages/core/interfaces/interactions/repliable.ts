@@ -5,8 +5,12 @@
  *
  */
 
+import type { APIEmbed } from 'discord-api-types/v10';
+
 export interface InteractionReplyOptions {
     content?: string;
+    embeds?: APIEmbed[];
 }
 
-export interface DeferReplyOptions {}
+// todo
+export type DeferReplyOptions = never;

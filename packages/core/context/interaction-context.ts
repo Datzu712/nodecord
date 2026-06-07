@@ -28,6 +28,6 @@ export abstract class InteractionContext {
         return this.type === 'contextMenu';
     }
 
-    abstract getGuild(): APIGuild;
+    abstract getGuild(): APIGuild | null;
     abstract getAuthor(): APIUser;
 }
