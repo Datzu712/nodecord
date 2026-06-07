@@ -1,4 +1,4 @@
-export interface AutocompleteChoice<T extends string | number = string | number> {
+export interface AutocompleteChoice<T extends string | number | boolean = string | number | boolean> {
     name: string;
     value: T;
 }

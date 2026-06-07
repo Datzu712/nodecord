@@ -14,4 +14,5 @@ export abstract class ChatInputCommandContext extends InteractionContext {
     abstract deferReply(options?: DeferReplyOptions): Promise<void>;
     abstract editReply(options: InteractionReplyOptions): Promise<void>;
     abstract followUp(options: InteractionReplyOptions): Promise<void>;
+    abstract getOptions(): { name: string; value: string | number | boolean }[];
 }

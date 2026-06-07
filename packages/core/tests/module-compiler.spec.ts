@@ -85,7 +85,7 @@ describe('ModuleCompiler', () => {
 
                 const compiler = new ModuleCompiler(mockLogger);
                 compiler.compile(AppModule);
-                expect(compiler.getContainerFor(MyService)).toBeDefined();
+                expect(compiler.getContainerFor(MyService).resolve(MyService)).toBeInstanceOf(MyService);
             });
         });
 

@@ -18,4 +18,12 @@ export interface OptionParamMetadata extends BaseParamMetadata {
     data: string[];
 }
 
-export type ParamMetadata = ContextParamMetadata | OptionParamMetadata;
+export interface AuthorParamMetadata extends BaseParamMetadata {
+    type: 'AUTHOR';
+}
+
+export interface GuildParamMetadata extends BaseParamMetadata {
+    type: 'GUILD';
+}
+
+export type ParamMetadata = ContextParamMetadata | OptionParamMetadata | AuthorParamMetadata | GuildParamMetadata;

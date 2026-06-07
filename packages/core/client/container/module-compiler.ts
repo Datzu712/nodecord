@@ -169,10 +169,10 @@ export class ModuleCompiler {
             this.registerProvider(container, provider);
         }
 
-        for (const [i, importedModule] of (metadata.imports ?? []).entries()) {
+        for (const [index, importedModule] of (metadata.imports ?? []).entries()) {
             this.compileModule(importedModule, {
                 parent: container,
-                importIndex: i,
+                importIndex: index,
                 importTrace: metadata.imports!,
                 providers: metadata.providers ?? [],
                 handlers: metadata.handlers ?? [],

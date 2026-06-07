@@ -9,7 +9,7 @@ import { InvalidAutocompleteContextException, InvalidOptionContextException } fr
 export function compileAutocompleteExecutor({
     baseOptions,
     entrypointExecutor, // aka ExecuteOptions for `execute` entrypoint method
-    subExecutor,
+    subExecutor, // options for the sub executor function for handling an specific autocomplete interaction
     target,
     params,
 }: {

@@ -5,5 +5,5 @@ export interface AutocompleteExecuteOptions extends BaseExecuteOptions {
     /**
      * The names of the focused options that triggered the autocomplete interaction. This comes from the arguments of @Autocomplete(...options) decorator on the method
      */
-    focusedOptions: string[];
+    focusedOptions: (string | number | boolean)[];
 }

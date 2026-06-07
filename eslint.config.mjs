@@ -54,6 +54,7 @@ export default [
             '@typescript-eslint/class-methods-use-this': 'off',
             '@typescript-eslint/prefer-destructuring': 'off',
             'no-console': 'off',
+            '@typescript-eslint/no-unused-vars': 'warn',
         },
     },
     {

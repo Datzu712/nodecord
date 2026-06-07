@@ -123,6 +123,6 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
 
     return {
         metadata: rawEntrypointExecutorMetadata,
-        executions,
+        executors: Array.from(executions.entries()),
     };
 }

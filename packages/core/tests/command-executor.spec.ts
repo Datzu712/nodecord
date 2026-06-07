@@ -1,17 +1,21 @@
 import 'reflect-metadata';
 
+import type { APIGuild, APIUser } from 'discord-api-types/v10';
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CommandPipelineBuilder } from '../client/command-pipeline-builder.js';
+import { ExecutionKind } from '../constants/execution-kind.js';
+import { InteractionContext } from '../context/interaction-context.js';
 import { Interceptor } from '../decorators/interceptor.js';
 import { OnException } from '../decorators/on-exception.js';
-import { CommandHandler, NodecordInterceptor } from '../interfaces/index.js';
 import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
-import { InteractionContext } from '../context/interaction-context.js';
-import { SlashCommand } from '../decorators/slash-command.js';
-import { ExecutionKind } from '../constants/execution-kind.js';
-import { CommandExecutor } from '../client/command-executor.js';
-import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
-import { randomUUID } from 'node:crypto';
+import type {
+    AbstractLogger,
+    NodecordInterceptor,
+    RegisteredExceptionHandler,
+    RegisteredInterceptor,
+} from '../interfaces/index.js';
 
 const mockLogger: AbstractLogger = {
     log: vi.fn(),
@@ -21,10 +25,40 @@ const mockLogger: AbstractLogger = {
     verbose: vi.fn(),
 };
 
-const makeExecutor = () => new CommandExecutor(mockLogger);
-const makeCtx = (name = 'test') => new InteractionContext(name, ExecutionKind.SLASH_COMMAND, {});
+class TestInteractionContext extends InteractionContext {
+    constructor(name = 'test') {
+        super(name, ExecutionKind.SLASH_COMMAND, {});
+    }
 
-describe('CommandExecutor', () => {
+    getGuild(): APIGuild {
+        return {} as APIGuild;
+    }
+
+    getAuthor(): APIUser {
+        return {} as APIUser;
+    }
+}
+
+const makeCtx = (name = 'test') => new TestInteractionContext(name);
+
+const makePipeline = (params: {
+    caller: (...args: unknown[]) => Promise<unknown>;
+    ctx?: InteractionContext;
+    interceptors?: RegisteredInterceptor[];
+    exceptionHandlers?: RegisteredExceptionHandler[];
+}) =>
+    new CommandPipelineBuilder(
+        {
+            caller: params.caller,
+            ctx: params.ctx ?? makeCtx(),
+            interceptors: params.interceptors ?? [],
+            exceptionHandlers: params.exceptionHandlers ?? [],
+            params: [],
+        },
+        mockLogger,
+    );
+
+describe('CommandPipelineBuilder', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -51,22 +85,17 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand({
-                name: 'test',
-                description: 'A test command',
-            })
-            class TestCommand implements CommandHandler {
-                async execute() {
-                    executionOrder.push('command');
-                }
-            }
-
-            const interceptors = [
+            const interceptors: RegisteredInterceptor[] = [
                 { interceptor: new InterceptorA(), metadata: { id: randomUUID() } },
                 { interceptor: new InterceptorB(), metadata: { id: randomUUID() } },
             ];
 
-            await makeExecutor().execute(makeCtx(), { caller: () => new TestCommand().execute(), interceptors });
+            await makePipeline({
+                caller: async () => {
+                    executionOrder.push('command');
+                },
+                interceptors,
+            }).execute();
 
             expect(executionOrder).toEqual(['1:before', '2:before', 'command', '2:after', '1:after']);
         });
@@ -76,25 +105,14 @@ describe('CommandExecutor', () => {
             class TransformInterceptor implements NodecordInterceptor {
                 async intercept(_ctx: InteractionContext, next: () => Promise<unknown>) {
                     const result = await next();
-                    return result + ':transformed';
+                    return (result as string) + ':transformed';
                 }
             }
 
-            @SlashCommand({
-                name: 'test',
-                description: 'A test command',
-            })
-            class TestCommand implements CommandHandler {
-                async execute() {
-                    return 'pong';
-                }
-            }
-
-            const command = new TestCommand();
-            const result = await makeExecutor().execute(makeCtx(), {
-                caller: () => command.execute(),
+            const result = await makePipeline({
+                caller: async () => 'pong',
                 interceptors: [{ interceptor: new TransformInterceptor(), metadata: { id: randomUUID() } }],
-            });
+            }).execute();
 
             expect(result).toBe('pong:transformed');
         });
@@ -109,22 +127,13 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand({
-                name: 'test',
-                description: 'A test command',
-            })
-            class TestCommand implements CommandHandler {
-                async execute() {
+            const result = await makePipeline({
+                caller: async () => {
                     commandExecuted.value = true;
                     return 'pong';
-                }
-            }
-
-            const command = new TestCommand();
-            const result = await makeExecutor().execute(makeCtx(), {
-                caller: () => command.execute(),
+                },
                 interceptors: [{ interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } }],
-            });
+            }).execute();
 
             expect(result).toBe('short-circuit');
             expect(commandExecuted.value).toBe(false);
@@ -141,23 +150,16 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
-                        throw new AppError('boom');
-                    }
-                }
-
                 const handler = new AppErrorHandler();
                 const ctx = makeCtx();
 
-                await makeExecutor().execute(ctx, {
-                    caller: () => new TestCommand().execute(),
+                await makePipeline({
+                    caller: () => {
+                        throw new AppError('boom');
+                    },
+                    ctx,
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
-                });
+                }).execute();
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(AppError), ctx);
             });
@@ -171,23 +173,15 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
-                        throw new AppError('unhandled');
-                    }
-                }
-
                 const handler = new OtherHandler();
 
                 await expect(
-                    makeExecutor().execute(makeCtx(), {
-                        caller: () => new TestCommand().execute(),
+                    makePipeline({
+                        caller: () => {
+                            throw new AppError('unhandled');
+                        },
                         exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [OtherError] } }],
-                    }),
+                    }).execute(),
                 ).rejects.toThrow(AppError);
 
                 expect(handler.handle).not.toHaveBeenCalled();
@@ -201,23 +195,16 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'ping',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
-                        throw new AppError();
-                    }
-                }
-
                 const handler = new AppErrorHandler();
                 const ctx = makeCtx('ping');
 
-                await makeExecutor().execute(ctx, {
-                    caller: () => new TestCommand().execute(),
+                await makePipeline({
+                    caller: () => {
+                        throw new AppError();
+                    },
+                    ctx,
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [AppError] } }],
-                });
+                }).execute();
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(AppError), ctx);
             });
@@ -233,23 +220,15 @@ describe('CommandExecutor', () => {
                     }
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
-                        throw new AppError();
-                    }
-                }
-
                 await expect(
-                    makeExecutor().execute(makeCtx(), {
-                        caller: () => new TestCommand().execute(),
+                    makePipeline({
+                        caller: () => {
+                            throw new AppError();
+                        },
                         exceptionHandlers: [
                             { handler: new BrokenHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                         ],
-                    }),
+                    }).execute(),
                 ).rejects.toThrow(HandlerError);
             });
         });
@@ -268,26 +247,18 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
-                        throw new AppError();
-                    }
-                }
-
                 const first = new FirstHandler();
                 const second = new SecondHandler();
 
-                await makeExecutor().execute(makeCtx(), {
-                    caller: () => new TestCommand().execute(),
+                await makePipeline({
+                    caller: () => {
+                        throw new AppError();
+                    },
                     exceptionHandlers: [
                         { handler: first, metadata: { id: randomUUID(), exceptions: [AppError] } },
                         { handler: second, metadata: { id: randomUUID(), exceptions: [AppError] } },
                     ],
-                });
+                }).execute();
 
                 expect(first.handle).toHaveBeenCalledOnce();
                 expect(second.handle).not.toHaveBeenCalled();
@@ -306,23 +277,15 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute() {
+                await makePipeline({
+                    caller: () => {
                         throw new AppError();
-                    }
-                }
-
-                await makeExecutor().execute(makeCtx(), {
-                    caller: () => new TestCommand().execute(),
+                    },
                     exceptionHandlers: [
                         { handler: new HandlerA(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                         { handler: new HandlerB(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     ],
-                });
+                }).execute();
 
                 expect(mockLogger.debug).toHaveBeenCalledWith(
                     expect.stringContaining('Multiple exception handlers matched'),
@@ -347,25 +310,20 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute = vi.fn();
-                }
-
+                const commandExecute = vi.fn();
                 const handler = new InterceptorErrorHandler();
-                const command = new TestCommand();
 
-                await makeExecutor().execute(makeCtx(), {
-                    caller: () => command.execute(),
+                await makePipeline({
+                    caller: commandExecute,
                     interceptors: [{ interceptor: new ThrowingInterceptor(), metadata: { id: randomUUID() } }],
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [InterceptorError] } }],
-                });
+                }).execute();
 
-                expect(handler.handle).toHaveBeenCalledWith(expect.any(InterceptorError), expect.any(InteractionContext));
-                expect(command.execute).not.toHaveBeenCalled();
+                expect(handler.handle).toHaveBeenCalledWith(
+                    expect.any(InterceptorError),
+                    expect.any(InteractionContext),
+                );
+                expect(commandExecute).not.toHaveBeenCalled();
             });
 
             it('catches an exception thrown inside an interceptor (after next)', async () => {
@@ -384,21 +342,13 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute = vi.fn();
-                }
-
                 const handler = new PostErrorHandler();
 
-                await makeExecutor().execute(makeCtx(), {
-                    caller: () => new TestCommand().execute(),
+                await makePipeline({
+                    caller: async () => {},
                     interceptors: [{ interceptor: new PostThrowInterceptor(), metadata: { id: randomUUID() } }],
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [PostError] } }],
-                });
+                }).execute();
 
                 expect(handler.handle).toHaveBeenCalledWith(expect.any(PostError), expect.any(InteractionContext));
             });
@@ -416,20 +366,12 @@ describe('CommandExecutor', () => {
                     handle = vi.fn();
                 }
 
-                @SlashCommand({
-                    name: 'test',
-                    description: 'A test command',
-                })
-                class TestCommand implements CommandHandler {
-                    execute = vi.fn();
-                }
-
                 const handler = new ErrorHandler();
-                const result = await makeExecutor().execute(makeCtx(), {
-                    caller: () => new TestCommand().execute(),
+                const result = await makePipeline({
+                    caller: async () => 'pong',
                     interceptors: [{ interceptor: new ShortCircuitInterceptor(), metadata: { id: randomUUID() } }],
                     exceptionHandlers: [{ handler, metadata: { id: randomUUID(), exceptions: [Error] } }],
-                });
+                }).execute();
 
                 expect(result).toBe('short-circuit');
                 expect(handler.handle).not.toHaveBeenCalled();
@@ -467,19 +409,11 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand({
-                name: 'test',
-                description: 'A test command',
-            })
-            class TestCommand implements CommandHandler {
-                execute() {
+            await makePipeline({
+                caller: () => {
                     order.push('command');
                     throw new AppError();
-                }
-            }
-
-            await makeExecutor().execute(makeCtx(), {
-                caller: () => new TestCommand().execute(),
+                },
                 interceptors: [
                     { interceptor: new InterceptorA(), metadata: { id: randomUUID() } },
                     { interceptor: new InterceptorB(), metadata: { id: randomUUID() } },
@@ -487,7 +421,7 @@ describe('CommandExecutor', () => {
                 exceptionHandlers: [
                     { handler: new AppErrorHandler(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                 ],
-            });
+            }).execute();
 
             expect(order).toEqual(['A:before', 'B:before', 'command', 'exception:handler']);
         });
@@ -517,25 +451,17 @@ describe('CommandExecutor', () => {
                 }
             }
 
-            @SlashCommand({
-                name: 'test',
-                description: 'A test command',
-            })
-            class TestCommand implements CommandHandler {
-                execute() {
-                    throw new AppError();
-                }
-            }
-
             // handler-level is prepended before module-level (mirrors compilePendingHandlers behavior)
-            await makeExecutor().execute(makeCtx(), {
-                caller: () => new TestCommand().execute(),
+            await makePipeline({
+                caller: () => {
+                    throw new AppError();
+                },
                 exceptionHandlers: [
                     { handler: new HandlerLevel(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     { handler: new ModuleLevelA(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                     { handler: new ModuleLevelB(), metadata: { id: randomUUID(), exceptions: [AppError] } },
                 ],
-            });
+            }).execute();
 
             // only the first match runs — module-level handlers are never reached
             expect(order).toEqual(['handler-level']);
