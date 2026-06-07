@@ -32,6 +32,7 @@
         "access": "public"
     },
     "devDependencies": {
+        "discord-api-types": "^0.38.47",
         "tsup": "latest",
         "typescript": "latest"
     },
@@ -40,8 +41,8 @@
         "discord.js": "^14.26.3"
     },
     "peerDependencies": {
-        "discord.js": "^14.0.0",
         "@nodecord/core": "workspace:*",
+        "discord.js": "^14.0.0",
         "vitest": ">=2.0.0"
     },
     "peerDependenciesMeta": {

@@ -1,11 +1,11 @@
-import { Author, CommandHandler, Context, ExecutionContext, SlashCommand } from '@nodecord/core';
+import { Author, CommandHandler, Context, InteractionContext, SlashCommand } from '@nodecord/core';
 import { ChatInputCommandInteraction, SlashCommandBuilder, User } from 'discord.js';
 
 @SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
 export class PingCommand implements CommandHandler {
     constructor() {}
 
-    async execute(@Context({ passThrough: true }) ctx: ExecutionContext, @Author() author: User) {
+    async execute(@Context({ passThrough: true }) ctx: InteractionContext, @Author() author: User) {
         const interaction = ctx.getRaw<ChatInputCommandInteraction>();
         await interaction.deferReply();
 

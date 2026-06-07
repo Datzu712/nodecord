@@ -1,10 +1,33 @@
-import type { ChatInputCommandInteraction } from 'discord.js';
+import type { APIGuild, APIUser, ChatInputCommandInteraction } from 'discord.js';
 import { ChatInputCommandContext } from '@nodecord/core';
 import type { DeferReplyOptions, InteractionReplyOptions } from '@nodecord/core';
 
 export class DjsChatInputCommandContext extends ChatInputCommandContext {
     constructor(private readonly interaction: ChatInputCommandInteraction) {
         super(interaction.commandName, interaction);
+    }
+
+    getOptions(): { name: string; value: string | number | boolean }[] {
+        return this.interaction.options.data.map((opt) => ({
+            name: opt.name,
+            value: opt.value as string | number | boolean,
+        }));
+    }
+
+    getGuild(): APIGuild | null {
+        const guild = this.interaction.guild;
+        if (!guild) return null;
+        return { id: guild.id, name: guild.name } as APIGuild;
+    }
+
+    getAuthor(): APIUser {
+        const user = this.interaction.user;
+        return {
+            id: user.id,
+            username: user.username,
+            discriminator: user.discriminator,
+            avatar: user.avatar,
+        } as APIUser;
     }
 
     async reply(options: InteractionReplyOptions): Promise<void> {
