@@ -16,30 +16,30 @@
     },
     "devDependencies": {
         "@changesets/cli": "^2.31.0",
-        "@commitlint/cli": "^20.5.3",
-        "@commitlint/config-conventional": "^20.5.3",
-        "@turbo/gen": "^2.9.6",
-        "@types/node": "^25.6.0",
-        "eslint": "^10.2.1",
+        "@commitlint/cli": "^21.0.2",
+        "@commitlint/config-conventional": "^21.0.2",
+        "@turbo/gen": "^2.9.16",
+        "@types/node": "^25.9.1",
+        "eslint": "^10.4.1",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.5",
+        "eslint-plugin-prettier": "^5.5.6",
         "husky": "^9.1.7",
-        "lint-staged": "^16.4.0",
+        "lint-staged": "^17.0.7",
         "nodemon": "^3.1.14",
         "prettier": "^3.8.3",
         "tsup": "^8.5.1",
-        "tsx": "^4.21.0",
-        "turbo": "^2.9.6",
+        "tsx": "^4.22.4",
+        "turbo": "^2.9.16",
         "typescript": "6.0.3",
-        "typescript-eslint": "^8.59.1",
-        "vitest": "^4.1.5"
+        "typescript-eslint": "^8.60.1",
+        "vitest": "^4.1.8"
     },
-    "packageManager": "pnpm@10.33.2",
+    "packageManager": "pnpm@11.5.2",
     "engines": {
         "node": ">=20"
     },
     "dependencies": {
-        "@swc/core": "^1.15.32",
+        "@swc/core": "^1.15.40",
         "reflect-metadata": "^0.2.2"
     },
     "pnpm": {

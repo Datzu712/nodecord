@@ -52,7 +52,7 @@
         "nestjs"
     ],
     "devDependencies": {
-        "discord-api-types": "^0.38.47",
+        "discord-api-types": "^0.38.48",
         "tsup": "latest",
         "typescript": "latest"
     },
