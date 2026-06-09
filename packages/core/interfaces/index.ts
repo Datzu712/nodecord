@@ -10,3 +10,4 @@ export type {
     ExceptionHandlerMetadata,
     RegisteredExceptionHandler,
 } from './exception-handler/exception-handler.js';
+export * from './interactions/index.js';

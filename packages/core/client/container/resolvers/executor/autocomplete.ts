@@ -1,19 +1,16 @@
-import { CommandParamTypes } from '../../../../constants/command-types.js';
 import { ExecutionKind } from '../../../../constants/execution-kind.js';
-import { BaseExecuteOptions } from '../../../../interfaces/handler/execute-options.js';
-import { AutocompleteExecuteOptions } from '../../../../interfaces/handler/executions/autocomplete.js';
-import { ExecutorMetadata } from '../../../../interfaces/handler/executor-metadata.js';
-import type { Constructor, ParamMetadata } from '../../../../interfaces/index.js';
-import { InvalidAutocompleteContextException, InvalidOptionContextException } from '../../../exceptions/module.js';
+import type { BaseExecuteOptions } from '../../../../interfaces/handler/execute-options.js';
+import type { AutocompleteExecuteOptions } from '../../../../interfaces/handler/executions/autocomplete.js';
+import type { ExecutorMetadata } from '../../../../interfaces/handler/executor-metadata.js';
+import type { Constructor } from '../../../../interfaces/index.js';
+import { InvalidAutocompleteContextException } from '../../../exceptions/module.js';
 
 export function compileAutocompleteExecutor({
     baseOptions,
     entrypointExecutor, // aka ExecuteOptions for `execute` entrypoint method
     subExecutor, // options for the sub executor function for handling an specific autocomplete interaction
     target,
-    params,
 }: {
-    params: ParamMetadata[];
     baseOptions: Omit<BaseExecuteOptions, 'kind'>;
     entrypointExecutor: ExecutorMetadata;
     subExecutor: ExecutorMetadata<'autocomplete'>;
@@ -27,18 +24,9 @@ export function compileAutocompleteExecutor({
         });
     }
 
-    // @Options() decorator is only allowed in the entrypoint executor (CommandHandler#`execute`).
-    if (params.some((param) => param.type === CommandParamTypes.OPTION)) {
-        throw new InvalidOptionContextException({
-            methodName: subExecutor.methodKey,
-            focusedOptions: subExecutor.data as string[],
-            className: target.name,
-        });
-    }
-
     return {
         ...baseOptions,
-        focusedOptions: subExecutor.data as string[],
+        targetOptions: subExecutor.data as string[],
         kind: subExecutor.kind,
     };
 }

@@ -4,7 +4,7 @@ import {
     COMMAND_ARGS_METADATA,
     COMMAND_HANDLER_METADATA,
     DEFER_REPLY_METADATA,
-    EXECUTIONS_METADATA,
+    SUB_EXECUTIONS_METADATA,
     HANDLER_WATERMARK,
     USE_INTERCEPTORS_METADATA,
 } from '../../constants/handler.js';
@@ -25,7 +25,6 @@ import type {
 } from '../../interfaces/exception-handler/exception-handler.js';
 import { ParamMetadata } from '../../interfaces/index.js';
 import { CommandHandlerMetadata } from '../../interfaces/handler/command-handler.js';
-import { ExecutionKind } from '../../constants/execution-kind.js';
 import { ExecutorMetadata } from '../../interfaces/handler/executor-metadata.js';
 
 export class MetadataScanner {
@@ -111,13 +110,7 @@ export class MetadataScanner {
         return Reflect.getMetadata(COMMAND_HANDLER_METADATA, handler) as CommandHandlerMetadata | undefined;
     }
 
-    static getCommandHandlerExecutors(
-        handler: Constructor,
-    ): ExecutorMetadata<Exclude<ExecutionKind, 'slashCommand'>>[] {
-        return (
-            (Reflect.getMetadata(EXECUTIONS_METADATA, handler) as
-                | ExecutorMetadata<Exclude<ExecutionKind, 'slashCommand'>>[]
-                | undefined) ?? []
-        );
+    static getCommandHandlerSubExecutors(handler: Constructor) {
+        return (Reflect.getMetadata(SUB_EXECUTIONS_METADATA, handler) ?? []) as ExecutorMetadata[];
     }
 }

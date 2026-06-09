@@ -1,4 +1,4 @@
-import { Autocomplete, CommandHandler, Option, SlashCommand } from '@nodecord/core';
+import { Autocomplete, CommandHandler, Focused, FocusedOption, Option, SlashCommand } from '@nodecord/core';
 import { SlashCommandBuilder } from 'discord.js';
 
 @SlashCommand(
@@ -42,13 +42,19 @@ export class SearchCommand implements CommandHandler {
     }
 
     @Autocomplete('tag')
-    async autocompleteTag() {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+    autocompleteTag(
+        @Focused() input: FocusedOption | undefined,
+        @Option('category') category: string,
+        @Option() options: Record<string, unknown>,
+    ) {
+        console.log('Focused input in autocomplete:', input);
+        console.log('Category option value in autocomplete:', category);
+        console.log('All options in autocomplete:', options);
 
         return [
             { name: 'Library', value: 'library' },
             { name: 'Framework', value: 'framework' },
             { name: 'Tool', value: 'tool' },
-        ];
+        ].filter((v) => v.name.toLowerCase().includes(input?.name.toLowerCase() ?? ''));
     }
 }

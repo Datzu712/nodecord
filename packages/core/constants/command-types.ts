@@ -3,6 +3,7 @@ export const CommandParamTypes = {
     GUILD: 'GUILD',
     AUTHOR: 'AUTHOR',
     OPTION: 'OPTION',
+    FOCUSED_OPTION: 'FOCUSED_OPTION',
     CUSTOM: 'CUSTOM',
 } as const;
 

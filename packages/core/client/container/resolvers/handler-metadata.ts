@@ -55,9 +55,9 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
         }
     }
 
-    const rawExecutors = MetadataScanner.getCommandHandlerExecutors(target);
+    const rawSubExecutors = MetadataScanner.getCommandHandlerSubExecutors(target);
 
-    for (const subExecutor of rawExecutors) {
+    for (const subExecutor of rawSubExecutors) {
         if (subExecutor.methodKey === 'execute') {
             throw new InvalidHandlerException(target.name);
         }
@@ -82,18 +82,16 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
                         // i would like to search if there is a way to avoid this type assertions in the future...
                         subExecutor: subExecutor as ExecutorMetadata<'autocomplete'>,
                         target,
-                        params,
                     }),
                 );
                 break;
             }
-            // @ts-expect-error - this case is a type guard for unexpected cases where some entrypoint executor is registered as a sub executor which should never happen
             // this happens because in sub executors the kind `slashCommand` is excluded from the possible values
             case ExecutionKind.SLASH_COMMAND: {
                 /**
                  * SLASH_COMMAND executors should never appear in rawExecutors.
                  *
-                 * The `execute` method is the designated entrypoint for slash commands and is registered
+                 * The `execute` method is the designated entrypoint for slash commands or context menus and is registered
                  * separately in the handler's own metadata namespace, not alongside sub executors like
                  * @Autocomplete, @Button, etc.
                  *

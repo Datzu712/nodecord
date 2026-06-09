@@ -81,7 +81,7 @@ export class SearchCommand {
     }
 
     @Autocomplete('query')
-    async autocompleteQuery(@Option('query') focused: string) {
+    async autocompleteQuery() {
         return db.search(focused).map((r) => ({ name: r.title, value: r.id }));
     }
 }

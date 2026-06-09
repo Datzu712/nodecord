@@ -1,7 +1,7 @@
 import { AutocompleteContext } from '../../context/autocomplete-context.js';
 import { BaseCommandFlow } from '../../interfaces/handler/base-command-flow.js';
 import type { AutocompleteChoice } from '../../interfaces/interactions/autocomplete.js';
-import { AbstractLogger, RegisteredCommandHandler } from '../../interfaces/index.js';
+import type { AbstractLogger, RegisteredCommandHandler } from '../../interfaces/index.js';
 import { CommandPipelineBuilder } from '../command-pipeline-builder.js';
 import { NodecordCoreException } from '../exceptions/base.js';
 
@@ -12,7 +12,7 @@ export class CommandAutocompleteFlow implements BaseCommandFlow {
         const focusedOption = ctx.getFocusedOption();
 
         const targetExecutor = cmd.executors.find(
-            ([, options]) => options.kind === 'autocomplete' && options.focusedOptions.includes(focusedOption.name),
+            ([, options]) => options.kind === 'autocomplete' && options.targetOptions.includes(focusedOption.name),
         );
         if (!targetExecutor) {
             this.logger.warn(

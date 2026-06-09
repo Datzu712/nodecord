@@ -30,8 +30,12 @@ export function Author(): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.AUTHOR)();
 }
 
-export const Ctx = Context;
-
 export function Option(...name: string[]): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.OPTION)(name);
 }
+
+export function Focused(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.FOCUSED_OPTION)();
+}
+
+export const Ctx = Context;

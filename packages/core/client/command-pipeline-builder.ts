@@ -37,25 +37,35 @@ export class CommandPipelineBuilder {
                     resolvedParams[param.index] = ctx;
                     break;
                 case 'OPTION':
-                    if (!ctx.isChatInputCommand()) {
+                    if (ctx.isChatInputCommand()) {
+                        const selectedOptions = ctx
+                            .getOptions()
+                            .filter(({ name: optionName }) => param.data.includes(optionName));
+
+                        resolvedParams[param.index] = selectedOptions;
+                    } else if (ctx.isAutocomplete()) {
+                        // handle already chosen options...
+                        //debugger;
+                    } else {
                         this.logger?.warn(
-                            `Received an "OPTION" parameter metadata for a non-chat input command context. ` +
-                                `Make sure that the parameter index ${param.index} of your command executor is decorated with @Context() instead of @Option().`,
+                            `Received an "OPTION" parameter metadata for a context that is not a chat input command or autocomplete context.`,
                             'CommandPipelineBuilder',
                         );
-
-                        resolvedParams[param.index] = undefined;
-                        break;
                     }
 
-                    const selectedOptions = ctx
-                        .getOptions()
-                        .filter(({ name: optionName }) => param.data.includes(optionName));
-
-                    resolvedParams[param.index] = selectedOptions;
                     break;
                 case 'AUTHOR':
                     resolvedParams[param.index] = ctx.getAuthor();
+                    break;
+                case 'FOCUSED_OPTION':
+                    if (ctx.isAutocomplete()) {
+                        resolvedParams[param.index] = ctx.getFocusedOption() ?? null;
+                    } else {
+                        this.logger?.warn(
+                            `Received a "FOCUSED_OPTION" parameter metadata for a context that is not an autocomplete context.`,
+                            'CommandPipelineBuilder',
+                        );
+                    }
                     break;
                 case 'GUILD':
                     resolvedParams[param.index] = ctx.getGuild();

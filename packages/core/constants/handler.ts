@@ -44,4 +44,4 @@ export const DEFER_REPLY_METADATA = 'nodecord:handler:defer-reply';
  * Metadata key used to store the execution options of each method executor within a command handler.
  * Stored as a Map where the key is the method name and the value is the ExecutorMetadata for that method.
  */
-export const EXECUTIONS_METADATA = 'nodecord:handler:executions';
+export const SUB_EXECUTIONS_METADATA = 'nodecord:handler:sub-executions';

@@ -9,6 +9,7 @@ export class DjsAutocompleteContext extends AutocompleteContext {
 
     getFocusedOption(): FocusedOption {
         const focused = this.interaction.options.getFocused(true);
+
         return {
             name: focused.name,
             value: focused.value,
