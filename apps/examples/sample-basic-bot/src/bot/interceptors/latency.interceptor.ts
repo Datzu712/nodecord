@@ -9,7 +9,8 @@ export class LatencyInterceptor implements NodecordInterceptor {
     async intercept(ctx: InteractionContext, next: () => Promise<unknown>): Promise<unknown> {
         const start = Date.now();
         const result = await next();
-        this.logger.log(`Command "${ctx.name}" responded in ${Date.now() - start}ms`);
+
+        this.logger.log(`Command "${ctx.name}" responded in ${Date.now() - start} ms`);
         return result;
     }
 }

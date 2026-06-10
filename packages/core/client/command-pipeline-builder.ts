@@ -44,8 +44,22 @@ export class CommandPipelineBuilder {
 
                         resolvedParams[param.index] = selectedOptions;
                     } else if (ctx.isAutocomplete()) {
-                        // handle already chosen options...
-                        //debugger;
+                        const options = ctx.getOptions();
+
+                        /**
+                         * There are 3 ways to retrieve resolved options:
+                         *
+                         * @Param()            -> ChatInputOption[]           (all options)
+                         * @Param('x')         -> ChatInputOption | undefined (single option by name)
+                         * @Param('a', 'b')    -> ChatInputOption[]           (filtered by name; unselected options are excluded)
+                         */
+                        if (!param.data.length) {
+                            resolvedParams[param.index] = options;
+                        } else if (param.data.length === 1) {
+                            resolvedParams[param.index] = options.find((opt) => opt.name === param.data[0]);
+                        } else {
+                            resolvedParams[param.index] = options.filter((opt) => param.data.includes(opt.name));
+                        }
                     } else {
                         this.logger?.warn(
                             `Received an "OPTION" parameter metadata for a context that is not a chat input command or autocomplete context.`,

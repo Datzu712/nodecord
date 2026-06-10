@@ -3,8 +3,8 @@ export interface AutocompleteChoice<T extends string | number = string | number>
     value: T;
 }
 
-export interface FocusedOption {
+export interface ChatInputOption {
     name: string;
-    value: string | number;
+    value: string | number | boolean;
     type: number;
 }

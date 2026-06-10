@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommandAutocompleteFlow } from '../client/command-flows/autocomplete.flow.js';
 import { AutocompleteContext } from '../context/autocomplete-context.js';
 import type { AbstractLogger, NodecordInterceptor, RegisteredCommandHandler } from '../interfaces/index.js';
-import type { AutocompleteChoice, FocusedOption } from '../interfaces/interactions/autocomplete.js';
+import type { AutocompleteChoice, ChatInputOption } from '../interfaces/interactions/autocomplete.js';
 
 const mockLogger: AbstractLogger = {
     log: vi.fn(),
@@ -18,13 +18,29 @@ const mockLogger: AbstractLogger = {
 };
 
 class TestAutocompleteContext extends AutocompleteContext {
+    getOption(): ChatInputOption | null {
+        return vi.mockObject<ChatInputOption>({
+            value: 'test',
+            name: 'test',
+            type: 1,
+        });
+    }
+    override getOptions(): ChatInputOption[] {
+        return [
+            {
+                value: 'test',
+                name: 'test',
+                type: 1,
+            },
+        ];
+    }
     readonly respond = vi.fn<(choices: AutocompleteChoice[]) => Promise<void>>(async () => {});
 
-    constructor(private readonly focusedOption: FocusedOption) {
+    constructor(private readonly focusedOption: ChatInputOption) {
         super('search', {});
     }
 
-    getFocusedOption(): FocusedOption {
+    getFocusedOption(): ChatInputOption {
         return this.focusedOption;
     }
 
@@ -53,7 +69,7 @@ function makeCommand(
                 'autocomplete',
                 {
                     kind: 'autocomplete',
-                    focusedOptions: ['query'],
+                    targetOptions: ['query'],
                     passThrough: false,
                     params: [],
                 },
