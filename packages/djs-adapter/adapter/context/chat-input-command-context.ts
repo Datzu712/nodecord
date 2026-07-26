@@ -1,16 +1,17 @@
 import type { APIGuild, APIUser, ChatInputCommandInteraction } from 'discord.js';
 import { ChatInputCommandContext } from '@nodecord/core';
-import type { DeferReplyOptions, InteractionReplyOptions } from '@nodecord/core';
+import type { ChatInputOption, DeferReplyOptions, InteractionReplyOptions } from '@nodecord/core';
 
 export class DjsChatInputCommandContext extends ChatInputCommandContext {
     constructor(private readonly interaction: ChatInputCommandInteraction) {
         super(interaction.commandName, interaction);
     }
 
-    getOptions(): { name: string; value: string | number | boolean }[] {
+    getOptions(): ChatInputOption[] {
         return this.interaction.options.data.map((opt) => ({
             name: opt.name,
             value: opt.value as string | number | boolean,
+            type: opt.type,
         }));
     }
 
