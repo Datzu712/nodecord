@@ -20,14 +20,13 @@ import { SlashCommandBuilder } from 'discord.js';
 )
 export class SearchCommand implements CommandHandler {
     execute(
-        @Option('query') query: string,
-        @Option('category') category: string,
-        @Option('tag') tag: string = 'none',
-        @Option('language') language: string = 'none',
+        @Option('query') query: ChatInputOption,
+        @Option('category') category: ChatInputOption,
+        @Option('tag') tag: ChatInputOption,
+        @Option('language') language: ChatInputOption,
         @Option() options: Record<string, unknown>,
     ) {
-        console.log(options);
-        return `You searched for "${query}" in category "${category}" with tag "${tag}" and language "${language}".`;
+        return `You searched for "${query.value}" in category "${category.value}" with tag "${tag.value}" and language "${language.value}".`;
     }
 
     @Autocomplete('query')
@@ -42,7 +41,7 @@ export class SearchCommand implements CommandHandler {
     }
 
     @Autocomplete('tag')
-    autocompleteTag(@Focused() input: ChatInputOption, @Option('category') category: string) {
+    autocompleteTag(@Focused() input: ChatInputOption, @Option('category') category: ChatInputOption) {
         const exampleOptions = [
             { name: 'Library', value: 'library' },
             { name: 'Framework', value: 'framework' },

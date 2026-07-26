@@ -15,7 +15,7 @@ export interface ContextParamMetadata extends BaseParamMetadata {
 
 export interface OptionParamMetadata extends BaseParamMetadata {
     type: 'OPTION';
-    data: string[]; // target option name. If multiple option names are provided, the output will be an array of options instead of a single option.
+    data: string[] | [string]; // target option name. If multiple option names are provided, the output will be an array of options instead of a single option.
 }
 
 export interface AuthorParamMetadata extends BaseParamMetadata {
@@ -31,8 +31,4 @@ export interface FocusedOptionParamMetadata extends BaseParamMetadata {
 }
 
 export type ParamMetadata =
-    | ContextParamMetadata
-    | OptionParamMetadata
-    | AuthorParamMetadata
-    | GuildParamMetadata
-    | FocusedOptionParamMetadata;
+    ContextParamMetadata | OptionParamMetadata | AuthorParamMetadata | GuildParamMetadata | FocusedOptionParamMetadata;

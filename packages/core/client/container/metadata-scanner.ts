@@ -55,8 +55,7 @@ export class MetadataScanner {
     static getHandlerInterceptors(target: Constructor): Constructor<NodecordInterceptor>[] {
         return (
             (Reflect.getMetadata(USE_INTERCEPTORS_METADATA, target) as
-                | Constructor<NodecordInterceptor>[]
-                | undefined) ?? []
+                Constructor<NodecordInterceptor>[] | undefined) ?? []
         );
     }
 
@@ -87,8 +86,7 @@ export class MetadataScanner {
     static getHandlerExceptionHandlers(target: Constructor): Constructor<ExceptionHandler>[] {
         return (
             (Reflect.getMetadata(USE_EXCEPTION_HANDLER_METADATA, target) as
-                | Constructor<ExceptionHandler>[]
-                | undefined) ?? []
+                Constructor<ExceptionHandler>[] | undefined) ?? []
         );
     }
     static isExecutorDeferReply(target: Constructor, methodKey: string): boolean {

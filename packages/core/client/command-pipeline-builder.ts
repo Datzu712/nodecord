@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import { APIGuild, APIUser } from 'discord-api-types/payloads/v10';
 import { InteractionContext } from '../context/interaction-context.js';
 import {
     AbstractLogger,
+    ChatInputOption,
     ParamMetadata,
     RegisteredExceptionHandler,
     RegisteredInterceptor,
@@ -16,8 +18,10 @@ export interface ExecuteParams {
 }
 
 export type CommandPipelineExecution<TResult> =
-    | { status: 'completed'; result: TResult | undefined }
-    | { status: 'exceptionHandled' };
+    { status: 'completed'; result: TResult | undefined } | { status: 'exceptionHandled' };
+
+export type PosibleCommandParameter =
+    InteractionContext | ChatInputOption[] | ChatInputOption | undefined | APIUser | APIGuild | null;
 
 export class CommandPipelineBuilder {
     constructor(
@@ -28,7 +32,7 @@ export class CommandPipelineBuilder {
     private resolveArgs(params: ParamMetadata[], ctx: InteractionContext): unknown[] {
         if (params.length === 0) return [];
 
-        const resolvedParams = new Array(params.length);
+        const resolvedParams = new Array(params.length) as PosibleCommandParameter[];
 
         const sortedParams = [...params].sort((a, b) => a.index - b.index);
         for (const param of sortedParams) {
@@ -37,25 +41,23 @@ export class CommandPipelineBuilder {
                     resolvedParams[param.index] = ctx;
                     break;
                 case 'OPTION':
-                    if (ctx.isChatInputCommand()) {
-                        const selectedOptions = ctx
-                            .getOptions()
-                            .filter(({ name: optionName }) => param.data.includes(optionName));
-
-                        resolvedParams[param.index] = selectedOptions;
-                    } else if (ctx.isAutocomplete()) {
+                    if (ctx.isAutocomplete() || ctx.isChatInputCommand()) {
                         const options = ctx.getOptions();
 
                         /**
                          * There are 3 ways to retrieve resolved options:
                          *
-                         * @Param()            -> ChatInputOption[]           (all options)
-                         * @Param('x')         -> ChatInputOption | undefined (single option by name)
-                         * @Param('a', 'b')    -> ChatInputOption[]           (filtered by name; unselected options are excluded)
+                         * @Param()            ->   []                          (all options)
+                         * @Param('x')         ->   ChatInputOption | undefined (single option by name)
+                         * @Param('a', 'b')    ->   ChatInputOption[]           (filtered by name; unselected options are excluded)
                          */
                         if (!param.data.length) {
                             resolvedParams[param.index] = options;
                         } else if (param.data.length === 1) {
+                            console.log(
+                                'find',
+                                options.find((opt) => opt.name === param.data[0]),
+                            );
                             resolvedParams[param.index] = options.find((opt) => opt.name === param.data[0]);
                         } else {
                             resolvedParams[param.index] = options.filter((opt) => param.data.includes(opt.name));

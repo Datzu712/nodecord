@@ -1,4 +1,5 @@
 import { ExecutionKind } from '../constants/execution-kind.js';
+import { ChatInputOption } from '../interfaces/interactions/autocomplete.js';
 import type { DeferReplyOptions, InteractionReplyOptions } from '../interfaces/interactions/repliable.js';
 import { InteractionContext } from './interaction-context.js';
 
@@ -14,5 +15,5 @@ export abstract class ChatInputCommandContext extends InteractionContext {
     abstract deferReply(options?: DeferReplyOptions): Promise<void>;
     abstract editReply(options: InteractionReplyOptions): Promise<void>;
     abstract followUp(options: InteractionReplyOptions): Promise<void>;
-    abstract getOptions(): { name: string; value: string | number | boolean }[];
+    abstract getOptions(): ChatInputOption[];
 }
