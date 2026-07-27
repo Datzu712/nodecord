@@ -1,16 +1,8 @@
 {
     "snyk.advanced.autoSelectOrganization": true,
-    "discord.enabled": false,
-    "conventionalCommits.scopes": [
-        "core",
-        "sample-basic-bot",
-        "djs-adapter",
-        "core,djs-adapter",
-        "monorepo"
-    ],
-    "js/ts.preferences.autoImportFileExcludePatterns": [
-        "@nestjs/*"
-    ],
+    "discord.enabled": true,
+    "conventionalCommits.scopes": ["core", "sample-basic-bot", "djs-adapter", "core,djs-adapter", "monorepo"],
+    "js/ts.preferences.autoImportFileExcludePatterns": ["@nestjs/*"],
     "snyk.advanced.organization": "7bf69418-2b0f-4000-a0f6-97845664e1c0",
     "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

@@ -53,8 +53,8 @@
     ],
     "devDependencies": {
         "discord-api-types": "^0.38.48",
-        "tsup": "latest",
-        "typescript": "latest"
+        "tsup": "8.5.1",
+        "typescript": "6.0.3"
     },
     "dependencies": {
         "inversify": "^8.1.0"
