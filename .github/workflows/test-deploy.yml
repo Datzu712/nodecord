@@ -32,13 +32,19 @@ jobs:
 
             # Pull requests opened from forks do not receive repository secrets,
             # so the preview is skipped there and the build above is the check.
+            #
+            # packageManager is pinned to npm because the action would otherwise
+            # detect pnpm and fail installing wrangler: workerd has a postinstall
+            # script and pnpm 11 exits 1 with ERR_PNPM_IGNORED_BUILDS for build
+            # scripts that are not approved in pnpm-workspace.yaml.
             - name: Deploy preview to Cloudflare Pages
               id: preview
               if: github.event.pull_request.head.repo.full_name == github.repository
-              uses: cloudflare/wrangler-action@v3
+              uses: cloudflare/wrangler-action@v4
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  packageManager: npm
                   command: pages deploy apps/docs/build --project-name=nodecord --branch=${{ github.head_ref }}
 
             - name: Report preview URL
