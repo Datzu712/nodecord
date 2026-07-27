@@ -30,17 +30,14 @@ jobs:
             - name: Build website
               run: pnpm turbo build --filter=docs
 
-            # packageManager is pinned to npm on purpose. The action installs
-            # wrangler with whichever package manager it detects, and detection
-            # lands on pnpm here because of pnpm-lock.yaml. wrangler pulls in
-            # workerd, which has a postinstall script, and pnpm 11 exits 1 with
-            # ERR_PNPM_IGNORED_BUILDS unless the package is listed under
-            # allowBuilds in pnpm-workspace.yaml. Approving build scripts for a
-            # package that is not a project dependency would be the wrong fix.
+            # wrangler is a devDependency of the workspace root, so the install
+            # step above already provides it. Leaving wranglerVersion unset is
+            # deliberate: the action then resolves the pre-installed binary and
+            # skips installing anything, which keeps the deployed version pinned
+            # by pnpm-lock.yaml. Setting it here would trigger a reinstall.
             - name: Deploy to Cloudflare Pages
               uses: cloudflare/wrangler-action@v4
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-                  packageManager: npm
                   command: pages deploy apps/docs/build --project-name=nodecord --branch=main

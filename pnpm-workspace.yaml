@@ -6,3 +6,5 @@ allowBuilds:
     '@swc/core': true
     core-js: true
     esbuild: true
+    # transitive dependency of wrangler, used to deploy the docs to Cloudflare Pages
+    workerd: true
