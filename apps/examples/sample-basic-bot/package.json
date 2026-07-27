@@ -1,5 +1,6 @@
 {
     "name": "sample-basic-bot",
+    "private": true,
     "type": "module",
     "description": "sample mjs bot",
     "scripts": {
