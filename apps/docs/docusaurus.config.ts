@@ -15,12 +15,11 @@ const config: Config = {
         v4: true, // Improve compatibility with the upcoming Docusaurus v4
     },
 
-    url: 'https://Datzu712.github.io',
-    baseUrl: '/nodecord/',
+    url: 'https://nodecord.pages.dev',
+    baseUrl: '/',
 
     organizationName: 'Datzu712',
     projectName: 'nodecord',
-    deploymentBranch: 'gh-pages',
     trailingSlash: false,
 
     onBrokenLinks: 'throw',

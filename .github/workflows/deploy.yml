@@ -1,14 +1,20 @@
-name: Deploy to GitHub Pages
+name: Deploy docs to Cloudflare Pages
 
 on:
     push:
         branches:
             - main
 
+concurrency:
+    group: cloudflare-pages-production
+    cancel-in-progress: false
+
 jobs:
-    build:
-        name: Build Docusaurus
+    deploy:
+        name: Build and deploy
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
               with:
@@ -24,27 +30,14 @@ jobs:
             - name: Build website
               run: pnpm turbo build --filter=docs
 
-            - name: Upload Build Artifact
-              uses: actions/upload-pages-artifact@v3
+            # wrangler is a devDependency of the workspace root, so the install
+            # step above already provides it. Leaving wranglerVersion unset is
+            # deliberate: the action then resolves the pre-installed binary and
+            # skips installing anything, which keeps the deployed version pinned
+            # by pnpm-lock.yaml. Setting it here would trigger a reinstall.
+            - name: Deploy to Cloudflare Pages
+              uses: cloudflare/wrangler-action@v4
               with:
-                  path: apps/docs/build
-
-    deploy:
-        name: Deploy to GitHub Pages
-        needs: build
-
-        # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-        permissions:
-            pages: write # to deploy to Pages
-            id-token: write # to verify the deployment originates from an appropriate source
-
-        # Deploy to the github-pages environment
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-
-        runs-on: ubuntu-latest
-        steps:
-            - name: Deploy to GitHub Pages
-              id: deployment
-              uses: actions/deploy-pages@v4
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  command: pages deploy apps/docs/build --project-name=nodecord --branch=main

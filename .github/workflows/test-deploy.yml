@@ -1,16 +1,20 @@
-name: Test deployment
+name: Preview deployment
 
 on:
     pull_request:
         branches:
             - main
-        # Review gh actions docs if you want to further define triggers, paths, etc
-        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
+
+concurrency:
+    group: cloudflare-pages-preview-${{ github.head_ref }}
+    cancel-in-progress: true
 
 jobs:
-    test-deploy:
-        name: Test deployment
+    preview:
+        name: Build and deploy preview
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
               with:
@@ -23,5 +27,25 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
-            - name: Test build website
+            - name: Build website
               run: pnpm turbo build --filter=docs
+
+            # Pull requests opened from forks do not receive repository secrets,
+            # so the preview is skipped there and the build above is the check.
+            #
+            # wrangler comes from the workspace root devDependencies, so the
+            # action resolves it and skips installing. wranglerVersion is left
+            # unset on purpose, see the note in deploy.yml.
+            - name: Deploy preview to Cloudflare Pages
+              id: preview
+              if: github.event.pull_request.head.repo.full_name == github.repository
+              uses: cloudflare/wrangler-action@v4
+              with:
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  command: pages deploy apps/docs/build --project-name=nodecord --branch=${{ github.head_ref }}
+
+            - name: Report preview URL
+              if: steps.preview.outcome == 'success'
+              run: |
+                  echo "Preview: ${{ steps.preview.outputs.deployment-url }}" >> "$GITHUB_STEP_SUMMARY"
