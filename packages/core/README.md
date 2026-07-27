@@ -11,7 +11,7 @@ This package holds the parts that do not depend on any Discord library: module c
 ## Install
 
 ```bash
-pnpm add @nodecord/core @nodecord/djs-adapter discord.js reflect-metadata
+pnpm add @nodecord/core @nodecord/djs-adapter discord.js
 ```
 
 Nodecord uses TypeScript's legacy decorators and reads constructor types from decorator metadata, so both options have to be enabled:
@@ -25,7 +25,7 @@ Nodecord uses TypeScript's legacy decorators and reads constructor types from de
 }
 ```
 
-`reflect-metadata` has to be imported once, before anything else, at your entry point.
+You do not need to install or import `reflect-metadata` yourself. It arrives as a transitive dependency of Inversify and the polyfill is installed when this package is first imported.
 
 Requires Node.js 20 or newer.
 
@@ -63,8 +63,6 @@ export class PingCommand implements CommandHandler {
 Bootstrapping compiles the module tree, wires the containers, and initializes the adapter:
 
 ```typescript
-import 'reflect-metadata';
-
 import { NodecordClient } from '@nodecord/core';
 import { GatewayIntentBits, type ClientOptions } from 'discord.js';
 

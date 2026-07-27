@@ -11,11 +11,11 @@ Exception handlers catch exceptions thrown during command execution, including e
 Decorate a class with `@OnException(...exceptions)` and implement the `ExceptionHandler` interface:
 
 ```ts
-import { OnException, ExceptionHandler, ExecutionContext } from '@nodecord/core';
+import { OnException, ExceptionHandler, InteractionContext } from '@nodecord/core';
 
 @OnException(DatabaseError)
 export class DatabaseErrorHandler implements ExceptionHandler {
-    handle(exception: unknown, ctx: ExecutionContext): void {
+    handle(exception: unknown, ctx: InteractionContext): void {
         const err = exception as DatabaseError;
         console.error(`Command "${ctx.name}" failed:`, err.message);
         ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
@@ -26,7 +26,7 @@ export class DatabaseErrorHandler implements ExceptionHandler {
 `handle()` receives:
 
 - `exception` — the thrown value (`unknown`; cast it to the type you registered)
-- `ctx` — the `ExecutionContext` for the command that failed
+- `ctx` — the `InteractionContext` for the command that failed
 
 ## Module-level exception handlers
 
@@ -86,7 +86,7 @@ To control which handler takes priority, use `@UseExceptionHandler()` at the com
 ```ts
 @OnException(NetworkError, TimeoutError)
 export class NetworkErrorHandler implements ExceptionHandler {
-    handle(exception: unknown, ctx: ExecutionContext): void {
+    handle(exception: unknown, ctx: InteractionContext): void {
         // handles both NetworkError and TimeoutError
     }
 }

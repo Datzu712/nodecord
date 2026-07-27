@@ -3,7 +3,8 @@
 [![CI](https://github.com/Datzu712/nodecord/actions/workflows/ci.yml/badge.svg)](https://github.com/Datzu712/nodecord/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.x-blue)](https://www.typescriptlang.org/)
+[![npm](https://img.shields.io/npm/v/@nodecord/core)](https://www.npmjs.com/package/@nodecord/core)
 [![Docs](https://img.shields.io/badge/docs-datzu712.github.io%2Fnodecord-blue)](https://datzu712.github.io/nodecord/)
 
 A TypeScript framework for building Discord bots.
@@ -117,7 +118,7 @@ Slash commands are decorated with `@SlashCommand` and receive a `SlashCommandBui
 export class PingCommand {
     constructor(private readonly logger: LoggerService) {}
 
-    execute(@Context() ctx: ExecutionContext): void {
+    execute(@Context() ctx: InteractionContext): void {
         this.logger.log('PingCommand executed');
         ctx.getRaw<ChatInputCommandInteraction>().reply('pong!');
     }
@@ -126,17 +127,29 @@ export class PingCommand {
 
 #### Parameter decorators
 
-| Decorator         | Resolves to                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| `@Context()`      | The `ExecutionContext` instance                              |
-| `@Guild()`        | The `Guild` from the interaction, or `null`                  |
-| `@Author()`       | The `User` who triggered the interaction                     |
-| `@Option('name')` | The value of the named slash command option                  |
-| `@Option()`       | All options as `Record<string, string \| number \| boolean>` |
+| Decorator               | Resolves to                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `@Context()` / `@Ctx()` | The `InteractionContext` instance                     |
+| `@Guild()`              | The `Guild` from the interaction, or `null`           |
+| `@Author()`             | The `User` who triggered the interaction              |
+| `@Option()`             | Every option, as `ChatInputOption[]`                  |
+| `@Option('a')`          | That single option, as `ChatInputOption \| undefined` |
+| `@Option('a', 'b')`     | Those options, as `ChatInputOption[]`                 |
+| `@Focused()`            | The option currently being autocompleted              |
 
-`ExecutionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
+`InteractionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
 
-All param decorators work on both `execute()` and `@Autocomplete()` methods.
+`@Option()` resolves to option objects rather than raw values, so the value is read through `.value`:
+
+```typescript
+execute(@Option('query') query: ChatInputOption | undefined) {
+    return `Searching for "${query?.value}"`;
+}
+```
+
+A `ChatInputOption` is `{ name, value, type }`, where `type` is the `ApplicationCommandOptionType` Discord sent.
+
+All param decorators work on both `execute()` and `@Autocomplete()` methods. `@Focused()` only carries a value inside `@Autocomplete()`.
 
 #### Automatic reply deferral
 
@@ -163,7 +176,7 @@ Interceptors wrap command execution and can observe, transform, or short-circuit
 ```typescript
 @Interceptor()
 export class LatencyInterceptor implements NodecordInterceptor {
-    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>): Promise<unknown> {
+    async intercept(ctx: InteractionContext, next: () => Promise<unknown>): Promise<unknown> {
         const start = Date.now();
         const result = await next();
         console.log(`Command "${ctx.name}" responded in ${Date.now() - start}ms`);
@@ -222,7 +235,7 @@ Exception handlers catch exceptions thrown during command execution (including e
 ```typescript
 @OnException(DatabaseError)
 export class DatabaseErrorHandler implements ExceptionHandler {
-    handle(exception: DatabaseError, ctx: ExecutionContext): void {
+    handle(exception: DatabaseError, ctx: InteractionContext): void {
         console.error(`Command "${ctx.name}" failed:`, exception.message);
 
         ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
@@ -230,7 +243,7 @@ export class DatabaseErrorHandler implements ExceptionHandler {
 }
 ```
 
-`handle()` receives the thrown exception and the `ExecutionContext`. The exception type is `unknown` so you can cast it to whatever type you registered with `@OnException`.
+`handle()` receives the thrown exception and the `InteractionContext`. The exception type is `unknown` so you can cast it to whatever type you registered with `@OnException`.
 
 #### Module-level exception handlers
 
@@ -380,7 +393,16 @@ Tests are written with [Vitest](https://vitest.dev/) and run directly via `pnpm 
 
 ### Where is the npm package?
 
-Not published yet! The API is still in development and I want to get more of the core features implemented before doing a release.
+Both packages are on npm:
+
+- [`@nodecord/core`](https://www.npmjs.com/package/@nodecord/core)
+- [`@nodecord/djs-adapter`](https://www.npmjs.com/package/@nodecord/djs-adapter)
+
+```bash
+pnpm add @nodecord/core @nodecord/djs-adapter discord.js
+```
+
+The API is still in development and will keep changing before 1.0. Breaking changes land in minor versions, as is conventional for 0.x, and each one is written up in the package changelogs.
 
 ## Current Status
 
@@ -390,12 +412,11 @@ Not published yet! The API is still in development and I want to get more of the
 - `@Injectable`, `@Module`, `@SlashCommand`, `@Inject`, `@Listener` decorators
 - Global vs. scoped module registration
 - Provider resolution via `NodecordClient.get<T>()`
-- Parameter decorators: `@Context()`, `@Guild()`, `@Author()`
+- Parameter decorators: `@Context()`, `@Guild()`, `@Author()`, `@Option()`, `@Focused()`
 - Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
 - Exception handlers: `@OnException` for module-level and `@UseExceptionHandler` for handler-level exception handling
 - Automatic reply deferral via `@DeferReply()`
 - Autocomplete: `@Autocomplete('option')` methods co-located in the command class, with full param decorator support
-- Parameter decorators: `@Context()`, `@Guild()`, `@Author()`, `@Option('name')`, `@Option()`
 - Testing utilities: `TestingModule` with provider overrides, `TestingDjsAdapter`, and `createMockChatInputInteraction` for testing commands without a live Discord connection
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
@@ -426,7 +447,7 @@ pnpm turbo watch dev --filter=sample-basic-bot
 
 - Node.js 20+
 - pnpm 9+
-- TypeScript 5.x with `experimentalDecorators` and `emitDecoratorMetadata` enabled
+- TypeScript 5.x or newer with `experimentalDecorators` and `emitDecoratorMetadata` enabled
 
 ---
 

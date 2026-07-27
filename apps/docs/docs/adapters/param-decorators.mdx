@@ -4,17 +4,29 @@ title: 'Param decorators'
 
 # Param Decorators
 
-Param decorators let you extract specific values from the execution context directly in handler methods, keeping them clean and free of boilerplate. They work on `execute()` and on any `@Autocomplete()` method.
+Param decorators let you extract specific values from the interaction directly in handler methods, keeping them clean and free of boilerplate. They work on `execute()` and on any `@Autocomplete()` method.
 
 ## `@Ctx()`
 
-Injects the raw `ExecutionContext`, which wraps the underlying interaction and exposes its name and type.
+Injects the `InteractionContext`, which wraps the underlying interaction and exposes its name and kind. `@Context()` is the same decorator under a longer name.
 
 ```ts
-execute(@Ctx() ctx: ExecutionContext) {
+execute(@Ctx() ctx: InteractionContext) {
   console.log(ctx.name); // 'ping'
 }
 ```
+
+Pass `{ passThrough: true }` when you want to reply to the interaction yourself instead of returning a value:
+
+```ts
+async execute(@Context({ passThrough: true }) ctx: InteractionContext) {
+  const interaction = ctx.getRaw<ChatInputCommandInteraction>();
+  await interaction.deferReply();
+  await interaction.editReply('Done');
+}
+```
+
+`getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
 
 ## `@Guild()`
 
@@ -36,61 +48,95 @@ execute(@Author() user: User) {
 }
 ```
 
+## `@Option(...names)`
+
+Injects slash command options. What you get back depends on how many names you pass:
+
+| Usage               | Resolves to                           |
+| ------------------- | ------------------------------------- |
+| `@Option()`         | `ChatInputOption[]`, every option     |
+| `@Option('a')`      | `ChatInputOption \| undefined`        |
+| `@Option('a', 'b')` | `ChatInputOption[]`, filtered by name |
+
+An option is not the raw value, it is an object carrying the name, the value, and the Discord option type:
+
+```ts
+interface ChatInputOption {
+    name: string;
+    value: string | number | boolean;
+    type: number;
+}
+```
+
+So a single option is read through `.value`:
+
+```ts
+execute(@Option('query') query: ChatInputOption | undefined) {
+    return `Searching for "${query?.value}"`;
+}
+```
+
+Asking for several names gives you only the ones the user actually filled in. Options left unset are not included:
+
+```ts
+execute(@Option('query', 'category') selected: ChatInputOption[]) {
+    return selected.map((opt) => `${opt.name}=${opt.value}`).join(', ');
+}
+```
+
+And with no arguments you get everything:
+
+```ts
+execute(@Option() options: ChatInputOption[]) {
+    console.log(options); // [{ name: 'query', value: 'nodecord', type: 3 }, ...]
+}
+```
+
+The `type` field holds the `ApplicationCommandOptionType` sent by Discord, which is what lets you tell apart options that share a value shape but not a meaning, such as a user ID and a channel ID both arriving as strings.
+
+For typed options that resolve to full Discord objects (User, Channel, Role), use `@Ctx()` and reach them through the raw interaction.
+
+## `@Focused()`
+
+Only meaningful inside an `@Autocomplete()` method. Injects the option the user is currently typing into, as a `ChatInputOption`.
+
+```ts
+@Autocomplete('tag')
+autocompleteTag(@Focused() input: ChatInputOption) {
+    return tags.filter((t) => t.value.includes(String(input.value)));
+}
+```
+
 ## Combining decorators
 
-You can use multiple param decorators in a single `execute()` method:
-
-```ts
-execute(@Author() user: User, @Guild() guild: Guild | null): string {
-  return `${user.username} in ${guild?.name ?? 'DMs'}`;
-}
-```
-
-## `@Option(name?)`
-
-Injects the value of a specific slash command option by name. Returns `string | number | boolean | undefined`.
-
-```ts
-execute(@Option('query') query: string, @Option('count') count: number) {
-    return `Searching for "${query}" (${count} results)`;
-}
-```
-
-Call `@Option()` without arguments to receive all options at once as a `Record<string, string | number | boolean>`:
-
-```ts
-execute(@Option() options: Record<string, string | number | boolean>) {
-    console.log(options.query, options.count);
-}
-```
-
-For typed options that resolve to Discord objects (User, Channel, Role), use `@Ctx()` and access them via the raw interaction.
-
-## Combining decorators
-
-You can mix and match any param decorators in a single method:
+You can mix any param decorators in a single method:
 
 ```ts
 execute(
     @Author() user: User,
-    @Option('query') query: string,
+    @Option('query') query: ChatInputOption | undefined,
     @Guild() guild: Guild | null,
 ): string {
-    return `${user.username} searched "${query}" in ${guild?.name ?? 'DMs'}`;
+    return `${user.username} searched "${query?.value}" in ${guild?.name ?? 'DMs'}`;
 }
 ```
 
 ## Usage in autocomplete methods
 
-All param decorators work the same way on `@Autocomplete()` methods. This keeps the contract consistent across the entire handler class:
+All param decorators work the same way on `@Autocomplete()` methods, which keeps the contract consistent across the handler class. A common shape is `@Focused()` for what is being typed plus `@Option()` for another option already filled in, so the suggestions can depend on it:
 
 ```ts
-@Autocomplete('query')
-async autocompleteQuery(@Option('query') focused: string, @Author() user: User) {
-    return db.search(focused, user.id).map((r) => ({ name: r.title, value: r.id }));
+@Autocomplete('tag')
+autocompleteTag(
+    @Focused() input: ChatInputOption,
+    @Option('category') category: ChatInputOption | undefined,
+) {
+    return db.tagsFor(category?.value).filter((t) => t.value.includes(String(input.value)));
 }
 ```
 
 ## How they work
 
-Param decorators are resolved by the `CommandExecutor` via a registry of `paramResolvers`. Each resolver receives the `ExecutionContext` and an optional `data` payload (e.g. the option name) and returns the value to inject at that parameter position. The discord.js adapter registers resolvers for `CONTEXT`, `GUILD`, `AUTHOR`, and `OPTION` on initialization.
+Param decorators record metadata at decoration time and are resolved by `CommandPipelineBuilder` in `@nodecord/core`, which builds the argument list before invoking the handler. Resolution happens in the framework core, not in the adapter, so the same decorators behave identically no matter which adapter you run.
+
+If an `@Option()` parameter appears on a handler whose context is neither a chat input command nor an autocomplete interaction, the framework logs a warning and injects `undefined` rather than throwing.

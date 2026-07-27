@@ -13,7 +13,7 @@ It also ships a `/testing` subpath for running commands through the real pipelin
 ## Install
 
 ```bash
-pnpm add @nodecord/core @nodecord/djs-adapter discord.js reflect-metadata
+pnpm add @nodecord/core @nodecord/djs-adapter discord.js
 ```
 
 `discord.js` v14 and `@nodecord/core` are peer dependencies. See the [core readme](https://www.npmjs.com/package/@nodecord/core) for the required TypeScript compiler options.
