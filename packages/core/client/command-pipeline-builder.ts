@@ -54,10 +54,6 @@ export class CommandPipelineBuilder {
                         if (!param.data.length) {
                             resolvedParams[param.index] = options;
                         } else if (param.data.length === 1) {
-                            console.log(
-                                'find',
-                                options.find((opt) => opt.name === param.data[0]),
-                            );
                             resolvedParams[param.index] = options.find((opt) => opt.name === param.data[0]);
                         } else {
                             resolvedParams[param.index] = options.filter((opt) => param.data.includes(opt.name));

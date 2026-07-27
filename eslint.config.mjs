@@ -53,7 +53,6 @@ export default [
             '@typescript-eslint/no-extraneous-class': 'off',
             '@typescript-eslint/class-methods-use-this': 'off',
             '@typescript-eslint/prefer-destructuring': 'off',
-            'no-console': 'off',
             '@typescript-eslint/no-unused-vars': 'warn',
         },
     },
