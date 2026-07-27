@@ -1,0 +1,63 @@
+---
+title: Exception codes
+---
+
+# Exception codes
+
+Every exception thrown by `@nodecord/djs-adapter` carries a code, and the error message links back to the matching entry on this page. The list below is exhaustive for `DjsAdapterErrorCodes`.
+
+For exceptions raised by the framework itself rather than by the adapter, see the [core exception codes](../../core/faq/exceptions.mdx).
+
+## MIXED_LISTENER_TYPE
+
+Thrown by `MixedListenerTypeException` when the same Discord event has both `on` and `once` listeners registered.
+
+The adapter groups every listener for an event under a single underlying discord.js handler, so the event can be subscribed either persistently or one time, not both at once. The message names the event.
+
+```typescript
+// these two cannot coexist for ClientReady
+@Listener(Events.ClientReady)
+export class ReadyListener implements ListenerProvider { ... }
+
+@Listener(Events.ClientReady, { once: true })
+export class OtherReadyListener implements ListenerProvider { ... }
+```
+
+Pick one mode for the event. If some of the work should only run once, keep the listener persistent and guard that part with your own flag.
+
+## ADAPTER_ALREADY_INITIALIZED
+
+Thrown by `AdapterAlreadyInitializedException` when `initialize()` is called on an adapter instance that was already initialized.
+
+The framework calls `initialize()` once during setup, so this normally means the same adapter instance was passed to `NodecordClient.create()` more than once. Build a new `DiscordJsAdapter` per client, or let the framework create one by leaving the `adapter` option out.
+
+## ADAPTER_NOT_INITIALIZED
+
+Thrown by `AdapterNotInitializedException` when `login()` is called before the adapter has been initialized.
+
+Initialization happens inside `NodecordClient.create()`, so reaching this usually means `login()` was called on an adapter built by hand rather than through the client.
+
+```typescript
+const client = NodecordClient.create({ module: BotModule, options: { intents: [...] } });
+await client.login(process.env.BOT_TOKEN!);
+```
+
+## INVALID_HANDLER_METADATA
+
+Thrown by `InvalidHandlerMetadataException` when the metadata passed to a command decorator is not a `SlashCommandBuilder` or a `ContextMenuCommandBuilder`.
+
+```typescript
+// wrong: a plain object
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
+
+// right: a builder
+@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+```
+
+A builder kept in a separate file works too, as long as the value reaching the decorator is the builder itself.
+
+## INTERNAL_ADAPTER_ERROR
+
+Raised for failures inside the adapter that are not caused by your configuration.
+
+Unlike the other codes, this one does not link here from the error message. It tells you to open an issue instead, because reaching it means the adapter hit a state it does not expect. Please include the steps to reproduce it.

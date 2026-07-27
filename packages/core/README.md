@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@nodecord/core)](https://www.npmjs.com/package/@nodecord/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docs](https://img.shields.io/badge/docs-datzu712.github.io%2Fnodecord-blue)](https://datzu712.github.io/nodecord/)
+[![Docs](https://img.shields.io/badge/docs-nodecord.pages.dev-blue)](https://nodecord.pages.dev/)
 
 The framework core of [Nodecord](https://github.com/Datzu712/nodecord), a TypeScript framework for building Discord bots around modules, dependency injection, and decorators.
 
@@ -119,7 +119,7 @@ Also exported: `NodecordClient`, `TestingModule`, `ConsoleLogger`, the context c
 
 ## Documentation
 
-Full guides live at [datzu712.github.io/nodecord](https://datzu712.github.io/nodecord/). Questions go to the [Discord server](https://discord.com/invite/BSaERbS).
+Full guides live at [nodecord.pages.dev](https://nodecord.pages.dev/). Questions go to the [Discord server](https://discord.com/invite/BSaERbS).
 
 ## Status
 

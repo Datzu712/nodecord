@@ -15,6 +15,6 @@ export class DjsAdapterException extends BaseFrameworkException<DjsAdapterErrorC
     }
 
     static override getDocsUrl(code: DjsAdapterErrorCodes): string {
-        return 'https://datzu712.github.io/nodecord/docs/djs-adapter/faq/exceptions#' + code.toLowerCase();
+        return 'https://nodecord.pages.dev/docs/djs-adapter/faq/exceptions#' + code.toLowerCase();
     }
 }
