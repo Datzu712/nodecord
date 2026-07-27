@@ -9,11 +9,11 @@ Interceptors wrap command execution in a chain-of-responsibility pipeline. They 
 ## Defining an interceptor
 
 ```ts
-import { Interceptor, ExecutionContext } from '@nodecord/core';
+import { Interceptor, InteractionContext } from '@nodecord/core';
 
 @Interceptor()
 export class LoggingInterceptor {
-    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>) {
+    async intercept(ctx: InteractionContext, next: () => Promise<unknown>) {
         console.log(`Command: ${ctx.name}`);
         const result = await next();
         console.log(`Result: ${String(result)}`);
@@ -43,7 +43,7 @@ A common pattern is transforming the return value for example, converting a stri
 ```ts
 @Interceptor()
 export class EmbedFormatInterceptor {
-    async intercept(ctx: ExecutionContext, next: () => Promise<unknown>) {
+    async intercept(ctx: InteractionContext, next: () => Promise<unknown>) {
         const result = await next();
         if (typeof result === 'string') {
             return new EmbedBuilder().setDescription(result);

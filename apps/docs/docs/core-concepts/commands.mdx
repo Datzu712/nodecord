@@ -64,7 +64,7 @@ This keeps the handler class focused on logic and makes the command definition e
 To add autocomplete to a command option, mark the option with `.setAutocomplete(true)` in the builder, then add a method decorated with `@Autocomplete('option-name')` in the handler class. The method must return an array of `{ name, value }` objects.
 
 ```ts
-import { SlashCommand, Autocomplete, Option } from '@nodecord/core';
+import { SlashCommand, Autocomplete, Focused, Option, ChatInputOption } from '@nodecord/core';
 import { SlashCommandBuilder } from 'discord.js';
 
 @SlashCommand(
@@ -76,22 +76,24 @@ import { SlashCommandBuilder } from 'discord.js';
         ),
 )
 export class SearchCommand {
-    execute(@Option('query') query: string): string {
-        return `Results for: ${query}`;
+    execute(@Option('query') query: ChatInputOption | undefined): string {
+        return `Results for: ${query?.value}`;
     }
 
     @Autocomplete('query')
-    async autocompleteQuery() {
-        return db.search(focused).map((r) => ({ name: r.title, value: r.id }));
+    async autocompleteQuery(@Focused() input: ChatInputOption) {
+        return db.search(String(input.value)).map((r) => ({ name: r.title, value: r.id }));
     }
 }
 ```
+
+`@Option('query')` gives you the option object, not the raw value, so the text lives in `.value`. Inside an autocomplete method, `@Focused()` is what you want for the option being typed. See [param decorators](../adapters/param-decorators.mdx) for the full set.
 
 Multiple autocomplete options on the same command get their own methods:
 
 ```ts
 @Autocomplete('query')
-async autocompleteQuery(@Option('query') focused: string) { ... }
+async autocompleteQuery(@Focused() input: ChatInputOption) { ... }
 
 @Autocomplete('category')
 async autocompleteCategory() { ... }
