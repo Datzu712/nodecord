@@ -21,9 +21,11 @@ jobs:
                   cache: pnpm
 
             - run: pnpm install --frozen-lockfile
-            # oxlint reads the sources directly, so it does not need the packages
-            # built first the way the typescript-eslint setup did. Type-aware
-            # rules are resolved by oxlint-tsgolint from tsconfig.
+            # The build has to run first. djs-adapter imports @nodecord/core,
+            # whose types resolve through the "types" field to dist/index.d.ts.
+            # Without that file the import is an error type and every no-unsafe-*
+            # rule fires on it: 33 errors instead of 0.
+            - run: pnpm build
             - run: pnpm lint
 
     format:
