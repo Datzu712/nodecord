@@ -3,17 +3,17 @@
     "type": "module",
     "description": "sample mjs bot",
     "scripts": {
-        "dev": "node --loader ts-node/esm --no-warnings src/index.ts",
+        "dev": "node --watch --loader ts-node/esm --no-warnings src/index.ts",
         "build": "tsc"
     },
     "devDependencies": {
         "ts-node": "^10.9.2",
-        "tsx": "^4.21.0",
-        "typescript": "latest",
-        "vitest": "^4.1.4"
+        "tsx": "^4.22.4",
+        "typescript": "6.0.3",
+        "vitest": "^4.1.8"
     },
     "dependencies": {
-        "discord.js": "^14.26.3",
+        "discord.js": "^14.26.4",
         "dotenv": "^17.4.2",
         "@nodecord/core": "workspace:*",
         "@nodecord/djs-adapter": "workspace:*"

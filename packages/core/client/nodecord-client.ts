@@ -54,11 +54,15 @@ export class NodecordClient {
     }
 
     private init() {
-        const executor = new CommandExecutor(this.logger);
         const handlers = this.moduleCompiler.getHandlers();
         const listeners = this.moduleCompiler.getEventListeners();
 
-        this.adapter.initialize(executor, handlers, listeners);
+        const executor = new CommandExecutor(this.logger, handlers);
+
+        this.adapter.initialize({
+            executor,
+            listeners,
+        });
     }
 
     get<T>(cls: Constructor<T>): T {

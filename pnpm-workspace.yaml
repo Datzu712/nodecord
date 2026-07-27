@@ -2,3 +2,7 @@ packages:
     - 'apps/*'
     - 'packages/*'
     - 'apps/examples/*'
+allowBuilds:
+    '@swc/core': true
+    core-js: true
+    esbuild: true

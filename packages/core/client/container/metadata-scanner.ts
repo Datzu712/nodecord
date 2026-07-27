@@ -1,11 +1,17 @@
 import { Constructor } from '../../interfaces/common/constructor.js';
 import { INJECTABLE_METADATA, INJECTABLE_WATERMARK } from '../../constants/injectable.js';
-import { HANDLER_METADATA, HANDLER_WATERMARK, USE_INTERCEPTORS_METADATA } from '../../constants/handler.js';
+import {
+    COMMAND_ARGS_METADATA,
+    COMMAND_HANDLER_METADATA,
+    DEFER_REPLY_METADATA,
+    SUB_EXECUTIONS_METADATA,
+    HANDLER_WATERMARK,
+    USE_INTERCEPTORS_METADATA,
+} from '../../constants/handler.js';
 import { MODULE_ID, MODULE_METADATA } from '../../constants/module.js';
 import type { ModuleMetadata } from '../../interfaces/module/module-metadata.interface.js';
 import { LISTENER_METADATA, LISTENER_WATERMARK } from '../../constants/listener.js';
 import type { ListenerMetadata } from '../../interfaces/listener/event-listener.js';
-import type { HandlerMetadata } from '../../interfaces/handler/command-handler.js';
 import { INTERCEPTOR_METADATA, INTERCEPTOR_WATERMARK } from '../../constants/interceptor.js';
 import type { NodecordInterceptor } from '../../interfaces/interceptor/interceptor.js';
 import {
@@ -17,6 +23,9 @@ import type {
     ExceptionHandler,
     ExceptionHandlerMetadata,
 } from '../../interfaces/exception-handler/exception-handler.js';
+import { ParamMetadata } from '../../interfaces/index.js';
+import { CommandHandlerMetadata } from '../../interfaces/handler/command-handler.js';
+import { ExecutorMetadata } from '../../interfaces/handler/executor-metadata.js';
 
 export class MetadataScanner {
     static getModuleId(target: Constructor): string {
@@ -46,8 +55,7 @@ export class MetadataScanner {
     static getHandlerInterceptors(target: Constructor): Constructor<NodecordInterceptor>[] {
         return (
             (Reflect.getMetadata(USE_INTERCEPTORS_METADATA, target) as
-                | Constructor<NodecordInterceptor>[]
-                | undefined) ?? []
+                Constructor<NodecordInterceptor>[] | undefined) ?? []
         );
     }
 
@@ -61,10 +69,6 @@ export class MetadataScanner {
 
     static isListener(target: Constructor): boolean {
         return Reflect.hasMetadata(LISTENER_WATERMARK, target);
-    }
-
-    static getHandlerMetadata(target: Constructor) {
-        return Reflect.getMetadata(HANDLER_METADATA, target) as HandlerMetadata;
     }
 
     static getListenerMetadata(target: Constructor) {
@@ -82,8 +86,29 @@ export class MetadataScanner {
     static getHandlerExceptionHandlers(target: Constructor): Constructor<ExceptionHandler>[] {
         return (
             (Reflect.getMetadata(USE_EXCEPTION_HANDLER_METADATA, target) as
-                | Constructor<ExceptionHandler>[]
-                | undefined) ?? []
+                Constructor<ExceptionHandler>[] | undefined) ?? []
         );
+    }
+    static isExecutorDeferReply(target: Constructor, methodKey: string): boolean {
+        return Reflect.hasMetadata(DEFER_REPLY_METADATA, target, methodKey);
+    }
+
+    static isExecutorEphemeral(target: Constructor, methodKey: string): boolean {
+        console.warn('Ephemeral executors are not implemented yet. Returning false for all executors.');
+        return false;
+        //throw new Error('Ephemeral executors are not implemented yet'); // not implemented yet
+        return Reflect.hasMetadata('TODO', target, methodKey);
+    }
+
+    static getHandlerExecutorParams(handler: Constructor, methodKey: string): ParamMetadata[] {
+        return (Reflect.getMetadata(COMMAND_ARGS_METADATA, handler, methodKey) as ParamMetadata[]) ?? [];
+    }
+
+    static getCommandHandlerEntrypointMetadata(handler: Constructor) {
+        return Reflect.getMetadata(COMMAND_HANDLER_METADATA, handler) as CommandHandlerMetadata | undefined;
+    }
+
+    static getCommandHandlerSubExecutors(handler: Constructor) {
+        return (Reflect.getMetadata(SUB_EXECUTIONS_METADATA, handler) ?? []) as ExecutorMetadata[];
     }
 }

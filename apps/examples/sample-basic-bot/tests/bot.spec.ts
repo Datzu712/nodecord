@@ -52,13 +52,10 @@ describe('UtilModule', () => {
             expect(interaction.editReply).toHaveBeenCalledWith(
                 expect.objectContaining({
                     embeds: expect.arrayContaining([
-                        expect.objectContaining({
-                            data: expect.objectContaining({ description: expect.stringContaining('online') }),
-                        }),
+                        expect.objectContaining({ description: expect.stringContaining('online') }),
                     ]),
                 }),
             );
-            //expect(interaction.editReply).toHaveBeenCalledWith({ embeds: [{ description: 'Bot is online' }] });
         });
     });
 
@@ -77,9 +74,7 @@ describe('UtilModule', () => {
             expect(interaction.editReply).toHaveBeenCalledWith(
                 expect.objectContaining({
                     embeds: expect.arrayContaining([
-                        expect.objectContaining({
-                            data: expect.objectContaining({ description: expect.stringContaining('Test Server') }),
-                        }),
+                        expect.objectContaining({ description: expect.stringContaining('Test Server') }),
                     ]),
                 }),
             );
@@ -97,9 +92,7 @@ describe('UtilModule', () => {
             expect(interaction.editReply).toHaveBeenCalledWith(
                 expect.objectContaining({
                     embeds: expect.arrayContaining([
-                        expect.objectContaining({
-                            data: { description: 'This command can only be used inside a server.' },
-                        }),
+                        expect.objectContaining({ description: 'This command can only be used inside a server.' }),
                     ]),
                 }),
             );

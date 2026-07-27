@@ -85,7 +85,7 @@ describe('ModuleCompiler', () => {
 
                 const compiler = new ModuleCompiler(mockLogger);
                 compiler.compile(AppModule);
-                expect(compiler.getContainerFor(MyService)).toBeDefined();
+                expect(compiler.getContainerFor(MyService).resolve(MyService)).toBeInstanceOf(MyService);
             });
         });
 
@@ -317,12 +317,12 @@ describe('ModuleCompiler', () => {
                     }
                 }
 
-                @SlashCommand({ name: 'ping' })
+                @SlashCommand({ name: 'ping', description: 'Pong' })
                 class PingHandler {
                     execute() {}
                 }
 
-                @SlashCommand({ name: 'echo' })
+                @SlashCommand({ name: 'echo', description: 'Echo' })
                 class EchoHandler {
                     execute() {}
                 }
@@ -667,7 +667,7 @@ describe('ModuleCompiler', () => {
                     handle() {}
                 }
 
-                @SlashCommand({ name: 'ping' })
+                @SlashCommand({ name: 'ping', description: 'Pong' })
                 class PingHandler {
                     execute() {}
                 }

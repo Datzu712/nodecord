@@ -126,13 +126,17 @@ export class PingCommand {
 
 #### Parameter decorators
 
-| Decorator    | Resolves to                                 |
-| ------------ | ------------------------------------------- |
-| `@Context()` | The `ExecutionContext` instance             |
-| `@Guild()`   | The `Guild` from the interaction, or `null` |
-| `@Author()`  | The `User` who triggered the interaction    |
+| Decorator         | Resolves to                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `@Context()`      | The `ExecutionContext` instance                              |
+| `@Guild()`        | The `Guild` from the interaction, or `null`                  |
+| `@Author()`       | The `User` who triggered the interaction                     |
+| `@Option('name')` | The value of the named slash command option                  |
+| `@Option()`       | All options as `Record<string, string \| number \| boolean>` |
 
 `ExecutionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
+
+All param decorators work on both `execute()` and `@Autocomplete()` methods.
 
 #### Automatic reply deferral
 
@@ -220,6 +224,7 @@ Exception handlers catch exceptions thrown during command execution (including e
 export class DatabaseErrorHandler implements ExceptionHandler {
     handle(exception: DatabaseError, ctx: ExecutionContext): void {
         console.error(`Command "${ctx.name}" failed:`, exception.message);
+
         ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
     }
 }
@@ -389,15 +394,16 @@ Not published yet! The API is still in development and I want to get more of the
 - Interceptors: global (`@Interceptor`), scoped (`@UseInterceptors`), and interaction-type filtering
 - Exception handlers: `@OnException` for module-level and `@UseExceptionHandler` for handler-level exception handling
 - Automatic reply deferral via `@DeferReply()`
+- Autocomplete: `@Autocomplete('option')` methods co-located in the command class, with full param decorator support
+- Parameter decorators: `@Context()`, `@Guild()`, `@Author()`, `@Option('name')`, `@Option()`
 - Testing utilities: `TestingModule` with provider overrides, `TestingDjsAdapter`, and `createMockChatInputInteraction` for testing commands without a live Discord connection
 - Full TypeScript strict mode throughout, dual ESM/CJS output
 
 **Not yet implemented:**
 
-- Interaction flows (buttons, modals, select menus, and autocomplete co-located with their parent slash command)
+- Interaction flows (buttons, modals, select menus)
 - Context menu command handling
 - Pipes on parameter decorators
-- More built-in parameter decorators (`@Option()`, etc.)
 
 ---
 

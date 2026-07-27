@@ -1,39 +1,13 @@
-import {
-    Client as DjsClient,
-    type ClientOptions,
-    type ApplicationCommandDataResolvable,
-    Events,
-    type Interaction,
-    REST,
-    Routes,
-} from 'discord.js';
-import {
-    AbstractClientAdapter,
-    CommandExecutor,
-    CommandParamTypes,
-    LoadSlashCommandsOptions,
-    type ExecutionContext,
-    type RegisteredCommandHandler,
-    type RegisteredListener,
-} from '@nodecord/core';
-import { CommandRegistry } from './command-registry.js';
+import { Client as DjsClient, type ClientOptions, Events } from 'discord.js';
+import { AbstractClientAdapter, type InitAdapterOptions, type LoadSlashCommandsOptions } from '@nodecord/core';
 import { EventManager } from './event-manager.js';
-import { InteractionCreateDispatcher } from './events/interaction-create.dispatcher.js';
-import { isDjsCommandMeta } from './helpers/validate-command-meta.js';
-import { ResponseHandler } from './response-handler.js';
-import {
-    AdapterAlreadyInitializedException,
-    AdapterNotInitializedException,
-    InvalidHandlerMetadataException,
-} from './exceptions/adapter.exception.js';
+import { InteractionDispatcher } from './events/interaction-dispatcher.js';
+import { AdapterAlreadyInitializedException, AdapterNotInitializedException } from './exceptions/adapter.exception.js';
 import { randomUUID } from 'node:crypto';
 
 export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     private alreadyInitialized = false;
-
     protected eventManager!: EventManager;
-
-    private readonly commandRegistry = new CommandRegistry();
 
     /**
      * Accepts either an already-created Client instance or raw ClientOptions.
@@ -47,35 +21,19 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
         }
     }
 
-    initialize(
-        executor: CommandExecutor,
-        handlers: RegisteredCommandHandler[],
-        listeners: RegisteredListener<unknown[]>[],
-    ): void {
+    override initialize({ executor, listeners }: InitAdapterOptions): void {
         if (this.alreadyInitialized) {
             throw new AdapterAlreadyInitializedException();
         }
         this.alreadyInitialized = true;
 
-        this.registerParamResolvers(executor);
-
         this.eventManager = new EventManager();
 
-        if (handlers.length) {
-            handlers.forEach(({ descriptor, handler, ...rest }) => {
-                if (!isDjsCommandMeta(descriptor)) {
-                    throw new InvalidHandlerMetadataException(handler.constructor.name);
-                }
-                this.commandRegistry.register({ descriptor: descriptor.toJSON(), handler, ...rest });
-            });
-
-            const responseHandler = new ResponseHandler();
-            const dispatcher = new InteractionCreateDispatcher(this.commandRegistry, executor, responseHandler);
-            this.eventManager.register({
-                metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
-                listener: dispatcher,
-            });
-        }
+        const dispatcher = new InteractionDispatcher(executor);
+        this.eventManager.register({
+            metadata: { event: Events.InteractionCreate, once: false, id: randomUUID() },
+            listener: dispatcher,
+        });
 
         listeners.forEach((l) => this.eventManager.register(l));
         this.eventManager.attach(this.clientInstance);
@@ -92,32 +50,20 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     /**
      * Todo: Add someway to filter which commands get registered.
      */
-    async loadSlashCommands({ token, clientId, restVersion = '10' }: LoadSlashCommandsOptions): Promise<void> {
-        const commands = this.commandRegistry
-            .getAll()
-            .map((cmd) => cmd.descriptor) as ApplicationCommandDataResolvable[];
+    // eslint-disable-next-line @typescript-eslint/require-await
+    async loadSlashCommands(_options: LoadSlashCommandsOptions): Promise<void> {
+        throw new Error('Method not implemented.'); // Placeholder until we decide on a strategy for command registration.
+        // const commands = this.commandRegistry
+        //     .getAll()
+        //     .map((cmd) => cmd.metadata.definition) as ApplicationCommandDataResolvable[];
 
-        const rest = new REST({ version: restVersion }).setToken(token);
-        await rest.put(Routes.applicationCommands(clientId), {
-            body: commands,
-        });
+        // const rest = new REST({ version: restVersion }).setToken(token);
+        // await rest.put(Routes.applicationCommands(clientId), {
+        //     body: commands,
+        // });
     }
 
     getClient(): DjsClient {
         return this.clientInstance;
-    }
-
-    private registerParamResolvers(executor: CommandExecutor): void {
-        executor.registerParamResolver(CommandParamTypes.CONTEXT, (ctx: ExecutionContext) => ctx);
-
-        executor.registerParamResolver(
-            CommandParamTypes.GUILD,
-            (ctx: ExecutionContext) => ctx.getRaw<Interaction>().guild,
-        );
-
-        executor.registerParamResolver(
-            CommandParamTypes.AUTHOR,
-            (ctx: ExecutionContext) => ctx.getRaw<Interaction>().user,
-        );
     }
 }

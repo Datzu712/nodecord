@@ -1,33 +1,59 @@
-import type { HandlerTypes } from '../../enums/command-types.enum.js';
 import type { RegisteredInterceptor } from '../interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../exception-handler/exception-handler.js';
-
-export interface HandlerMetadata {
-    id: string;
-    type: HandlerTypes;
-    descriptor: unknown;
-}
+import { ExecuteOptions } from './execute-options.js';
+import { ApplicationCommandTypes } from '../../constants/application-command-types.js';
 
 export interface CommandHandler {
+    /**
+     * Entry point for the interaction flow. The framework will call this method with the resolved arguments when the interaction (slash commands, context menus) is received.
+     */
     execute(...args: unknown[]): any;
 }
 
 /**
- * Minimum contract the core needs to use handlers.
+ * Basic metadata about a command handler, used for registration and execution.
+ * https://docs.discord.com/developers/interactions/application-commands#application-command-object
  *
- * @todo
- * - Move command registration (REST deploy) into core as a standalone feature,
- *   since it's a standard Discord API call not tied to any specific adapter.
- *   This would introduce a direct dev dependency on `discord-api-types` in the core,
- *   which is acceptable given the framework is discord only and `discord-api-types`
- *   represents the protocol contract, not an implementation detail related with the adapter.
- * - Revisit versioning strategy if multi-version API support becomes a requirement.
- *
+ * todo: add missing name_localizations, guildId, description_localizations, default_member_permissions, etc...
  */
-export interface RegisteredCommandHandler<TMetadata = unknown> {
-    type: HandlerTypes;
+export interface CommandHandlerMetadata {
+    id: string; // internal framework ID
+
+    /**
+     * Name of command, 1-32 characters and should match `^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` regex.
+     */
+    name: string;
+
+    /**
+     * Description for `CHAT_INPUT` commands, 1-100 characters.
+     */
+    description: string;
+    nsfw?: boolean;
+    applicationCommandType: ApplicationCommandTypes;
+}
+
+/**
+ * At "compile" time we don't know anything about infrastructure or DI.
+ * That's why we need a separate interface to represent the minimum contract of a handler
+ */
+export interface CompiledCommandHandler {
+    metadata: CommandHandlerMetadata;
+    // definition: APIApplicationCommand; We can add this later because it is not needed in runtime to know the exact shape of the command definition for discord api
+
+    /**
+     * Map<executor method key, ExecuteOptions>.
+     */
+    executors: [executorMethodKey: string, executorOptions: ExecuteOptions][];
+}
+
+/**
+ * Minimum contract the core needs to use handlers without knowing the implementation details.
+ */
+export interface RegisteredCommandHandler extends CompiledCommandHandler {
+    // instance with their dependencies resolved, ready to be executed by the framework.
     handler: CommandHandler;
-    descriptor: TMetadata;
+
+    // infra
     interceptors: RegisteredInterceptor[];
     exceptionHandlers: RegisteredExceptionHandler[];
 }

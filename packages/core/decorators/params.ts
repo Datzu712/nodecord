@@ -1,17 +1,19 @@
 import { COMMAND_ARGS_METADATA } from '../constants/handler.js';
-import { CommandParamTypes } from '../enums/command-types.enum.js';
-import type { ParamMetadata } from '../interfaces/handler/param-metadata.js';
+import { CommandParamTypes } from '../constants/command-types.js';
+import type { BaseParamMetadata } from '../interfaces/handler/param-metadata.js';
 
 export function createCommandParamDecorator(paramType: CommandParamTypes) {
     return function (data?: unknown): ParameterDecorator {
-        return (target, key, index) => {
+        return (target, methodKey, index) => {
             const existing =
-                (Reflect.getMetadata(COMMAND_ARGS_METADATA, target.constructor, key as string) as
-                    | ParamMetadata[]
-                    | undefined) ?? [];
+                (Reflect.getMetadata(
+                    COMMAND_ARGS_METADATA,
+                    target.constructor,
+                    methodKey as string,
+                ) as BaseParamMetadata[]) ?? [];
 
             existing.push({ index, type: paramType, data });
-            Reflect.defineMetadata(COMMAND_ARGS_METADATA, existing, target.constructor, key as string);
+            Reflect.defineMetadata(COMMAND_ARGS_METADATA, existing, target.constructor, methodKey as string);
         };
     };
 }
@@ -26,6 +28,14 @@ export function Guild(): ParameterDecorator {
 
 export function Author(): ParameterDecorator {
     return createCommandParamDecorator(CommandParamTypes.AUTHOR)();
+}
+
+export function Option(...name: string[]): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.OPTION)(name);
+}
+
+export function Focused(): ParameterDecorator {
+    return createCommandParamDecorator(CommandParamTypes.FOCUSED_OPTION)();
 }
 
 export const Ctx = Context;

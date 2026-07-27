@@ -1,6 +1,6 @@
 {
     "name": "@nodecord/djs-adapter",
-    "version": "0.0.1-alpha.0",
+    "version": "0.2.0",
     "type": "module",
     "types": "./dist/index.d.ts",
     "main": "./dist/index.js",
@@ -32,16 +32,17 @@
         "access": "public"
     },
     "devDependencies": {
-        "tsup": "latest",
-        "typescript": "latest"
+        "@nodecord/core": "workspace:^",
+        "discord-api-types": "^0.38.48",
+        "tsup": "8.5.1",
+        "typescript": "6.0.3"
     },
     "dependencies": {
-        "@nodecord/core": "workspace:*",
-        "discord.js": "^14.26.3"
+        "discord.js": "^14.26.4"
     },
     "peerDependencies": {
+        "@nodecord/core": "workspace:^",
         "discord.js": "^14.0.0",
-        "@nodecord/core": "workspace:*",
         "vitest": ">=2.0.0"
     },
     "peerDependenciesMeta": {

@@ -1,4 +1,4 @@
-import { NodecordExceptionCode } from '../../enums/exceptions.js';
+import { NodecordExceptionCode } from '../../constants/exceptions.js';
 
 /**
  * Open base exception class for all Nodecord exceptions. The idea is to have custom strict code types for all exceptions

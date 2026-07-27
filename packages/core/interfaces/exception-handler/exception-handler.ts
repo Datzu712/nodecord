@@ -1,8 +1,8 @@
-import type { ExecutionContext } from '../../client/execution-context.js';
+import type { InteractionContext } from '../../context/interaction-context.js';
 import type { Constructor } from '../common/constructor.js';
 
 export interface ExceptionHandler {
-    handle(exception: unknown, context: ExecutionContext): void | Promise<void>;
+    handle(exception: unknown, context: InteractionContext): void | Promise<void>;
 }
 
 export interface ExceptionHandlerMetadata {

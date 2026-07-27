@@ -1,0 +1,16 @@
+import { ExecutionKind } from '../constants/execution-kind.js';
+import type { DeferReplyOptions, InteractionReplyOptions } from '../interfaces/interactions/repliable.js';
+import { InteractionContext } from './interaction-context.js';
+
+export abstract class ContextMenuContext extends InteractionContext {
+    constructor(name: string, raw: unknown) {
+        super(name, ExecutionKind.CONTEXT_MENU, raw);
+    }
+
+    abstract readonly deferred: boolean;
+    abstract readonly replied: boolean;
+
+    abstract reply(options: InteractionReplyOptions): Promise<void>;
+    abstract deferReply(options?: DeferReplyOptions): Promise<void>;
+    abstract editReply(options: InteractionReplyOptions): Promise<void>;
+}
