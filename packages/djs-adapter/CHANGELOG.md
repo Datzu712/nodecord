@@ -1,5 +1,40 @@
 # @nodecord/djs-adapter
 
+## 0.2.0
+
+### Minor Changes
+
+- ## New Features
+
+    ### `DjsChatInputCommandContext#getOptions()` now includes the option `type`
+
+    Resolved options expose the `ApplicationCommandOptionType` sent by Discord, so options sharing the same `value` but differing in type can be told apart without reaching back into the interaction.
+
+    Before
+
+    ```ts
+    execute(@Option('target') option: ChatInputOption) {
+        // { name: 'target', value: '123456789' }
+        // no way to tell whether it is a user, a channel or a plain string
+    }
+    ```
+
+    After
+
+    ```ts
+    execute(@Option('target') option: ChatInputOption) {
+        // { name: 'target', value: '123456789', type: ApplicationCommandOptionType.User }
+        if (option.type === ApplicationCommandOptionType.User) {
+            // ...
+        }
+    }
+    ```
+
+### Patch Changes
+
+- Updated dependencies
+    - @nodecord/core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

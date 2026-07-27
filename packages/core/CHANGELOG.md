@@ -1,5 +1,82 @@
 # @nodecord/core
 
+## 0.2.0
+
+### Minor Changes
+
+- ## Breaking Change
+
+    ### `ChatInputCommandContext#getOptions()` now returns `ChatInputOption[]`
+
+    The return type changed from an anonymous object to `ChatInputOption`, which includes the option `type` alongside `name` and `value`. If you maintain a custom adapter that extends `ChatInputCommandContext`, each returned option must now include its `type`.
+
+    Before
+
+    ```ts
+    class MyChatInputCommandContext extends ChatInputCommandContext {
+        getOptions(): { name: string; value: string | number | boolean }[] {
+            return this.interaction.options.map((opt) => ({
+                name: opt.name,
+                value: opt.value,
+            }));
+        }
+    }
+    ```
+
+    After
+
+    ```ts
+    class MyChatInputCommandContext extends ChatInputCommandContext {
+        getOptions(): ChatInputOption[] {
+            return this.interaction.options.map((opt) => ({
+                name: opt.name,
+                value: opt.value,
+                type: opt.type,
+            }));
+        }
+    }
+    ```
+
+    ## Bug Fixes
+
+    ### `@Option()` now resolves the same way in slash commands and autocomplete
+
+    Parameter resolution for chat input commands ignored how many option names were passed to the decorator and always returned a filtered array. This caused two incorrect behaviors:
+
+    - `@Option()` with no arguments returned an empty array instead of every option.
+    - `@Option('name')` with a single name returned a one element array instead of the option itself.
+
+    Both contexts now share the same resolution:
+
+    ```ts
+    @SlashCommand({ name: 'search' })
+    class SearchCommand {
+        execute(
+            @Option() all: ChatInputOption[], // every option (previously: [])
+            @Option('query') query: ChatInputOption | undefined, // the option (previously: [option])
+            @Option('query', 'lang') some: ChatInputOption[], // filtered by name
+        ) {}
+    }
+    ```
+
+    If you relied on the previous behavior and destructured the array for a single name, you now receive the option directly.
+
+    Before
+
+    ```ts
+    execute(@Option('query') options: ChatInputOption[]) {
+        const query = options[0]?.value;
+    }
+    ```
+
+    After
+
+    ```ts
+    execute(@Option('query') option: ChatInputOption | undefined) {
+        const query = option?.value;
+    }
+    ```
+
 ## 0.1.0
 
 ### Minor Changes
