@@ -33,4 +33,7 @@ export interface RepliableExecuteOptions extends BaseExecuteOptions {
 
 // Note: be aware that metadata registration for ContextMenuExecuteOptions/SlashCommandExecuteOptions is always registered in the namespace of the method `execute` of the handler.
 export type ExecuteOptions =
-    ContextMenuExecuteOptions | AutocompleteExecuteOptions | SlashCommandExecuteOptions | ButtonExecuteOptions;
+    | ContextMenuExecuteOptions
+    | AutocompleteExecuteOptions
+    | SlashCommandExecuteOptions
+    | ButtonExecuteOptions;

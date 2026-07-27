@@ -18,21 +18,28 @@ export interface ExecuteParams {
 }
 
 export type CommandPipelineExecution<TResult> =
-    { status: 'completed'; result: TResult | undefined } | { status: 'exceptionHandled' };
+    | { status: 'completed'; result: TResult | undefined }
+    | { status: 'exceptionHandled' };
 
 export type PosibleCommandParameter =
-    InteractionContext | ChatInputOption[] | ChatInputOption | undefined | APIUser | APIGuild | null;
+    | InteractionContext
+    | ChatInputOption[]
+    | ChatInputOption
+    | undefined
+    | APIUser
+    | APIGuild
+    | null;
 
 export class CommandPipelineBuilder {
     constructor(
         private readonly params: ExecuteParams,
-        private readonly logger?: AbstractLogger | undefined,
+        private readonly logger?: AbstractLogger,
     ) {}
 
     private resolveArgs(params: ParamMetadata[], ctx: InteractionContext): unknown[] {
         if (params.length === 0) return [];
 
-        const resolvedParams = new Array(params.length) as PosibleCommandParameter[];
+        const resolvedParams = Array.from({ length: params.length }) as PosibleCommandParameter[];
 
         const sortedParams = [...params].sort((a, b) => a.index - b.index);
         for (const param of sortedParams) {
