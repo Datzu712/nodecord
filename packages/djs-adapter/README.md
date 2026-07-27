@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@nodecord/djs-adapter)](https://www.npmjs.com/package/@nodecord/djs-adapter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docs](https://img.shields.io/badge/docs-datzu712.github.io%2Fnodecord-blue)](https://datzu712.github.io/nodecord/)
+[![Docs](https://img.shields.io/badge/docs-nodecord.pages.dev-blue)](https://nodecord.pages.dev/)
 
 The [discord.js](https://discord.js.org/) adapter for [Nodecord](https://github.com/Datzu712/nodecord).
 
@@ -93,7 +93,7 @@ Both entry points ship ESM and CJS builds with TypeScript declarations.
 
 ## Documentation
 
-Full guides live at [datzu712.github.io/nodecord](https://datzu712.github.io/nodecord/). Questions go to the [Discord server](https://discord.com/invite/BSaERbS).
+Full guides live at [nodecord.pages.dev](https://nodecord.pages.dev/). Questions go to the [Discord server](https://discord.com/invite/BSaERbS).
 
 ## License
 

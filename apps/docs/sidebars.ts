@@ -33,6 +33,12 @@ const sidebars: SidebarsConfig = {
             collapsed: false,
             items: ['adapters/overview', 'adapters/param-decorators', 'adapters/discordjs-adapter'],
         },
+        {
+            type: 'category',
+            label: 'Error reference',
+            collapsed: false,
+            items: ['core/faq/exceptions', 'djs-adapter/faq/exceptions'],
+        },
     ],
 };
 

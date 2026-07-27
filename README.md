@@ -5,7 +5,7 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-blue)](https://www.typescriptlang.org/)
 [![npm](https://img.shields.io/npm/v/@nodecord/core)](https://www.npmjs.com/package/@nodecord/core)
-[![Docs](https://img.shields.io/badge/docs-datzu712.github.io%2Fnodecord-blue)](https://datzu712.github.io/nodecord/)
+[![Docs](https://img.shields.io/badge/docs-nodecord.pages.dev-blue)](https://nodecord.pages.dev/)
 
 A TypeScript framework for building Discord bots.
 
@@ -15,7 +15,7 @@ Nodecord takes the module/provider pattern from frameworks like NestJS and bring
 
 ## Links
 
-- [Documentation](https://datzu712.github.io/nodecord/)
+- [Documentation](https://nodecord.pages.dev/)
 - [Discord support server](https://discord.com/invite/BSaERbS)
 
 ---

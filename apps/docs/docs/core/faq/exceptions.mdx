@@ -1,0 +1,129 @@
+---
+title: Exception codes
+---
+
+# Exception codes
+
+Every exception thrown by `@nodecord/core` carries a code, and the error message links back to the matching entry on this page. The list below is exhaustive for `NodecordExceptionCode`.
+
+Most of these are thrown at startup, while the module tree is being compiled, rather than while your bot is running. That is deliberate: a wiring mistake should stop the process before the bot connects to Discord.
+
+## CIRCULAR_IMPORT
+
+Thrown by `PossibleCircularImportException` when an entry inside a module's `imports` array resolves to `undefined`.
+
+The usual cause is two modules importing each other. Under CommonJS one of the two is still mid-evaluation when the other reads it, so the class comes back as `undefined`. The error prints the offending `@Module()` block with an arrow pointing at the failing index.
+
+Break the cycle by moving whatever both modules need into a third module that each imports, and mark it `global: true` if it is needed widely.
+
+```typescript
+@Module({
+    providers: [LoggerService],
+    global: true,
+})
+export class LoggerModule {}
+```
+
+## INVALID_MODULE
+
+Thrown by `InvalidModuleException` when a class passed to `imports` is not decorated with `@Module`.
+
+```typescript
+// wrong: no decorator
+export class BotModule {}
+
+// right
+@Module({ handlers: [PingCommand] })
+export class BotModule {}
+```
+
+## INVALID_PROVIDER
+
+Thrown by `InvalidProviderException` when a class listed in `providers` is not decorated with `@Injectable`.
+
+The decorator is what lets the container read the constructor's parameter types, so it is required even when the class takes no dependencies.
+
+## INVALID_LISTENER
+
+Thrown by `InvalidListenerException` when a class listed in `listeners` is not decorated with an event decorator such as `@Listener`.
+
+Note that listeners belong in the `listeners` array, not in `providers`.
+
+## INVALID_HANDLER
+
+Thrown by `InvalidHandlerException` when a class listed in `handlers` is missing a command decorator such as `@SlashCommand`, or does not implement `CommandHandler`.
+
+Implementing the interface means having an `execute()` method.
+
+## INVALID_INTERCEPTOR
+
+Thrown by `InvalidInterceptorException` when a class is not decorated with `@Interceptor`, or when an instance is passed to `@UseInterceptors` instead of the class itself.
+
+```typescript
+// wrong: passing an instance
+@UseInterceptors(new LatencyInterceptor())
+
+// right: passing the class, the container builds it
+@UseInterceptors(LatencyInterceptor)
+```
+
+## PROVIDER_NOT_FOUND
+
+Two exceptions share this code.
+
+`ProviderNotFoundException` is thrown when you ask for a provider that is not registered in any module, typically through `client.get()`.
+
+`UnresolvedBindingException` is thrown when a constructor dependency cannot be resolved while compiling a module. Its message names both the module and the dependency it failed to resolve.
+
+In both cases the provider has to appear in the `providers` array of the module that needs it, or of one of that module's ancestors. Providers are not visible across sibling modules unless the module that owns them is marked `global: true`.
+
+## DUPLICATE_INTERCEPTOR
+
+Thrown by `DuplicateInterceptorException` when the same interceptor would run twice for one handler.
+
+This happens when an interceptor is registered in a module's `providers` and also attached to a handler in that module with `@UseInterceptors`. Module-level registration already covers every handler in the module and its children, so the handler-level attachment is redundant. Remove one of the two.
+
+## INVALID_EXCEPTION_HANDLER
+
+Thrown by `InvalidExceptionHandlerException` when a class used as an exception handler is not decorated with `@OnException`.
+
+The decorator takes the exception types the class handles, and the class needs a `handle()` method.
+
+## MISSING_CONTRACT_METHOD
+
+Thrown by `MissingContractMethodException` when a class is registered in a role whose interface it does not satisfy. The message names the class, the contract, and the specific method that is missing.
+
+TypeScript interfaces do not exist at runtime, so the framework checks for the method when it compiles the module rather than at build time. A class can typecheck as `implements CommandHandler` and still hit this if the method name is misspelled.
+
+## INTERNAL_ERROR
+
+Thrown by `InternalCompilerException` when a provider is mapped to a module that was never compiled.
+
+This is a bug in `ModuleCompiler` rather than a mistake in your code. Please open an issue with the module structure that triggers it.
+
+## MISSING_CLIENT_OPTIONS
+
+Thrown by `MissingRequiredClientOptionsException` when `NodecordClient.create()` is called without the options the adapter needs.
+
+The discord.js adapter needs at least the gateway intents:
+
+```typescript
+const client = NodecordClient.create<ClientOptions>({
+    module: BotModule,
+    options: {
+        intents: [GatewayIntentBits.Guilds],
+    },
+});
+```
+
+## INVALID_OPTION_CONTEXT
+
+Thrown by `InvalidOptionContextException` when `@Option()` is used in a class that is not decorated with `@SlashCommand`.
+
+Slash command options only exist for chat input commands, so the decorator has nothing to read anywhere else. The message names the class, the method, and the option names involved.
+
+## INVALID_AUTOCOMPLETE_CONTEXT
+
+Thrown by `InvalidAutocompleteContextException` when `@Autocomplete()` is used in a class that is not decorated with `@SlashCommand`.
+
+Autocomplete methods live in the same class as the command they complete. The option also has to be declared with `.setAutocomplete(true)` in the builder, otherwise Discord never sends the autocomplete interaction and the method is simply never called.
