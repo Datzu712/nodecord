@@ -1,0 +1,44 @@
+name: Deploy GitHub Pages redirect
+
+# The docs moved to Cloudflare Pages. GitHub Pages now serves a small redirect
+# site so the datzu712.github.io/nodecord links shipped in the npm readmes for
+# 0.2.0 keep resolving. Those tarballs are immutable, so the old host cannot
+# simply be turned off.
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - '.github/pages-redirect/**'
+            - '.github/workflows/pages-redirect.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: github-pages-redirect
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        name: Deploy redirect
+        runs-on: ubuntu-latest
+
+        permissions:
+            pages: write
+            id-token: write
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Upload redirect site
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: .github/pages-redirect
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

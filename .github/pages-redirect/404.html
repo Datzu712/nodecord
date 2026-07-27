@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Nodecord docs have moved</title>
+        <meta name="robots" content="noindex" />
+        <script>
+            // GitHub Pages serves this file for every path that does not exist.
+            // The redirect site only ships index.html, so every deep link from the
+            // old /nodecord/* layout lands here and gets forwarded with its path
+            // intact. Published npm readmes for 0.2.0 point at the old URLs and
+            // cannot be edited, so these links have to keep working.
+            (function () {
+                var target = 'https://nodecord.pages.dev';
+                var path = window.location.pathname.replace(/^\/nodecord/, '');
+                window.location.replace(target + path + window.location.search + window.location.hash);
+            })();
+        </script>
+        <meta http-equiv="refresh" content="1; url=https://nodecord.pages.dev/" />
+    </head>
+    <body>
+        <p>
+            The Nodecord documentation now lives at
+            <a href="https://nodecord.pages.dev/">nodecord.pages.dev</a>.
+        </p>
+    </body>
+</html>
