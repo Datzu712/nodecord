@@ -5,8 +5,8 @@
     "types": "./dist/index.d.ts",
     "main": "./dist/index.js",
     "scripts": {
-        "dev": "tsup --watch",
-        "build": "tsup",
+        "dev": "tsdown --watch",
+        "build": "tsdown",
         "lint": "eslint adapter testing --ext .ts",
         "typecheck": "tsc --noEmit"
     },
@@ -34,7 +34,6 @@
     "devDependencies": {
         "@nodecord/core": "workspace:^",
         "discord-api-types": "^0.38.48",
-        "tsup": "8.5.1",
         "typescript": "6.0.3"
     },
     "dependencies": {

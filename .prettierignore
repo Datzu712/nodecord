@@ -1,0 +1,9 @@
+# pnpm owns this file's formatting. Without this entry the *.yaml glob in
+# lint-staged reformats it on every commit, pnpm rewrites it on the next
+# install, and each pull request carries a spurious multi-thousand line diff.
+pnpm-lock.yaml
+
+# Build output
+dist
+build
+.docusaurus
