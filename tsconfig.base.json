@@ -2,9 +2,7 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
         "target": "ES2022",
-        "lib": [
-            "es2022",
-        ],
+        "lib": ["es2022"],
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "moduleDetection": "force",
@@ -12,9 +10,7 @@
         "declarationMap": true,
         "sourceMap": true,
         "strict": true,
-        "types": [
-            "node"
-        ],
+        "types": ["node"],
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
@@ -32,7 +28,5 @@
         "emitDecoratorMetadata": true,
         "incremental": false
     },
-    "exclude": [
-        "prototype"
-    ]
+    "exclude": ["prototype"]
 }

@@ -21,8 +21,26 @@ jobs:
                   cache: pnpm
 
             - run: pnpm install --frozen-lockfile
+            # The build has to run first. djs-adapter imports @nodecord/core,
+            # whose types resolve through the "types" field to dist/index.d.ts.
+            # Without that file the import is an error type and every no-unsafe-*
+            # rule fires on it: 33 errors instead of 0.
             - run: pnpm build
-            - run: pnpm turbo lint --filter='./packages/*'
+            - run: pnpm lint
+
+    format:
+        name: Format
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm format:check
 
     typecheck:
         name: Typecheck

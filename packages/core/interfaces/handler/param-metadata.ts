@@ -31,4 +31,8 @@ export interface FocusedOptionParamMetadata extends BaseParamMetadata {
 }
 
 export type ParamMetadata =
-    ContextParamMetadata | OptionParamMetadata | AuthorParamMetadata | GuildParamMetadata | FocusedOptionParamMetadata;
+    | ContextParamMetadata
+    | OptionParamMetadata
+    | AuthorParamMetadata
+    | GuildParamMetadata
+    | FocusedOptionParamMetadata;

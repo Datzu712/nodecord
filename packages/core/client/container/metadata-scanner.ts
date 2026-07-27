@@ -55,7 +55,8 @@ export class MetadataScanner {
     static getHandlerInterceptors(target: Constructor): Constructor<NodecordInterceptor>[] {
         return (
             (Reflect.getMetadata(USE_INTERCEPTORS_METADATA, target) as
-                Constructor<NodecordInterceptor>[] | undefined) ?? []
+                | Constructor<NodecordInterceptor>[]
+                | undefined) ?? []
         );
     }
 
@@ -86,18 +87,18 @@ export class MetadataScanner {
     static getHandlerExceptionHandlers(target: Constructor): Constructor<ExceptionHandler>[] {
         return (
             (Reflect.getMetadata(USE_EXCEPTION_HANDLER_METADATA, target) as
-                Constructor<ExceptionHandler>[] | undefined) ?? []
+                | Constructor<ExceptionHandler>[]
+                | undefined) ?? []
         );
     }
     static isExecutorDeferReply(target: Constructor, methodKey: string): boolean {
         return Reflect.hasMetadata(DEFER_REPLY_METADATA, target, methodKey);
     }
 
-    static isExecutorEphemeral(target: Constructor, methodKey: string): boolean {
+    // Parameters are kept for the eventual implementation, see the warning below.
+    static isExecutorEphemeral(_target: Constructor, _methodKey: string): boolean {
         console.warn('Ephemeral executors are not implemented yet. Returning false for all executors.');
         return false;
-        //throw new Error('Ephemeral executors are not implemented yet'); // not implemented yet
-        return Reflect.hasMetadata('TODO', target, methodKey);
     }
 
     static getHandlerExecutorParams(handler: Constructor, methodKey: string): ParamMetadata[] {

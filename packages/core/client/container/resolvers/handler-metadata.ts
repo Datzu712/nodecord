@@ -106,15 +106,12 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
                 throw new NodecordCoreException(
                     `Malformed CommandHandler ${target.name}: multiple slash command executors found. Please open an issue if you are seeing this error.`,
                 );
-                break;
             }
             case ExecutionKind.CONTEXT_MENU: {
                 throw new Error('Not implemented yet');
-                break;
             }
             case ExecutionKind.BUTTON: {
                 throw new Error('Not implemented yet');
-                break;
             }
         }
     }

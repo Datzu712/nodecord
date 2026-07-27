@@ -97,7 +97,8 @@ export class ModuleCompiler {
         }
 
         const testOverrides = Reflect.getMetadata(TESTING_OVERRIDES_METADATA, moduleClass) as
-            Map<Constructor, unknown> | undefined;
+            | Map<Constructor, unknown>
+            | undefined;
 
         if (testOverrides) {
             this.overrides = testOverrides;
