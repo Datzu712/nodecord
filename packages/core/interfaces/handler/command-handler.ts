@@ -33,12 +33,34 @@ export interface CommandHandlerMetadata {
 }
 
 /**
+ * Anything exposing a `toJSON()` method (e.g. a discord.js `SlashCommandBuilder`) can be passed to
+ * `@SlashCommand()`. Detected structurally (duck-typing), never via `instanceof`, so `packages/core`
+ * never has to import discord.js or any `@discordjs/*` package.
+ */
+export interface CommandDefinitionBuilder {
+    toJSON(): unknown;
+}
+
+/**
+ * Argument accepted by `@SlashCommand()`: either a builder exposing `toJSON()`, or a plain object
+ * (at minimum `name`/`description`, plus any adapter-specific fields such as `type`, `options`, `nsfw`, etc.).
+ */
+export type SlashCommandDefinition =
+    | CommandDefinitionBuilder
+    | (Omit<CommandHandlerMetadata, 'id' | 'applicationCommandType'> & Record<string, unknown>);
+
+/**
  * At "compile" time we don't know anything about infrastructure or DI.
  * That's why we need a separate interface to represent the minimum contract of a handler
  */
 export interface CompiledCommandHandler {
     metadata: CommandHandlerMetadata;
-    // definition: APIApplicationCommand; We can add this later because it is not needed in runtime to know the exact shape of the command definition for discord api
+
+    /**
+     * The original object or builder passed to `@SlashCommand()`, preserved by identity so adapters
+     * can use it as-is for command registration (e.g. a discord.js `SlashCommandBuilder` instance).
+     */
+    definition: unknown;
 
     /**
      * Map<executor method key, ExecuteOptions>.

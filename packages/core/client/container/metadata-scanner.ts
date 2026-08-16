@@ -2,6 +2,7 @@ import { Constructor } from '../../interfaces/common/constructor.js';
 import { INJECTABLE_METADATA, INJECTABLE_WATERMARK } from '../../constants/injectable.js';
 import {
     COMMAND_ARGS_METADATA,
+    COMMAND_HANDLER_DEFINITION,
     COMMAND_HANDLER_METADATA,
     DEFER_REPLY_METADATA,
     SUB_EXECUTIONS_METADATA,
@@ -107,6 +108,10 @@ export class MetadataScanner {
 
     static getCommandHandlerEntrypointMetadata(handler: Constructor) {
         return Reflect.getMetadata(COMMAND_HANDLER_METADATA, handler) as CommandHandlerMetadata | undefined;
+    }
+
+    static getCommandHandlerDefinition(handler: Constructor): unknown {
+        return Reflect.getMetadata(COMMAND_HANDLER_DEFINITION, handler) as unknown;
     }
 
     static getCommandHandlerSubExecutors(handler: Constructor) {

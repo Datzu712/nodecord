@@ -11,6 +11,13 @@ export const HANDLER_WATERMARK = 'nodecord:handler:watermark';
 export const COMMAND_HANDLER_METADATA = 'nodecord:handler:metadata';
 
 /**
+ * Metadata key used to store the ORIGINAL definition object or builder passed to @SlashCommand,
+ * preserved by identity (not the normalized `CommandHandlerMetadata`) so adapters can use it as-is
+ * for command registration (e.g. a discord.js `SlashCommandBuilder` instance).
+ */
+export const COMMAND_HANDLER_DEFINITION = 'nodecord:handler:definition';
+
+/**
  * Params metadata related with a method executor inside a command handler.
  * Stored as ParamMetadata[] on the handler class, keyed by method name via Reflect.
  *

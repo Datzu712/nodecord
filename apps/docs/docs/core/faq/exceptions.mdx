@@ -127,3 +127,42 @@ Slash command options only exist for chat input commands, so the decorator has n
 Thrown by `InvalidAutocompleteContextException` when `@Autocomplete()` is used in a class that is not decorated with `@SlashCommand`.
 
 Autocomplete methods live in the same class as the command they complete. The option also has to be declared with `.setAutocomplete(true)` in the builder, otherwise Discord never sends the autocomplete interaction and the method is simply never called.
+
+## INVALID_COMMAND_DEFINITION
+
+Thrown by `InvalidCommandDefinitionException` when the value passed to `@SlashCommand()` fails validation. `@SlashCommand()` accepts either a plain object or any builder exposing a `toJSON()` method (e.g. a discord.js `SlashCommandBuilder`), and the message names the handler class plus the specific reason:
+
+- `name` is missing or an empty string.
+- `description` is missing or an empty string. Only chat input (slash) commands are supported, so `description` is always required.
+- `type` is present and is not chat input (`1`). `@SlashCommand` only supports chat input commands.
+- The definition is not a non-null object (for plain objects), or `toJSON()` did not return a non-null object (for builders).
+- `toJSON()` itself threw. This happens when a builder validates its own state and rejects an incomplete definition; the original error message is included.
+
+```typescript
+// wrong: type 2 is a User context menu command, not chat input
+@SlashCommand({ name: 'ping', description: 'Replies with pong', type: 2 })
+export class PingCommand implements CommandHandler {
+    execute() {}
+}
+
+// right
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
+export class PingCommand implements CommandHandler {
+    execute() {}
+}
+```
+
+## DUPLICATE_COMMAND_NAME
+
+Thrown by `DuplicateCommandNameException` when `CommandCatalog` is built from the compiled module tree and two handlers register the same `name` for the same `applicationCommandType`. This is checked during `NodecordClient.create()`, before the client ever logs in.
+
+Two commands are allowed to share a `name` as long as they have different `applicationCommandType`s (for example, a chat input command and a `User` context menu command both named `"ping"`). Rename one of the handlers to fix the error.
+
+```typescript
+// wrong: both are ChatInput commands named "ping"
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
+export class PingCommand implements CommandHandler {}
+
+@SlashCommand({ name: 'ping', description: 'Also replies with pong' })
+export class AnotherPingCommand implements CommandHandler {}
+```

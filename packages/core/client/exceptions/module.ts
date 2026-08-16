@@ -38,6 +38,15 @@ export class InvalidHandlerException extends NodecordCoreException {
     }
 }
 
+export class InvalidCommandDefinitionException extends NodecordCoreException {
+    constructor(handlerName: string, reason: string) {
+        super(
+            `Invalid command definition for handler ${handlerName}: ${reason}`,
+            NodecordExceptionCode.INVALID_COMMAND_DEFINITION,
+        );
+    }
+}
+
 export class InvalidInterceptorException extends NodecordCoreException {
     constructor(interceptorName: string) {
         super(
@@ -70,6 +79,18 @@ export class DuplicateInterceptorException extends NodecordCoreException {
                 `Make sure each interceptor has a unique ID and that you are not registering the same interceptor both globally and at the handler level.`,
             ].join('\n'),
             NodecordExceptionCode.DUPLICATE_INTERCEPTOR,
+        );
+    }
+}
+
+export class DuplicateCommandNameException extends NodecordCoreException {
+    constructor(commandName: string) {
+        super(
+            [
+                `Duplicate command name "${commandName}" detected.`,
+                `Make sure no two handlers register the same "name" for the same "applicationCommandType".`,
+            ].join('\n'),
+            NodecordExceptionCode.DUPLICATE_COMMAND_NAME,
         );
     }
 }

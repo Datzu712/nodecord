@@ -64,6 +64,7 @@ function makeCommand(
             description: 'Search',
             applicationCommandType: 1,
         },
+        definition: undefined,
         executors: [
             [
                 'autocomplete',

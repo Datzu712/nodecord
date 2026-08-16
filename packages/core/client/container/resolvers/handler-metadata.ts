@@ -118,6 +118,7 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
 
     return {
         metadata: rawEntrypointExecutorMetadata,
+        definition: MetadataScanner.getCommandHandlerDefinition(target),
         executors: Array.from(executions.entries()),
     };
 }

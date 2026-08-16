@@ -5,6 +5,7 @@ export {
     type InitAdapterOptions,
 } from './abstract-client-adapter.js';
 export { CommandExecutor } from './command-executor.js';
+export { CommandCatalog } from './command-catalog.js';
 export { ConsoleLogger } from './console-logger.js';
 export { InteractionContext } from '../context/interaction-context.js';
 export { ModuleCompiler } from './container/module-compiler.js';

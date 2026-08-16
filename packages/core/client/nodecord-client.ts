@@ -3,6 +3,7 @@ import { NodecordClientOptions } from '../interfaces/client/nodecord-client-opti
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
 import type { Constructor } from '../interfaces/common/constructor.js';
 import { AbstractClientAdapter, type LoadSlashCommandsOptions } from './abstract-client-adapter.js';
+import { CommandCatalog } from './command-catalog.js';
 import { CommandExecutor } from './command-executor.js';
 import { ConsoleLogger } from './console-logger.js';
 import { ModuleCompiler } from './container/module-compiler.js';
@@ -58,10 +59,12 @@ export class NodecordClient {
         const listeners = this.moduleCompiler.getEventListeners();
 
         const executor = new CommandExecutor(this.logger, handlers);
+        const commands = new CommandCatalog(handlers);
 
         this.adapter.initialize({
             executor,
             listeners,
+            commands,
         });
     }
 

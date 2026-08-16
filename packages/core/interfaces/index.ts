@@ -2,7 +2,14 @@ export type { NodecordInterceptor, RegisteredInterceptor } from './interceptor/i
 export type { Constructor } from './common/constructor.js';
 export type { AbstractLogger } from './common/abstract-logger.js';
 export type { InteractionRequest } from './handler/interaction-request.js';
-export type { CommandHandler, RegisteredCommandHandler } from './handler/command-handler.js';
+export type {
+    CommandHandler,
+    RegisteredCommandHandler,
+    CompiledCommandHandler,
+    CommandHandlerMetadata,
+    SlashCommandDefinition,
+    CommandDefinitionBuilder,
+} from './handler/command-handler.js';
 export type { ListenerProvider, RegisteredListener } from './listener/event-listener.js';
 export type { ParamMetadata } from './handler/param-metadata.js';
 export type {
