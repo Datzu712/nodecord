@@ -52,10 +52,10 @@
         "nestjs"
     ],
     "devDependencies": {
-        "discord-api-types": "^0.38.48",
         "typescript": "6.0.3"
     },
     "dependencies": {
+        "discord-api-types": "^0.38.48",
         "inversify": "^8.1.0"
     },
     "files": [
