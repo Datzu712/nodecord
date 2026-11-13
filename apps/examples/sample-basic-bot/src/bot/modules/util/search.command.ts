@@ -1,23 +1,36 @@
 import { Autocomplete, CommandHandler, Focused, Option, SlashCommand, ChatInputOption } from '@nodecord/core';
-import { SlashCommandBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 
-@SlashCommand(
-    new SlashCommandBuilder()
-        .setName('search')
-        .setDescription('Search command with autocomplete')
-        .addStringOption((option) =>
-            option.setName('query').setDescription('The search query').setRequired(true).setAutocomplete(true),
-        )
-        .addStringOption((option) =>
-            option.setName('category').setDescription('The category to search in').setRequired(true),
-        )
-        .addStringOption((option) =>
-            option.setName('tag').setDescription('The tag to filter by').setRequired(false).setAutocomplete(true),
-        )
-        .addStringOption((option) =>
-            option.setName('language').setDescription('The language filter').setRequired(false),
-        ),
-)
+@SlashCommand({
+    name: 'search',
+    description: 'Search command with autocomplete',
+    options: [
+        {
+            type: ApplicationCommandOptionType.String,
+            name: 'query',
+            description: 'The search query',
+            required: true,
+            autocomplete: true,
+        },
+        {
+            type: ApplicationCommandOptionType.String,
+            name: 'category',
+            description: 'The category to search in',
+            required: true,
+        },
+        {
+            type: ApplicationCommandOptionType.String,
+            name: 'tag',
+            description: 'The tag to filter by',
+            autocomplete: true,
+        },
+        {
+            type: ApplicationCommandOptionType.String,
+            name: 'language',
+            description: 'The language filter',
+        },
+    ],
+})
 export class SearchCommand implements CommandHandler {
     execute(
         @Option('query') query: ChatInputOption,

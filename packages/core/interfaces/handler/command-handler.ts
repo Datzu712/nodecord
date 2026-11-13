@@ -2,6 +2,7 @@ import type { RegisteredInterceptor } from '../interceptor/interceptor.js';
 import type { RegisteredExceptionHandler } from '../exception-handler/exception-handler.js';
 import { ExecuteOptions } from './execute-options.js';
 import { ApplicationCommandTypes } from '../../constants/application-command-types.js';
+import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 export interface CommandHandler {
     /**
@@ -11,24 +12,14 @@ export interface CommandHandler {
 }
 
 /**
- * Basic metadata about a command handler, used for registration and execution.
+ * Metadata about a command handler, used for registration and execution. It is the command definition as the
+ * Discord API expects it, plus the fields the framework needs internally.
  * https://docs.discord.com/developers/interactions/application-commands#application-command-object
  *
- * todo: add missing name_localizations, guildId, description_localizations, default_member_permissions, etc...
+ * todo: add guildId
  */
-export interface CommandHandlerMetadata {
+export interface CommandHandlerMetadata extends Omit<RESTPostAPIChatInputApplicationCommandsJSONBody, 'type'> {
     id: string; // internal framework ID
-
-    /**
-     * Name of command, 1-32 characters and should match `^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` regex.
-     */
-    name: string;
-
-    /**
-     * Description for `CHAT_INPUT` commands, 1-100 characters.
-     */
-    description: string;
-    nsfw?: boolean;
     applicationCommandType: ApplicationCommandTypes;
 }
 

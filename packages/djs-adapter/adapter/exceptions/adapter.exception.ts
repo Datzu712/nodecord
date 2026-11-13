@@ -18,12 +18,3 @@ export class AdapterNotInitializedException extends DjsAdapterException {
         );
     }
 }
-
-export class InvalidHandlerMetadataException extends DjsAdapterException {
-    constructor(handlerName: string) {
-        super(
-            `Invalid metadata for handler "${handlerName}". Expected SlashCommandBuilder or ContextMenuCommandBuilder.`,
-            DjsAdapterErrorCodes.INVALID_HANDLER_METADATA,
-        );
-    }
-}

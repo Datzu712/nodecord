@@ -1,4 +1,10 @@
-import { Client as DjsClient, type ClientOptions, Events } from 'discord.js';
+import {
+    Client as DjsClient,
+    type ClientOptions,
+    Events,
+    type RESTPutAPIApplicationCommandsJSONBody,
+    Routes,
+} from 'discord.js';
 import { AbstractClientAdapter, type InitAdapterOptions, type LoadSlashCommandsOptions } from '@nodecord/core';
 import { EventManager } from './event-manager.js';
 import { InteractionDispatcher } from './events/interaction-dispatcher.js';
@@ -50,17 +56,11 @@ export class DiscordJsAdapter extends AbstractClientAdapter<DjsClient> {
     /**
      * Todo: Add someway to filter which commands get registered.
      */
-    // eslint-disable-next-line @typescript-eslint/require-await
-    async loadSlashCommands(_options: LoadSlashCommandsOptions): Promise<void> {
-        throw new Error('Method not implemented.'); // Placeholder until we decide on a strategy for command registration.
-        // const commands = this.commandRegistry
-        //     .getAll()
-        //     .map((cmd) => cmd.metadata.definition) as ApplicationCommandDataResolvable[];
-
-        // const rest = new REST({ version: restVersion }).setToken(token);
-        // await rest.put(Routes.applicationCommands(clientId), {
-        //     body: commands,
-        // });
+    async loadSlashCommands(
+        { token, clientId }: LoadSlashCommandsOptions,
+        commands: RESTPutAPIApplicationCommandsJSONBody,
+    ): Promise<void> {
+        await this.clientInstance.rest.setToken(token).put(Routes.applicationCommands(clientId), { body: commands });
     }
 
     getClient(): DjsClient {

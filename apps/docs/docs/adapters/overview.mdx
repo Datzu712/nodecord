@@ -21,7 +21,10 @@ export abstract class AbstractClientAdapter {
     ): Promise<void>;
 
     abstract login(token: string): Promise<void>;
-    abstract loadSlashCommands(handlers: HandlerMetadata[]): Promise<void>;
+    abstract loadSlashCommands(
+        options: LoadSlashCommandsOptions,
+        commands: RESTPutAPIApplicationCommandsJSONBody,
+    ): Promise<void>;
 }
 ```
 
@@ -42,7 +45,7 @@ The rest of your application, modules, providers, commands, interceptors, remain
 
 ## A note on abstraction
 
-Fully abstracting the underlying Discord library is a long-term effort. At this stage, some parts of your code will touch library-specific types directly, for example `@SlashCommand()` is designed to receive a discord.js `SlashCommandBuilder` when using the discord.js adapter, and `ctx.getRaw()` may be necessary when the framework doesn't expose what you need.
+Fully abstracting the underlying Discord library is a long-term effort. At this stage, some parts of your code will touch library-specific types directly, for example `ctx.getRaw()` may be necessary when the framework doesn't expose what you need.
 
 :::caution
 Any code that depends on raw library types is tied to the adapter you're using. Swapping adapters later will require updating those handlers. The more you rely on `ctx.getRaw()` or discord.js types directly, the harder that migration becomes.

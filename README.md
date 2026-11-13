@@ -111,10 +111,10 @@ export class EventsModule {}
 
 ### Commands
 
-Slash commands are decorated with `@SlashCommand` and receive a `SlashCommandBuilder` (or compatible metadata) as argument. Services get injected through the constructor; Discord-specific context comes through parameter decorators on `execute()`.
+Slash commands are decorated with `@SlashCommand` and receive the command definition as a plain object, in the shape the Discord API expects. Services get injected through the constructor; Discord-specific context comes through parameter decorators on `execute()`.
 
 ```typescript
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
 export class PingCommand {
     constructor(private readonly logger: LoggerService) {}
 
@@ -156,7 +156,7 @@ All param decorators work on both `execute()` and `@Autocomplete()` methods. `@F
 Place `@DeferReply()` on `execute()` so the framework will defer the reply before running the handler. The `ResponseHandler` will edit the deferred reply with the return value of `execute()`, so you can return a string or an `InteractionReplyOptions` object instead of calling `reply()` manually.
 
 ```typescript
-@SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows bot status'))
+@SlashCommand({ name: 'status', description: 'Shows bot status' })
 export class StatusCommand implements CommandHandler {
     @DeferReply()
     execute(): string {
@@ -215,7 +215,7 @@ The execution order is always outermost to innermost: root module → parent mod
 Use `@UseInterceptors()` on a command class to attach interceptors that only run for that specific command. These run after all module-level interceptors in the chain.
 
 ```typescript
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
 @UseInterceptors(RateLimitInterceptor)
 export class PingCommand implements CommandHandler {
     execute(): string {
@@ -263,7 +263,7 @@ export class AppModule {}
 Use `@UseExceptionHandler()` on a command class to attach exception handlers that only apply to that specific command. Handler-level exception handlers take priority over module-level ones.
 
 ```typescript
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
 @UseExceptionHandler(RateLimitErrorHandler)
 export class PingCommand implements CommandHandler {
     execute(): string {
@@ -336,11 +336,11 @@ const client = NodecordClient.create<ClientOptions>({
     },
 });
 
-await client.loadSlashCommands();
-await client.login(process.env.BOT_TOKEN);
+await client.loadSlashCommands({ token: process.env.BOT_TOKEN!, clientId: process.env.CLIENT_ID! });
+await client.login(process.env.BOT_TOKEN!);
 ```
 
-`NodecordClient.create()` compiles the module tree, wires up the DI containers, and initializes the adapter. Call `client.get(ServiceClass)` to pull instances out of the dependency graph.
+`NodecordClient.create()` compiles the module tree, wires up the DI containers, and initializes the adapter. `loadSlashCommands()` overwrites the application's global commands with the ones found in your modules, so a command that is no longer in a module is removed from Discord. Call `client.get(ServiceClass)` to pull instances out of the dependency graph.
 
 ---
 

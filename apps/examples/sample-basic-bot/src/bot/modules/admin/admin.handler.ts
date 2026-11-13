@@ -1,9 +1,7 @@
 import { CommandHandler, DeferReply, SlashCommand } from '@nodecord/core';
-import { SlashCommandBuilder } from 'discord.js';
-
 import { AdminService } from './admin.service.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('admin').setDescription('Admin command'))
+@SlashCommand({ name: 'admin', description: 'Admin command' })
 export class AdminHandler implements CommandHandler {
     constructor(private readonly adminService: AdminService) {}
 

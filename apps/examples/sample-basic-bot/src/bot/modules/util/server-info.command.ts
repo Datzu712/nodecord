@@ -1,7 +1,7 @@
 import { CommandHandler, DeferReply, Guild, SlashCommand } from '@nodecord/core';
-import { Guild as DjsGuild, SlashCommandBuilder } from 'discord.js';
+import { Guild as DjsGuild } from 'discord.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('server-info').setDescription('Shows information about this server'))
+@SlashCommand({ name: 'server-info', description: 'Shows information about this server' })
 export class ServerInfoCommand implements CommandHandler {
     @DeferReply()
     execute(@Guild() guild: DjsGuild | null): string {

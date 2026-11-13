@@ -19,12 +19,13 @@ async function bootstrap() {
     });
 
     const admin = client.get(AdminService);
+    // oxlint-disable-next-line no-console
     console.log(admin.getStatus());
 
-    // await client.loadSlashCommands({
-    //     token: process.env.BOT_TOKEN!,
-    //     clientId: process.env.CLIENT_ID!,
-    // });
+    await client.loadSlashCommands({
+        token: process.env.BOT_TOKEN!,
+        clientId: process.env.CLIENT_ID!,
+    });
 
     await client.login(process.env.BOT_TOKEN!);
 }

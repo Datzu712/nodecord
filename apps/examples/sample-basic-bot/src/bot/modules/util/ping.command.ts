@@ -1,7 +1,7 @@
 import { Author, CommandHandler, Context, InteractionContext, SlashCommand } from '@nodecord/core';
-import { ChatInputCommandInteraction, SlashCommandBuilder, User } from 'discord.js';
+import { ChatInputCommandInteraction, User } from 'discord.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
 export class PingCommand implements CommandHandler {
     constructor() {}
 
