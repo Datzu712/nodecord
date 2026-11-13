@@ -8,7 +8,7 @@ import { ApplicationCommandTypes } from '../constants/application-command-types.
 /**
  * Class decorator for slash command handlers.
  *
- * The metadata parameter depends on the adapter. For example, the discord.js adapter accepts either a SlashCommandBuilder.
+ * The metadata is the command definition as the Discord API expects it, so it is registered as is.
  */
 export function SlashCommand(meta: Omit<CommandHandlerMetadata, 'id' | 'applicationCommandType'>): ClassDecorator {
     return (target) => {
