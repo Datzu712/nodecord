@@ -48,9 +48,9 @@ A command is a class decorated with `@SlashCommand`. Services arrive through the
 
 ```typescript
 import { Author, CommandHandler, SlashCommand } from '@nodecord/core';
-import { SlashCommandBuilder, User } from 'discord.js';
+import { User } from 'discord.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with pong'))
+@SlashCommand({ name: 'ping', description: 'Replies with pong' })
 export class PingCommand implements CommandHandler {
     constructor(private readonly pingService: PingService) {}
 

@@ -44,9 +44,8 @@ src/
 
 ```ts title="src/ping/ping.command.ts"
 import { SlashCommand } from '@nodecord/core';
-import { SlashCommandBuilder } from 'discord.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'))
+@SlashCommand({ name: 'ping', description: 'Replies with Pong!' })
 export class PingCommand {
     execute(): string {
         return 'Pong!';
@@ -89,5 +88,6 @@ const client = NodecordClient.create<ClientOptions>({
     },
 });
 
+await client.loadSlashCommands({ token: process.env.TOKEN, clientId: process.env.CLIENT_ID });
 await client.login(process.env.TOKEN);
 ```

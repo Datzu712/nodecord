@@ -4,16 +4,15 @@ title: Commands
 
 # Commands
 
-Commands are handler classes decorated with `@SlashCommand()`. Each class must implement an `execute()` method that the framework calls when the command is invoked.
+Commands are handler classes decorated with `@SlashCommand()`, which receives the command definition as a plain object in the shape the [Discord API](https://docs.discord.com/developers/interactions/application-commands#application-command-object) expects. Each class must implement an `execute()` method that the framework calls when the command is invoked.
 
 ## Defining a command
 
 ```ts
 import { SlashCommand, DeferReply, Author } from '@nodecord/core';
-import { SlashCommandBuilder } from 'discord.js';
 import { User } from 'discord.js';
 
-@SlashCommand(new SlashCommandBuilder().setName('status').setDescription('Shows your status'))
+@SlashCommand({ name: 'status', description: 'Shows your status' })
 export class StatusCommand {
     constructor(private readonly statusService: StatusService) {}
 
@@ -32,24 +31,25 @@ Automatically calls `interaction.deferReply()` before invoking `execute()`. Use 
 
 The return value of `execute()` is forwarded to the adapter, which handles sending the response. Interceptors can transform this value before it reaches the adapter for example, converting a plain string into a Discord embed.
 
-## Keeping builders in a separate file
+## Using discord.js builders
 
-As commands grow to include options, subcommands, or choices, the builder definition can get long. The recommended pattern is to extract it into its own file, similar to how DTOs are handled:
+If you prefer a discord.js `SlashCommandBuilder`, call `.toJSON()` on it: the result is the same plain object. Keeping it in its own file, similar to how DTOs are handled, also helps as commands grow to include options, subcommands, or choices:
 
-```ts title="src/status/status.builder.ts"
+```ts title="src/status/status.definition.ts"
 import { SlashCommandBuilder } from 'discord.js';
 
-export const StatusCommandBuilder = new SlashCommandBuilder()
+export const StatusCommandDefinition = new SlashCommandBuilder()
     .setName('status')
     .setDescription('Shows the current bot status')
-    .addStringOption((option) => option.setName('type').setDescription('Status type').setRequired(false));
+    .addStringOption((option) => option.setName('type').setDescription('Status type').setRequired(false))
+    .toJSON();
 ```
 
 ```ts title="src/status/status.command.ts"
 import { SlashCommand } from '@nodecord/core';
-import { StatusCommandBuilder } from './status.builder';
+import { StatusCommandDefinition } from './status.definition';
 
-@SlashCommand(StatusCommandBuilder)
+@SlashCommand(StatusCommandDefinition)
 export class StatusCommand {
     execute(): string {
         return 'Online';
@@ -61,20 +61,25 @@ This keeps the handler class focused on logic and makes the command definition e
 
 ## Autocomplete (discord.js adapter)
 
-To add autocomplete to a command option, mark the option with `.setAutocomplete(true)` in the builder, then add a method decorated with `@Autocomplete('option-name')` in the handler class. The method must return an array of `{ name, value }` objects.
+To add autocomplete to a command option, set `autocomplete: true` on the option, then add a method decorated with `@Autocomplete('option-name')` in the handler class. The method must return an array of `{ name, value }` objects.
 
 ```ts
 import { SlashCommand, Autocomplete, Focused, Option, ChatInputOption } from '@nodecord/core';
-import { SlashCommandBuilder } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 
-@SlashCommand(
-    new SlashCommandBuilder()
-        .setName('search')
-        .setDescription('Search for something')
-        .addStringOption((opt) =>
-            opt.setName('query').setDescription('Search query').setRequired(true).setAutocomplete(true),
-        ),
-)
+@SlashCommand({
+    name: 'search',
+    description: 'Search for something',
+    options: [
+        {
+            type: ApplicationCommandOptionType.String,
+            name: 'query',
+            description: 'Search query',
+            required: true,
+            autocomplete: true,
+        },
+    ],
+})
 export class SearchCommand {
     execute(@Option('query') query: ChatInputOption | undefined): string {
         return `Results for: ${query?.value}`;
@@ -103,4 +108,10 @@ Autocomplete methods support the same param decorators as `execute()`. If no met
 
 ## Registering commands
 
-Commands are registered by adding them to the `handlers` array of a module. Slash commands are also registered with Discord's API on startup via `loadSlashCommands()`.
+Commands are registered by adding them to the `handlers` array of a module. Slash commands are also registered with Discord's API on startup via `loadSlashCommands()`:
+
+```ts
+await client.loadSlashCommands({ token: process.env.BOT_TOKEN!, clientId: process.env.CLIENT_ID! });
+```
+
+This overwrites the application's global commands with the ones found in your modules, so a command that is no longer in a module is removed from Discord.
