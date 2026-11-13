@@ -119,6 +119,10 @@ export class NodecordClient {
     }
 
     public async loadSlashCommands(options: LoadSlashCommandsOptions): Promise<void> {
-        await this.adapter.loadSlashCommands(options);
+        const commands = this.moduleCompiler
+            .getHandlers()
+            .map(({ metadata: { id: _id, applicationCommandType: type, ...definition } }) => ({ ...definition, type }));
+
+        await this.adapter.loadSlashCommands(options, commands);
     }
 }

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { RESTPutAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 import { AbstractLogger, RegisteredListener } from '../interfaces/index.js';
 import type { CommandExecutor } from './command-executor.js';
 
 export interface LoadSlashCommandsOptions {
     token: string;
     clientId: string;
-    restVersion?: string;
 }
 
 export interface InitAdapterOptions {
@@ -19,7 +19,10 @@ export abstract class AbstractClientAdapter<TClientInstance = any> {
 
     abstract initialize(adapterOptions: InitAdapterOptions): void;
     abstract login(token: string): Promise<void>;
-    abstract loadSlashCommands(options: LoadSlashCommandsOptions): Promise<void>;
+    abstract loadSlashCommands(
+        options: LoadSlashCommandsOptions,
+        commands: RESTPutAPIApplicationCommandsJSONBody,
+    ): Promise<void>;
 
     abstract getClient(): TClientInstance;
 }
