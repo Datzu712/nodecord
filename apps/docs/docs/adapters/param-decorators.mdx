@@ -4,11 +4,38 @@ title: 'Param decorators'
 
 # Param Decorators
 
-Param decorators let you extract specific values from the interaction directly in handler methods, keeping them clean and free of boilerplate. They work on `execute()` and on any `@Autocomplete()` method.
+Param decorators hand a handler method exactly the piece of the interaction it needs, keeping it free of boilerplate. They work on `execute()` and on any `@Autocomplete()` method.
+
+| Decorator               | The parameter receives                                           |
+| ----------------------- | ---------------------------------------------------------------- |
+| `@Ctx()` / `@Context()` | The `InteractionContext`                                         |
+| `@Author()`             | The user who triggered the interaction                           |
+| `@Guild()`              | The guild it happened in, or `null`                              |
+| `@Option('a')`          | The value of option `a`, or `undefined` if it was not provided   |
+| `@Option('a', 'b')`     | A record of the provided ones among `a` and `b`, keyed by name   |
+| `@Option()`             | A record of every provided option, keyed by name                 |
+| `@Focused()`            | What the user has typed so far in the option being autocompleted |
+
+## Typing a parameter
+
+TypeScript does not check the type you write on a decorated parameter, so it helps to know what really arrives: the object the adapter's library created, untouched. With the discord.js adapter `@Author()` hands you the discord.js `User` and `@Guild()` the discord.js `Guild`.
+
+So annotate with the library's types, and you get everything the library offers:
+
+```ts
+import { Guild, Option } from '@nodecord/core';
+import type { Guild as DjsGuild, User } from 'discord.js';
+
+async execute(@Option('target') target: User, @Guild() guild: DjsGuild | null) {
+    await target.send(`Hello from ${guild?.name}`);
+}
+```
+
+`@nodecord/core` also exports `UserLike`, `GuildLike`, `RoleLike`, `ChannelLike` and `AttachmentLike`. They hold only the few fields every adapter guarantees, such as a user's `id` and `username`, and exist for [adapter authors](./overview.mdx#the-adapter-delivers-the-core-decides) and for code meant to run on any adapter. In a bot's handlers, the library's types are what you want.
 
 ## `@Ctx()`
 
-Injects the `InteractionContext`, which wraps the underlying interaction and exposes its name and kind. `@Context()` is the same decorator under a longer name.
+Injects the `InteractionContext`, which wraps the interaction and exposes its name and kind. `@Context()` is the same decorator under a longer name.
 
 ```ts
 execute(@Ctx() ctx: InteractionContext) {
@@ -16,96 +43,115 @@ execute(@Ctx() ctx: InteractionContext) {
 }
 ```
 
-Pass `{ passThrough: true }` when you want to reply to the interaction yourself instead of returning a value:
+`ctx.getAuthor()` and `ctx.getGuild()` return the same objects `@Author()` and `@Guild()` inject. On a plain `InteractionContext` they are typed as `UserLike` and `GuildLike`. To have them typed with discord.js types, pass the adapter's types:
 
 ```ts
-async execute(@Context({ passThrough: true }) ctx: InteractionContext) {
-  const interaction = ctx.getRaw<ChatInputCommandInteraction>();
-  await interaction.deferReply();
-  await interaction.editReply('Done');
+import type { InteractionContext } from '@nodecord/core';
+import type { DjsTypes } from '@nodecord/djs-adapter';
+
+intercept(ctx: InteractionContext<DjsTypes>, next: () => Promise<unknown>) {
+    console.log(ctx.getGuild()?.name); // typed as a discord.js Guild
+    return next();
 }
 ```
 
-`getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
-
-## `@Guild()`
-
-Injects the `Guild` object from the interaction. Returns `null` if the command was used in a DM.
+Pass `{ passThrough: true }` when the method answers the interaction itself and the framework must not use its return value:
 
 ```ts
-execute(@Guild() guild: Guild | null) {
-  return guild ? guild.name : 'DM';
+async execute(@Context({ passThrough: true }) ctx: ChatInputCommandContext) {
+  await ctx.deferReply();
+  await ctx.editReply({ content: 'Done' });
+}
+```
+
+When you need something Nodecord does not expose, `ctx.getRaw()` returns the interaction object of the underlying library, as the adapter received it. A handler that uses it is tied to its adapter:
+
+```ts
+async execute(@Context({ passThrough: true }) ctx: ChatInputCommandContext) {
+  await ctx.getRaw<ChatInputCommandInteraction>().showModal(modal);
 }
 ```
 
 ## `@Author()`
 
-Injects the `User` who triggered the interaction.
+Injects the user who triggered the interaction. It is always the user, never the guild member, in a guild too.
 
 ```ts
-execute(@Author() user: User) {
-  return `Hello, ${user.username}!`;
+execute(@Author() author: User) {
+  return `Hello, ${author.displayName}!`;
+}
+```
+
+## `@Guild()`
+
+Injects the guild the interaction happened in. It is `null` in a DM, and also when the library does not have the guild, which is what discord.js does for a guild your bot is not a member of.
+
+```ts
+execute(@Guild() guild: Guild | null) {
+  return guild ? `${guild.name} has ${guild.memberCount} members` : 'DM';
 }
 ```
 
 ## `@Option(...names)`
 
-Injects slash command options. What you get back depends on how many names you pass:
+Injects what the user filled in, not a wrapper around it.
 
-| Usage               | Resolves to                           |
-| ------------------- | ------------------------------------- |
-| `@Option()`         | `ChatInputOption[]`, every option     |
-| `@Option('a')`      | `ChatInputOption \| undefined`        |
-| `@Option('a', 'b')` | `ChatInputOption[]`, filtered by name |
-
-An option is not the raw value, it is an object carrying the name, the value, and the Discord option type:
+With one name you get that option, or `undefined` if the user left it out:
 
 ```ts
-interface ChatInputOption {
-    name: string;
-    value: string | number | boolean;
-    type: number;
+execute(@Option('query') query: string, @Option('limit') limit: number | undefined) {
+    return `Searching for "${query}" (${limit ?? 10} results)`;
 }
 ```
 
-So a single option is read through `.value`:
+A string, integer, number or boolean option arrives as that value. A user, role, channel or attachment option arrives as the object the library resolved for it, and a user option is the user, never the member:
 
 ```ts
-execute(@Option('query') query: ChatInputOption | undefined) {
-    return `Searching for "${query?.value}"`;
+execute(@Option('target') target: User) {
+    return `You picked ${target.displayName}`;
 }
 ```
 
-Asking for several names gives you only the ones the user actually filled in. Options left unset are not included:
+With several names you get a record holding only the ones the user provided:
 
 ```ts
-execute(@Option('query', 'category') selected: ChatInputOption[]) {
-    return selected.map((opt) => `${opt.name}=${opt.value}`).join(', ');
+execute(@Option('query', 'category') selected: Record<string, unknown>) {
+    return Object.entries(selected).map(([name, value]) => `${name}=${value}`).join(', ');
 }
 ```
 
-And with no arguments you get everything:
+And with no names you get every provided option:
 
 ```ts
-execute(@Option() options: ChatInputOption[]) {
-    console.log(options); // [{ name: 'query', value: 'nodecord', type: 3 }, ...]
+execute(@Option() options: Record<string, unknown>) {
+    console.log(options); // { query: 'nodecord', limit: 5 }
 }
 ```
 
-The `type` field holds the `ApplicationCommandOptionType` sent by Discord, which is what lets you tell apart options that share a value shape but not a meaning, such as a user ID and a channel ID both arriving as strings.
+Every name you pass is checked against the `options` of the `@SlashCommand()` definition when the bot starts. A name the definition does not declare stops startup with [`UNKNOWN_OPTION`](../core/faq/exceptions.mdx#unknown_option) instead of quietly giving you `undefined`.
 
-For typed options that resolve to full Discord objects (User, Channel, Role), use `@Ctx()` and reach them through the raw interaction.
+When you need more than the value, such as the `ApplicationCommandOptionType` Discord sent, read the options from the context. Each one is `{ name, type, value, resolved }`:
+
+```ts
+execute(@Ctx() ctx: ChatInputCommandContext) {
+    for (const option of ctx.getOptions()) {
+        console.log(option.name, option.type, option.value);
+    }
+}
+```
 
 ## `@Focused()`
 
-Only meaningful inside an `@Autocomplete()` method. Injects the option the user is currently typing into, as a `ChatInputOption`.
+Only meaningful inside an `@Autocomplete()` method. Injects what the user has typed so far in the option being autocompleted.
 
 ```ts
 @Autocomplete('tag')
-autocompleteTag(@Focused() input: ChatInputOption) {
-    return tags.filter((t) => t.value.includes(String(input.value)));
+autocompleteTag(@Focused() input: string) {
+    return tags.filter((t) => t.value.includes(input));
 }
 ```
+
+A method that serves several options can tell which one is focused through `ctx.getFocusedOption().name`.
 
 ## Combining decorators
 
@@ -113,11 +159,11 @@ You can mix any param decorators in a single method:
 
 ```ts
 execute(
-    @Author() user: User,
-    @Option('query') query: ChatInputOption | undefined,
+    @Author() author: User,
+    @Option('query') query: string,
     @Guild() guild: Guild | null,
 ): string {
-    return `${user.username} searched "${query?.value}" in ${guild?.name ?? 'DMs'}`;
+    return `${author.username} searched "${query}" in ${guild?.name ?? 'DMs'}`;
 }
 ```
 
@@ -128,15 +174,17 @@ All param decorators work the same way on `@Autocomplete()` methods, which keeps
 ```ts
 @Autocomplete('tag')
 autocompleteTag(
-    @Focused() input: ChatInputOption,
-    @Option('category') category: ChatInputOption | undefined,
+    @Focused() input: string,
+    @Option('category') category: string | undefined,
 ) {
-    return db.tagsFor(category?.value).filter((t) => t.value.includes(String(input.value)));
+    return db.tagsFor(category).filter((t) => t.value.includes(input));
 }
 ```
 
+One difference: Discord resolves nothing while the user is still typing. Inside an autocomplete method a user, role, channel or attachment option arrives as its id, not as an object.
+
 ## How they work
 
-Param decorators record metadata at decoration time and are resolved by `CommandPipelineBuilder` in `@nodecord/core`, which builds the argument list before invoking the handler. Resolution happens in the framework core, not in the adapter, so the same decorators behave identically no matter which adapter you run.
+Param decorators record metadata at decoration time and are resolved by `CommandPipelineBuilder` in `@nodecord/core`, which builds the argument list before invoking the handler. Resolution happens in the framework core, not in the adapter, so the same decorators behave identically no matter which adapter you run. The adapter only supplies the objects.
 
 If an `@Option()` parameter appears on a handler whose context is neither a chat input command nor an autocomplete interaction, the framework logs a warning and injects `undefined` rather than throwing.

@@ -64,7 +64,7 @@ This keeps the handler class focused on logic and makes the command definition e
 To add autocomplete to a command option, set `autocomplete: true` on the option, then add a method decorated with `@Autocomplete('option-name')` in the handler class. The method must return an array of `{ name, value }` objects.
 
 ```ts
-import { SlashCommand, Autocomplete, Focused, Option, ChatInputOption } from '@nodecord/core';
+import { SlashCommand, Autocomplete, Focused, Option } from '@nodecord/core';
 import { ApplicationCommandOptionType } from 'discord.js';
 
 @SlashCommand({
@@ -81,24 +81,24 @@ import { ApplicationCommandOptionType } from 'discord.js';
     ],
 })
 export class SearchCommand {
-    execute(@Option('query') query: ChatInputOption | undefined): string {
-        return `Results for: ${query?.value}`;
+    execute(@Option('query') query: string): string {
+        return `Results for: ${query}`;
     }
 
     @Autocomplete('query')
-    async autocompleteQuery(@Focused() input: ChatInputOption) {
-        return db.search(String(input.value)).map((r) => ({ name: r.title, value: r.id }));
+    async autocompleteQuery(@Focused() input: string) {
+        return db.search(input).map((r) => ({ name: r.title, value: r.id }));
     }
 }
 ```
 
-`@Option('query')` gives you the option object, not the raw value, so the text lives in `.value`. Inside an autocomplete method, `@Focused()` is what you want for the option being typed. See [param decorators](../adapters/param-decorators.mdx) for the full set.
+`@Option('query')` gives you the value the user filled in. Inside an autocomplete method, `@Focused()` gives you what has been typed so far in the option being completed. The names you pass to `@Option()` and `@Autocomplete()` are checked against the command definition at startup. See [param decorators](../adapters/param-decorators.mdx) for the full set.
 
 Multiple autocomplete options on the same command get their own methods:
 
 ```ts
 @Autocomplete('query')
-async autocompleteQuery(@Focused() input: ChatInputOption) { ... }
+async autocompleteQuery(@Focused() input: string) { ... }
 
 @Autocomplete('category')
 async autocompleteCategory() { ... }

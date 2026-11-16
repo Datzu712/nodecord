@@ -15,10 +15,13 @@ import { OnException, ExceptionHandler, InteractionContext } from '@nodecord/cor
 
 @OnException(DatabaseError)
 export class DatabaseErrorHandler implements ExceptionHandler {
-    handle(exception: unknown, ctx: InteractionContext): void {
+    async handle(exception: unknown, ctx: InteractionContext): Promise<void> {
         const err = exception as DatabaseError;
         console.error(`Command "${ctx.name}" failed:`, err.message);
-        ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
+
+        if (ctx.isChatInputCommand()) {
+            await ctx.reply({ content: 'Something went wrong.' });
+        }
     }
 }
 ```

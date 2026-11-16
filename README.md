@@ -118,36 +118,42 @@ Slash commands are decorated with `@SlashCommand` and receive the command defini
 export class PingCommand {
     constructor(private readonly logger: LoggerService) {}
 
-    execute(@Context() ctx: InteractionContext): void {
+    execute(@Author() author: User): string {
         this.logger.log('PingCommand executed');
-        ctx.getRaw<ChatInputCommandInteraction>().reply('pong!');
+        return `pong, ${author.username}!`;
     }
 }
 ```
 
 #### Parameter decorators
 
-| Decorator               | Resolves to                                           |
-| ----------------------- | ----------------------------------------------------- |
-| `@Context()` / `@Ctx()` | The `InteractionContext` instance                     |
-| `@Guild()`              | The `Guild` from the interaction, or `null`           |
-| `@Author()`             | The `User` who triggered the interaction              |
-| `@Option()`             | Every option, as `ChatInputOption[]`                  |
-| `@Option('a')`          | That single option, as `ChatInputOption \| undefined` |
-| `@Option('a', 'b')`     | Those options, as `ChatInputOption[]`                 |
-| `@Focused()`            | The option currently being autocompleted              |
+| Decorator               | Resolves to                                                     |
+| ----------------------- | --------------------------------------------------------------- |
+| `@Context()` / `@Ctx()` | The `InteractionContext` for the current interaction            |
+| `@Author()`             | The user who triggered the interaction                          |
+| `@Guild()`              | The guild the interaction came from, or `null`                  |
+| `@Option('a')`          | The value of that option, or `undefined` if it was not provided |
+| `@Option('a', 'b')`     | A record of the provided ones among them, keyed by name         |
+| `@Option()`             | A record of every provided option, keyed by name                |
+| `@Focused()`            | What the user has typed in the option being autocompleted       |
 
-`InteractionContext.getRaw<T>()` gives you the underlying discord.js interaction typed as `T`.
-
-`@Option()` resolves to option objects rather than raw values, so the value is read through `.value`:
+`@Option()` resolves to what the user filled in. A user, role, channel or attachment option arrives as the object the library resolved for it:
 
 ```typescript
-execute(@Option('query') query: ChatInputOption | undefined) {
-    return `Searching for "${query?.value}"`;
+execute(@Option('query') query: string, @Option('target') target: User | undefined) {
+    return `Searching for "${query}"`;
 }
 ```
 
-A `ChatInputOption` is `{ name, value, type }`, where `type` is the `ApplicationCommandOptionType` Discord sent.
+Option names are checked against the command definition at startup, so a misspelled `@Option('qurey')` stops the bot before it connects.
+
+What arrives is always the library's own object, untouched: with the discord.js adapter, `@Author()` hands you the discord.js `User`, and `ctx.getRaw()` the interaction itself:
+
+```typescript
+async execute(@Author() author: User) {
+    await author.send('Hello!');
+}
+```
 
 All param decorators work on both `execute()` and `@Autocomplete()` methods. `@Focused()` only carries a value inside `@Autocomplete()`.
 
@@ -235,10 +241,12 @@ Exception handlers catch exceptions thrown during command execution (including e
 ```typescript
 @OnException(DatabaseError)
 export class DatabaseErrorHandler implements ExceptionHandler {
-    handle(exception: DatabaseError, ctx: InteractionContext): void {
+    async handle(exception: DatabaseError, ctx: InteractionContext): Promise<void> {
         console.error(`Command "${ctx.name}" failed:`, exception.message);
 
-        ctx.getRaw<ChatInputCommandInteraction>().reply('Something went wrong.');
+        if (ctx.isChatInputCommand()) {
+            await ctx.reply({ content: 'Something went wrong.' });
+        }
     }
 }
 ```

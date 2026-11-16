@@ -11,24 +11,59 @@ One of Nodecord's core design goals is that `@nodecord/core` has **zero Discord 
 Every adapter extends `AbstractClientAdapter` from `@nodecord/core`:
 
 ```ts
-import { AbstractClientAdapter, CommandExecutor } from '@nodecord/core';
-
-export abstract class AbstractClientAdapter {
-    abstract initialize(
-        executor: CommandExecutor,
-        handlers: HandlerMetadata[],
-        listeners: ListenerMetadata[],
-    ): Promise<void>;
-
+export abstract class AbstractClientAdapter<TClientInstance = any> {
+    abstract initialize(adapterOptions: InitAdapterOptions): void;
     abstract login(token: string): Promise<void>;
     abstract loadSlashCommands(
         options: LoadSlashCommandsOptions,
         commands: RESTPutAPIApplicationCommandsJSONBody,
     ): Promise<void>;
+
+    abstract getClient(): TClientInstance;
 }
 ```
 
-The framework calls `initialize()` after compiling the module tree, passing the executor and registered handlers/listeners. Everything else like interaction routing, events handling, etc... are the adapter's responsibility.
+The framework calls `initialize()` after compiling the module tree, passing the command executor and the registered listeners. From there the adapter listens to its library, wraps each incoming interaction in a context object, and hands it to the executor.
+
+## The adapter delivers, the core decides
+
+An adapter stays thin by following one rule. Its methods either answer "give me this from the interaction" or do "this on the interaction" (`reply`, `deferReply`, `editReply`). It never decides when or whether something happens: it does not read decorator metadata, and it does not branch on framework concepts such as deferral, `passThrough`, or interceptors. All of that lives in `@nodecord/core`, so every adapter behaves the same.
+
+What an adapter hands over are its library's own objects. The core does not copy or reshape them, it only requires that they satisfy a small contract, `AdapterTypes`:
+
+```ts
+export interface UserLike { id: string; username: string }
+export interface GuildLike { id: string }
+export interface RoleLike { id: string }
+export interface ChannelLike { id: string }
+export interface AttachmentLike { id: string }
+
+export interface AdapterTypes {
+    user: UserLike;
+    guild: GuildLike;
+    role: RoleLike;
+    channel: ChannelLike;
+    attachment: AttachmentLike;
+}
+```
+
+A field only enters that contract if Discord sends it in the interaction payload, so any library can supply it. An adapter declares its own types against it, and the compiler checks that they fit:
+
+```ts
+export interface DjsTypes {
+    user: User;
+    guild: Guild;
+    role: Role | APIRole;
+    channel: GuildBasedChannel | APIInteractionDataResolvedChannel;
+    attachment: Attachment;
+}
+
+class DjsChatInputCommandContext extends ChatInputCommandContext<DjsTypes> {
+    getAuthor(): User {
+        return this.interaction.user;
+    }
+}
+```
 
 ## Swapping adapters
 
@@ -41,12 +76,10 @@ const client = await NodecordClient.create({
 });
 ```
 
-The rest of your application, modules, providers, commands, interceptors, remains completely unchanged.
+Modules, providers, and the framework's behavior remain unchanged.
 
-## A note on abstraction
+## What a swap touches
 
-Fully abstracting the underlying Discord library is a long-term effort. At this stage, some parts of your code will touch library-specific types directly, for example `ctx.getRaw()` may be necessary when the framework doesn't expose what you need.
+Nodecord does not wrap the Discord library in a model of its own. A handler receives the library's real objects and is typed with the library's types, so those annotations, and any use of `ctx.getRaw()`, are what changes with the adapter.
 
-:::caution
-Any code that depends on raw library types is tied to the adapter you're using. Swapping adapters later will require updating those handlers. The more you rely on `ctx.getRaw()` or discord.js types directly, the harder that migration becomes.
-:::
+Returning a value from `execute()`, primitive options, and the reply methods on the context do not depend on the library and carry over as they are.

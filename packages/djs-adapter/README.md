@@ -48,6 +48,36 @@ const client = NodecordClient.create({
 });
 ```
 
+## What your handlers receive
+
+The adapter hands the framework discord.js's own objects, so `@Author()` gives you the discord.js `User`, `@Guild()` the `Guild`, and a user, role, channel or attachment option the object discord.js resolved for it. `ctx.getRaw()` gives you the interaction itself.
+
+```typescript
+import { Author, Guild, SlashCommand } from '@nodecord/core';
+import type { Guild as DjsGuild, User } from 'discord.js';
+
+@SlashCommand({ name: 'hello', description: 'Says hello' })
+export class HelloCommand {
+    async execute(@Author() author: User, @Guild() guild: DjsGuild | null) {
+        await author.send(`Hello from ${guild?.name ?? 'a DM'}`);
+    }
+}
+```
+
+`DjsTypes` types a context with discord.js types, which is useful in interceptors and exception handlers:
+
+```typescript
+import type { InteractionContext } from '@nodecord/core';
+import type { DjsTypes } from '@nodecord/djs-adapter';
+
+intercept(ctx: InteractionContext<DjsTypes>, next: () => Promise<unknown>) {
+    console.log(ctx.getGuild()?.name);
+    return next();
+}
+```
+
+During autocomplete Discord resolves nothing, so entity options arrive there as their id.
+
 ## Testing
 
 The `/testing` subpath runs the full pipeline, meaning module compilation, DI, the interceptor chain, command dispatch, and response handling, while skipping `login()` and `loadSlashCommands()`. `simulateInteraction()` pushes a mock interaction through it.
@@ -86,7 +116,7 @@ NodecordClient.create({
 
 | Entry point                     | Exports                                                                  |
 | ------------------------------- | ------------------------------------------------------------------------ |
-| `@nodecord/djs-adapter`         | `DiscordJsAdapter`                                                       |
+| `@nodecord/djs-adapter`         | `DiscordJsAdapter`, `DjsTypes`                                           |
 | `@nodecord/djs-adapter/testing` | `TestingDjsAdapter`, `createMockChatInputInteraction`, `MockInteraction` |
 
 Both entry points ship ESM and CJS builds with TypeScript declarations.
