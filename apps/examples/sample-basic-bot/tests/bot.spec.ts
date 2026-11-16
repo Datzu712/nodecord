@@ -78,6 +78,13 @@ describe('UtilModule', () => {
                     ]),
                 }),
             );
+            expect(interaction.editReply).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    embeds: expect.arrayContaining([
+                        expect.objectContaining({ description: expect.stringContaining('Members: 42') }),
+                    ]),
+                }),
+            );
         });
 
         it('replies with an error message when outside a guild', async () => {

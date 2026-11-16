@@ -1,8 +1,9 @@
-import type { APIGuild, APIUser, ContextMenuCommandInteraction } from 'discord.js';
+import type { ContextMenuCommandInteraction, Guild, User } from 'discord.js';
 import { ContextMenuContext } from '@nodecord/core';
 import type { DeferReplyOptions, InteractionReplyOptions } from '@nodecord/core';
+import type { DjsTypes } from '../djs-types.js';
 
-export class DjsContextMenuContext extends ContextMenuContext {
+export class DjsContextMenuContext extends ContextMenuContext<DjsTypes> {
     constructor(private readonly interaction: ContextMenuCommandInteraction) {
         super(interaction.commandName, interaction);
     }
@@ -27,19 +28,11 @@ export class DjsContextMenuContext extends ContextMenuContext {
         await this.interaction.editReply(options);
     }
 
-    getGuild(): APIGuild | null {
-        const guild = this.interaction.guild;
-        if (!guild) return null;
-        return { id: guild.id, name: guild.name } as APIGuild;
+    getGuild(): Guild | null {
+        return this.interaction.guild;
     }
 
-    getAuthor(): APIUser {
-        const user = this.interaction.user;
-        return {
-            id: user.id,
-            username: user.username,
-            discriminator: user.discriminator,
-            avatar: user.avatar,
-        } as APIUser;
+    getAuthor(): User {
+        return this.interaction.user;
     }
 }

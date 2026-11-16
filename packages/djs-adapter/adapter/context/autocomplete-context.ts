@@ -1,13 +1,14 @@
-import type { APIGuild, APIUser, AutocompleteInteraction } from 'discord.js';
+import type { AutocompleteInteraction, Guild, User } from 'discord.js';
 import { AutocompleteContext } from '@nodecord/core';
 import type { AutocompleteChoice, ChatInputOption } from '@nodecord/core';
+import type { DjsTypes } from '../djs-types.js';
 
-export class DjsAutocompleteContext extends AutocompleteContext {
+export class DjsAutocompleteContext extends AutocompleteContext<DjsTypes> {
     constructor(private readonly interaction: AutocompleteInteraction) {
         super(interaction.commandName, interaction);
     }
 
-    getFocusedOption(): ChatInputOption {
+    getFocusedOption(): ChatInputOption<DjsTypes> {
         const focused = this.interaction.options.getFocused(true);
 
         return {
@@ -17,7 +18,7 @@ export class DjsAutocompleteContext extends AutocompleteContext {
         };
     }
 
-    getOption(optionName?: string): ChatInputOption | null {
+    getOption(optionName?: string): ChatInputOption<DjsTypes> | null {
         const targetOption = this.interaction.options.data.find((opt) => opt.name === optionName);
 
         if (!targetOption || !targetOption.value) return null;
@@ -29,26 +30,18 @@ export class DjsAutocompleteContext extends AutocompleteContext {
         };
     }
 
-    override getOptions(): ChatInputOption[] {
+    override getOptions(): ChatInputOption<DjsTypes>[] {
         const options = this.interaction.options.data.filter((opt) => opt.value !== undefined);
 
         return options.map((opt) => ({ name: opt.name, value: opt.value!, type: opt.type }));
     }
 
-    getGuild(): APIGuild | null {
-        const guild = this.interaction.guild;
-        if (!guild) return null;
-        return { id: guild.id, name: guild.name } as APIGuild;
+    getGuild(): Guild | null {
+        return this.interaction.guild;
     }
 
-    getAuthor(): APIUser {
-        const user = this.interaction.user;
-        return {
-            id: user.id,
-            username: user.username,
-            discriminator: user.discriminator,
-            avatar: user.avatar,
-        } as APIUser;
+    getAuthor(): User {
+        return this.interaction.user;
     }
 
     async respond(choices: AutocompleteChoice[]): Promise<void> {
