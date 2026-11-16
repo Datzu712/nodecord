@@ -8,6 +8,8 @@ import { Injectable } from '../decorators/injectable.js';
 import { Module } from '../decorators/module.js';
 import { Interceptor } from '../decorators/interceptor.js';
 import { Listener } from '../decorators/listener.js';
+import { Autocomplete } from '../decorators/autocomplete.js';
+import { Option } from '../decorators/params.js';
 import { SlashCommand } from '../decorators/slash-command.js';
 import { UseInterceptors } from '../decorators/use-interceptors.js';
 import type { AbstractLogger } from '../interfaces/common/abstract-logger.js';
@@ -18,6 +20,7 @@ import {
     PossibleCircularImportException,
 } from '../client/exceptions/module.js';
 import { OnException } from '../decorators/on-exception.js';
+import { UnknownOptionException } from '../client/exceptions/module.js';
 import { UseExceptionHandler } from '../decorators/use-exception-handler.js';
 import type { ExceptionHandler } from '../interfaces/exception-handler/exception-handler.js';
 
@@ -192,6 +195,186 @@ describe('ModuleCompiler', () => {
 
                 const [handler] = compiler.getHandlers();
                 expect((handler?.handler as PingHandler).execute()).toBe('pong');
+            });
+        });
+
+        describe('option names', () => {
+            const definition = {
+                name: 'search',
+                description: 'Search',
+                options: [
+                    { type: 3, name: 'query', description: 'q', autocomplete: true },
+                    { type: 3, name: 'category', description: 'c' },
+                ],
+            };
+
+            const compileError = (module: new () => unknown): unknown => {
+                try {
+                    new ModuleCompiler(mockLogger).compile(module);
+                } catch (error) {
+                    return error;
+                }
+                return undefined;
+            };
+
+            it('throws for an unknown name in @Option on execute', () => {
+                @SlashCommand(definition)
+                class SearchHandler {
+                    execute(@Option('qurey') _query: string) {}
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                const error = compileError(AppModule);
+
+                expect(error).toBeInstanceOf(UnknownOptionException);
+                expect((error as UnknownOptionException).code).toBe('UNKNOWN_OPTION');
+                expect((error as Error).message).toContain('@Option("qurey") on SearchHandler.execute()');
+                expect((error as Error).message).toContain('Declared options: "query", "category".');
+            });
+
+            it('says so when the command declares no options', () => {
+                @SlashCommand({ name: 'search', description: 'Search' })
+                class SearchHandler {
+                    execute(@Option('query') _query: string) {}
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                const error = compileError(AppModule);
+
+                expect(error).toBeInstanceOf(UnknownOptionException);
+                expect((error as Error).message).toContain('Declared options: none.');
+            });
+
+            it('throws for an unknown name in @Option on an autocomplete method', () => {
+                @SlashCommand(definition)
+                class SearchHandler {
+                    execute() {}
+
+                    @Autocomplete('query')
+                    complete(@Option('categroy') _category: string) {
+                        return [];
+                    }
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                const error = compileError(AppModule);
+
+                expect(error).toBeInstanceOf(UnknownOptionException);
+                expect((error as Error).message).toContain('@Option("categroy") on SearchHandler.complete()');
+            });
+
+            it('throws for an unknown name in @Autocomplete', () => {
+                @SlashCommand(definition)
+                class SearchHandler {
+                    execute() {}
+
+                    @Autocomplete('qurey')
+                    complete() {
+                        return [];
+                    }
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                const error = compileError(AppModule);
+
+                expect(error).toBeInstanceOf(UnknownOptionException);
+                expect((error as Error).message).toContain('@Autocomplete("qurey") on SearchHandler.complete()');
+            });
+
+            it('accepts declared names', () => {
+                @SlashCommand(definition)
+                class SearchHandler {
+                    execute(
+                        @Option('query') _query: string,
+                        @Option('query', 'category') _both: Record<string, unknown>,
+                    ) {}
+
+                    @Autocomplete('query')
+                    complete(@Option('category') _category: string) {
+                        return [];
+                    }
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                expect(compileError(AppModule)).toBeUndefined();
+            });
+
+            it('accepts @Option() with no names', () => {
+                @SlashCommand(definition)
+                class SearchHandler {
+                    execute(@Option() _all: Record<string, unknown>) {}
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                expect(compileError(AppModule)).toBeUndefined();
+            });
+
+            it('does not count a subcommand name as an option', () => {
+                @SlashCommand({
+                    name: 'search',
+                    description: 'Search',
+                    options: [
+                        {
+                            type: 1,
+                            name: 'ban',
+                            description: 'b',
+                            options: [{ type: 6, name: 'target', description: 't' }],
+                        },
+                    ],
+                })
+                class SearchHandler {
+                    execute(@Option('ban') _ban: unknown) {}
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                const error = compileError(AppModule);
+
+                expect(error).toBeInstanceOf(UnknownOptionException);
+                expect((error as Error).message).toContain('Declared options: "target".');
+            });
+
+            it('accepts a name declared inside a subcommand', () => {
+                @SlashCommand({
+                    name: 'search',
+                    description: 'Search',
+                    options: [
+                        {
+                            type: 2,
+                            name: 'admin',
+                            description: 'a',
+                            options: [
+                                {
+                                    type: 1,
+                                    name: 'ban',
+                                    description: 'b',
+                                    options: [{ type: 6, name: 'target', description: 't' }],
+                                },
+                            ],
+                        },
+                    ],
+                })
+                class SearchHandler {
+                    execute(@Option('target') _target: unknown) {}
+                }
+
+                @Module({ handlers: [SearchHandler] })
+                class AppModule {}
+
+                expect(compileError(AppModule)).toBeUndefined();
             });
         });
     });

@@ -13,6 +13,7 @@ export const NodecordExceptionCode = {
     MISSING_CLIENT_OPTIONS: 'MISSING_CLIENT_OPTIONS',
     INVALID_OPTION_CONTEXT: 'INVALID_OPTION_CONTEXT',
     INVALID_AUTOCOMPLETE_CONTEXT: 'INVALID_AUTOCOMPLETE_CONTEXT',
+    UNKNOWN_OPTION: 'UNKNOWN_OPTION',
 } as const;
 
 export type NodecordExceptionCode = (typeof NodecordExceptionCode)[keyof typeof NodecordExceptionCode];

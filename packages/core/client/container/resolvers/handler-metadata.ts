@@ -10,6 +10,7 @@ import { InvalidHandlerException, MissingContractMethodException } from '../../e
 import { MetadataScanner } from '../metadata-scanner.js';
 import { compileAutocompleteExecutor } from './executor/autocomplete.js';
 import { compileSlashCommandExecutor } from './executor/slash-command.js';
+import { assertOptionNamesDeclared } from './option-names.js';
 
 export function compileCommandHandlerMetadata(target: Constructor): CompiledCommandHandler {
     if (!MetadataScanner.isHandler(target)) {
@@ -45,6 +46,12 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
                 methodKey: 'execute',
                 data: rawEntrypointExecutorMetadata,
             };
+            assertOptionNamesDeclared({
+                target,
+                methodKey: 'execute',
+                definition: rawEntrypointExecutorMetadata,
+                params,
+            });
             executions.set('execute', compileSlashCommandExecutor({ target, baseOptions }));
             break;
         }
@@ -84,6 +91,13 @@ export function compileCommandHandlerMetadata(target: Constructor): CompiledComm
                         target,
                     }),
                 );
+                assertOptionNamesDeclared({
+                    target,
+                    methodKey: subExecutor.methodKey,
+                    definition: rawEntrypointExecutorMetadata,
+                    params,
+                    autocompleteTargets: subExecutor.data as string[],
+                });
                 break;
             }
             // this happens because in sub executors the kind `slashCommand` is excluded from the possible values
