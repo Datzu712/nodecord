@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import { describe, expect, it } from 'vitest';
+import { CommandInteractionOptionResolver } from 'discord.js';
 import type { AutocompleteInteraction, ChatInputCommandInteraction, ContextMenuCommandInteraction } from 'discord.js';
 
 import { DjsAutocompleteContext } from '../adapter/context/autocomplete-context.js';
@@ -51,5 +52,81 @@ describe('chat input options', () => {
         expect(target!.resolved).toBe(user);
         expect(who!.resolved).toBe(role);
         expect(query).toEqual({ name: 'query', type: 3, value: 'nodecord', resolved: undefined });
+    });
+
+    it('lists the options inside a subcommand group and subcommand, not the groups', () => {
+        // /mod admin ban target:@juan reason:spam, through discord.js's own resolver, which keeps `data` nested
+        const Resolver = CommandInteractionOptionResolver as unknown as new (
+            client: unknown,
+            options: unknown[],
+            resolved: unknown,
+        ) => CommandInteractionOptionResolver;
+        const ctx = new DjsChatInputCommandContext({
+            commandName: 'mod',
+            options: new Resolver(
+                {},
+                [
+                    {
+                        name: 'admin',
+                        type: 2,
+                        options: [
+                            {
+                                name: 'ban',
+                                type: 1,
+                                options: [
+                                    { name: 'target', type: 6, value: '42', user },
+                                    { name: 'reason', type: 3, value: 'spam' },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                {},
+            ),
+        } as unknown as ChatInputCommandInteraction);
+
+        expect(ctx.getOptions()).toEqual([
+            { name: 'target', type: 6, value: '42', resolved: user },
+            { name: 'reason', type: 3, value: 'spam', resolved: undefined },
+        ]);
+    });
+});
+
+describe('autocomplete options', () => {
+    // /search filter limit:0 exact:false query:<typing>
+    const ctx = new DjsAutocompleteContext({
+        commandName: 'search',
+        options: {
+            data: [
+                {
+                    name: 'filter',
+                    type: 1,
+                    options: [
+                        { name: 'limit', type: 4, value: 0 },
+                        { name: 'exact', type: 5, value: false },
+                        { name: 'query', type: 3, value: '', focused: true },
+                    ],
+                },
+            ],
+        },
+    } as unknown as AutocompleteInteraction);
+
+    it('lists the options inside a subcommand, falsy values included', () => {
+        expect(ctx.getOptions()).toEqual([
+            { name: 'limit', type: 4, value: 0 },
+            { name: 'exact', type: 5, value: false },
+            { name: 'query', type: 3, value: '' },
+        ]);
+    });
+
+    it('finds an option inside a subcommand, even with a falsy value', () => {
+        expect(ctx.getOption('limit')).toEqual({ name: 'limit', type: 4, value: 0 });
+        expect(ctx.getOption('exact')).toEqual({ name: 'exact', type: 5, value: false });
+        expect(ctx.getOption('query')).toEqual({ name: 'query', type: 3, value: '' });
+    });
+
+    it('returns null for an option the user has not filled in', () => {
+        expect(ctx.getOption('missing')).toBeNull();
+        expect(ctx.getOption('filter')).toBeNull();
     });
 });

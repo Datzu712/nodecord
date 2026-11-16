@@ -2,6 +2,7 @@ import type { ChatInputCommandInteraction, Guild, User } from 'discord.js';
 import { ChatInputCommandContext } from '@nodecord/core';
 import type { ChatInputOption, DeferReplyOptions, InteractionReplyOptions } from '@nodecord/core';
 import type { DjsTypes } from '../djs-types.js';
+import { leafOptions } from './leaf-options.js';
 
 export class DjsChatInputCommandContext extends ChatInputCommandContext<DjsTypes> {
     constructor(private readonly interaction: ChatInputCommandInteraction) {
@@ -9,7 +10,7 @@ export class DjsChatInputCommandContext extends ChatInputCommandContext<DjsTypes
     }
 
     getOptions(): ChatInputOption<DjsTypes>[] {
-        return this.interaction.options.data.map((opt) => ({
+        return leafOptions(this.interaction.options.data).map((opt) => ({
             name: opt.name,
             value: opt.value as string | number | boolean,
             type: opt.type,
