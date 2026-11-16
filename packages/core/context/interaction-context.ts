@@ -11,8 +11,8 @@ export abstract class InteractionContext<T extends AdapterTypes = AdapterTypes> 
         private readonly raw: unknown,
     ) {}
 
-    getRaw<T>(): T {
-        return this.raw as T;
+    getRaw<TRaw>(): TRaw {
+        return this.raw as TRaw;
     }
 
     isChatInputCommand(): this is ChatInputCommandContext<T> {
