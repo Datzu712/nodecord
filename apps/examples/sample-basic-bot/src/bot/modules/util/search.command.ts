@@ -1,4 +1,4 @@
-import { Autocomplete, CommandHandler, Focused, Option, SlashCommand, ChatInputOption } from '@nodecord/core';
+import { Autocomplete, CommandHandler, Focused, Option, SlashCommand } from '@nodecord/core';
 import { ApplicationCommandOptionType } from 'discord.js';
 
 @SlashCommand({
@@ -33,13 +33,13 @@ import { ApplicationCommandOptionType } from 'discord.js';
 })
 export class SearchCommand implements CommandHandler {
     execute(
-        @Option('query') query: ChatInputOption,
-        @Option('category') category: ChatInputOption,
-        @Option('tag') tag: ChatInputOption,
-        @Option('language') language: ChatInputOption,
-        @Option() options: Record<string, unknown>,
+        @Option('query') query: string,
+        @Option('category') category: string,
+        @Option('tag') tag: string | undefined,
+        @Option('language') language: string | undefined,
+        @Option() _options: Record<string, unknown>,
     ) {
-        return `You searched for "${query.value}" in category "${category.value}" with tag "${tag.value}" and language "${language.value}".`;
+        return `You searched for "${query}" in category "${category}" with tag "${tag ?? 'none'}" and language "${language ?? 'any'}".`;
     }
 
     @Autocomplete('query')
@@ -54,17 +54,15 @@ export class SearchCommand implements CommandHandler {
     }
 
     @Autocomplete('tag')
-    autocompleteTag(@Focused() input: ChatInputOption, @Option('category') category: ChatInputOption) {
+    autocompleteTag(@Focused() input: string, @Option('category') _category: string | undefined) {
         const exampleOptions = [
             { name: 'Library', value: 'library' },
             { name: 'Framework', value: 'framework' },
             { name: 'Tool', value: 'tool' },
         ];
 
-        if (!input.value.toString().trim()) return exampleOptions;
+        if (!input.trim()) return exampleOptions;
 
-        return exampleOptions.filter((v) =>
-            v.value.toLowerCase().includes(input?.value.toString().toLowerCase() ?? ''),
-        );
+        return exampleOptions.filter((v) => v.value.toLowerCase().includes(input.toLowerCase()));
     }
 }

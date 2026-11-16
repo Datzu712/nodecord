@@ -38,7 +38,8 @@ describe('UtilModule', () => {
             await simulation;
 
             expect(interaction.deferReply).toHaveBeenCalledOnce();
-            expect(interaction.editReply).toHaveBeenCalledWith('Pong! Hello, juan!');
+            expect(interaction.editReply).toHaveBeenCalledOnce();
+            expect(interaction.editReply).toHaveBeenCalledWith({ content: 'Pong! Hello, juan!' });
         });
     });
 
@@ -103,6 +104,32 @@ describe('UtilModule', () => {
                     ]),
                 }),
             );
+        });
+    });
+
+    describe('/search', () => {
+        it('receives option values through the adapter', async () => {
+            const interaction = createMockChatInputInteraction({
+                commandName: 'search',
+                user: mockedUser,
+                options: {
+                    data: [
+                        { name: 'query', type: 3, value: 'nodecord' },
+                        { name: 'category', type: 3, value: 'docs' },
+                    ],
+                },
+            });
+
+            await adapter.simulateInteraction(interaction);
+
+            expect(interaction.reply).toHaveBeenCalledWith({
+                embeds: [
+                    {
+                        description:
+                            'You searched for "nodecord" in category "docs" with tag "none" and language "any".',
+                    },
+                ],
+            });
         });
     });
 

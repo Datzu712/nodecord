@@ -1,6 +1,7 @@
 import { InteractionContext } from '../context/interaction-context.js';
 import {
     AbstractLogger,
+    ChatInputOption,
     ParamMetadata,
     RegisteredExceptionHandler,
     RegisteredInterceptor,
@@ -40,18 +41,25 @@ export class CommandPipelineBuilder {
                         const options = ctx.getOptions();
 
                         /**
-                         * There are 3 ways to retrieve resolved options:
+                         * A handler receives what the option holds, not the option itself: the object the
+                         * adapter resolved for it, or its raw value.
                          *
-                         * @Param()            ->   []                          (all options)
-                         * @Param('x')         ->   ChatInputOption | undefined (single option by name)
-                         * @Param('a', 'b')    ->   ChatInputOption[]           (filtered by name; unselected options are excluded)
+                         * @Option('x')        ->   that option, or undefined if it was not provided
+                         * @Option('a', 'b')   ->   record of the provided ones among them, keyed by name
+                         * @Option()           ->   record of every provided option, keyed by name
                          */
-                        if (!param.data.length) {
-                            resolvedParams[param.index] = options;
-                        } else if (param.data.length === 1) {
-                            resolvedParams[param.index] = options.find((opt) => opt.name === param.data[0]);
+                        const names = param.data;
+
+                        if (names.length === 1) {
+                            const target = options.find((opt) => opt.name === names[0]);
+                            resolvedParams[param.index] = target && this.unwrapOption(target);
                         } else {
-                            resolvedParams[param.index] = options.filter((opt) => param.data.includes(opt.name));
+                            const selected = names.length ? options.filter((opt) => names.includes(opt.name)) : options;
+
+                            // fromEntries defines own properties, so an option named "__proto__" stays a key
+                            resolvedParams[param.index] = Object.fromEntries(
+                                selected.map((opt) => [opt.name, this.unwrapOption(opt)]),
+                            );
                         }
                     } else {
                         this.logger?.warn(
@@ -66,7 +74,7 @@ export class CommandPipelineBuilder {
                     break;
                 case 'FOCUSED_OPTION':
                     if (ctx.isAutocomplete()) {
-                        resolvedParams[param.index] = ctx.getFocusedOption() ?? null;
+                        resolvedParams[param.index] = ctx.getFocusedOption().value;
                     } else {
                         this.logger?.warn(
                             `Received a "FOCUSED_OPTION" parameter metadata for a context that is not an autocomplete context.`,
@@ -82,6 +90,10 @@ export class CommandPipelineBuilder {
         }
 
         return resolvedParams;
+    }
+
+    private unwrapOption(option: ChatInputOption): unknown {
+        return option.resolved ?? option.value;
     }
 
     public async execute<TResult = unknown>(): Promise<TResult | undefined> {
