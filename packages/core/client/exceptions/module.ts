@@ -157,6 +157,34 @@ export class InvalidAutocompleteContextException extends NodecordCoreException {
     }
 }
 
+export class UnknownOptionException extends NodecordCoreException {
+    constructor({
+        decorator,
+        optionName,
+        className,
+        methodName,
+        commandName,
+        declaredOptions,
+    }: {
+        decorator: 'Option' | 'Autocomplete';
+        optionName: string;
+        className: string;
+        methodName: string;
+        commandName: string;
+        declaredOptions: string[];
+    }) {
+        const declared = declaredOptions.length ? declaredOptions.map((o) => `"${o}"`).join(', ') : 'none';
+
+        super(
+            [
+                `@${decorator}("${optionName}") on ${className}.${methodName}() does not match any option of the command "${commandName}".`,
+                `Declared options: ${declared}.`,
+            ].join('\n'),
+            NodecordExceptionCode.UNKNOWN_OPTION,
+        );
+    }
+}
+
 const MAX_ITEMS = 5;
 
 export class PossibleCircularImportException extends NodecordCoreException {

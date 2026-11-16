@@ -105,17 +105,19 @@ Use `client.get(SomeService)` to pull an instance out of the dependency graph.
 
 Parameter decorators, valid on both `execute()` and `@Autocomplete()` methods:
 
-| Decorator               | Resolves to                                           |
-| ----------------------- | ----------------------------------------------------- |
-| `@Context()` / `@Ctx()` | The `InteractionContext` for the current interaction  |
-| `@Author()`             | The user who triggered the interaction                |
-| `@Guild()`              | The guild the interaction came from, or `null`        |
-| `@Option()`             | Every option, as `ChatInputOption[]`                  |
-| `@Option('a')`          | That single option, as `ChatInputOption \| undefined` |
-| `@Option('a', 'b')`     | Those options, as `ChatInputOption[]`                 |
-| `@Focused()`            | The option currently being autocompleted              |
+| Decorator               | Resolves to                                                     |
+| ----------------------- | --------------------------------------------------------------- |
+| `@Context()` / `@Ctx()` | The `InteractionContext` for the current interaction            |
+| `@Author()`             | The user who triggered the interaction                          |
+| `@Guild()`              | The guild the interaction came from, or `null`                  |
+| `@Option('a')`          | The value of that option, or `undefined` if it was not provided |
+| `@Option('a', 'b')`     | A record of the provided ones among them, keyed by name         |
+| `@Option()`             | A record of every provided option, keyed by name                |
+| `@Focused()`            | What the user has typed in the option being autocompleted       |
 
-Also exported: `NodecordClient`, `TestingModule`, `ConsoleLogger`, the context classes (`InteractionContext`, `ChatInputCommandContext`, `AutocompleteContext`, `ContextMenuContext`), `AbstractClientAdapter` for writing your own adapter, and the framework exception types.
+Each one hands over the library's own object, so type the parameter with the library's types: with the discord.js adapter, `@Author()` is a discord.js `User`.
+
+Also exported: `NodecordClient`, `TestingModule`, `ConsoleLogger`, the context classes (`InteractionContext`, `ChatInputCommandContext`, `AutocompleteContext`, `ContextMenuContext`), `AbstractClientAdapter` and the `AdapterTypes` contract for writing your own adapter, and the framework exception types.
 
 ## Documentation
 

@@ -10,4 +10,12 @@ export type {
     ExceptionHandlerMetadata,
     RegisteredExceptionHandler,
 } from './exception-handler/exception-handler.js';
+export type {
+    AdapterTypes,
+    AttachmentLike,
+    ChannelLike,
+    GuildLike,
+    RoleLike,
+    UserLike,
+} from './adapter/adapter-types.js';
 export * from './interactions/index.js';

@@ -127,3 +127,24 @@ Slash command options only exist for chat input commands, so the decorator has n
 Thrown by `InvalidAutocompleteContextException` when `@Autocomplete()` is used in a class that is not decorated with `@SlashCommand`.
 
 Autocomplete methods live in the same class as the command they complete. The option also has to be declared with `.setAutocomplete(true)` in the builder, otherwise Discord never sends the autocomplete interaction and the method is simply never called.
+
+## UNKNOWN_OPTION
+
+Thrown by `UnknownOptionException` when a name passed to `@Option()` or `@Autocomplete()` is not declared in the `options` of the command's `@SlashCommand()` definition.
+
+The definition is the source of truth for option names, and a parameter decorator cannot be checked by the compiler, so the names are compared at startup instead. Options nested inside subcommands count as declared. The message names the decorator, the class, the method, and the options the command does declare.
+
+```typescript
+@SlashCommand({
+    name: 'search',
+    description: 'Search something',
+    options: [{ type: ApplicationCommandOptionType.String, name: 'query', description: 'The search query' }],
+})
+export class SearchCommand {
+    // wrong: the definition has no option called "qurey"
+    execute(@Option('qurey') query: string) {}
+
+    // right
+    execute(@Option('query') query: string) {}
+}
+```
