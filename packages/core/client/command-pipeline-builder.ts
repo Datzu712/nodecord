@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-import { APIGuild, APIUser } from 'discord-api-types/payloads/v10';
 import { InteractionContext } from '../context/interaction-context.js';
 import {
     AbstractLogger,
-    ChatInputOption,
     ParamMetadata,
     RegisteredExceptionHandler,
     RegisteredInterceptor,
@@ -21,15 +18,6 @@ export type CommandPipelineExecution<TResult> =
     | { status: 'completed'; result: TResult | undefined }
     | { status: 'exceptionHandled' };
 
-export type PosibleCommandParameter =
-    | InteractionContext
-    | ChatInputOption[]
-    | ChatInputOption
-    | undefined
-    | APIUser
-    | APIGuild
-    | null;
-
 export class CommandPipelineBuilder {
     constructor(
         private readonly params: ExecuteParams,
@@ -39,7 +27,7 @@ export class CommandPipelineBuilder {
     private resolveArgs(params: ParamMetadata[], ctx: InteractionContext): unknown[] {
         if (params.length === 0) return [];
 
-        const resolvedParams = Array.from({ length: params.length }) as PosibleCommandParameter[];
+        const resolvedParams: unknown[] = Array.from({ length: params.length });
 
         const sortedParams = [...params].sort((a, b) => a.index - b.index);
         for (const param of sortedParams) {

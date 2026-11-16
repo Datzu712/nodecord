@@ -1,8 +1,9 @@
 import { ExecutionKind } from '../constants/execution-kind.js';
 import type { DeferReplyOptions, InteractionReplyOptions } from '../interfaces/interactions/repliable.js';
+import type { AdapterTypes } from '../interfaces/adapter/adapter-types.js';
 import { InteractionContext } from './interaction-context.js';
 
-export abstract class ContextMenuContext extends InteractionContext {
+export abstract class ContextMenuContext<T extends AdapterTypes = AdapterTypes> extends InteractionContext<T> {
     constructor(name: string, raw: unknown) {
         super(name, ExecutionKind.CONTEXT_MENU, raw);
     }

@@ -1,9 +1,10 @@
 import { ExecutionKind } from '../constants/execution-kind.js';
 import { ChatInputOption } from '../interfaces/interactions/autocomplete.js';
 import type { DeferReplyOptions, InteractionReplyOptions } from '../interfaces/interactions/repliable.js';
+import type { AdapterTypes } from '../interfaces/adapter/adapter-types.js';
 import { InteractionContext } from './interaction-context.js';
 
-export abstract class ChatInputCommandContext extends InteractionContext {
+export abstract class ChatInputCommandContext<T extends AdapterTypes = AdapterTypes> extends InteractionContext<T> {
     constructor(name: string, raw: unknown) {
         super(name, ExecutionKind.SLASH_COMMAND, raw);
     }
@@ -15,5 +16,5 @@ export abstract class ChatInputCommandContext extends InteractionContext {
     abstract deferReply(options?: DeferReplyOptions): Promise<void>;
     abstract editReply(options: InteractionReplyOptions): Promise<void>;
     abstract followUp(options: InteractionReplyOptions): Promise<void>;
-    abstract getOptions(): ChatInputOption[];
+    abstract getOptions(): ChatInputOption<T>[];
 }
